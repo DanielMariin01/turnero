@@ -12,7 +12,7 @@ function App() {
   );
 }
 
-// Renderiza la aplicación en el div con id="app"
+// Renderiza la aplicación en el div con id="root"
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <App />

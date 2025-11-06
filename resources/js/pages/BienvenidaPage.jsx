@@ -1,22 +1,29 @@
 import { use } from "react";
 import Tarjeta from "../components/Tarjeta";
-import { useLocation } from "react-router-dom";
-import radiografia from "../../imagenes/radiografia.png";
-import laboratorio from "../../imagenes/laboratorio.png";
+import { useLocation , useNavigate} from "react-router-dom";
+
 import oncologia from "../../imagenes/oncologia.png";
 import consulta_externa from "../../imagenes/consulta_externa.png";
+
 
 
 export default function BienvenidaPage() {
 
 const Location = useLocation();
 const paciente = Location.state?.paciente || null;
+ const navigate = useNavigate();
+
 const formatearNombre = (texto) => {
   if (!texto) return "";
   return texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase();
 };
 
+const manejarClick = (motivo) =>{
 
+const datosPaciente = { ...paciente, motivo };
+  navigate('/condicion', {state : {paciente : datosPaciente}});
+
+}
   return (
 
 <div className="min-h-screen bg-white from-blue-50 to-blue-100 flex flex-col items-center justify-center p-10">
@@ -41,14 +48,14 @@ const formatearNombre = (texto) => {
           icono="🏥"
           color="blue"
           imagen={consulta_externa}
-          onClick={() => alert("Ingresando a Admisiones...")}
+          onClick={() => manejarClick("Consulta Externa")}
         />
         <Tarjeta
           titulo="Oncología"
           icono="🧬"
           color="pink"
           imagen={oncologia}
-          onClick={() => alert("Ingresando a Oncología...")}
+          onClick={() => manejarClick("Oncología")}
         />
        
       </div>
