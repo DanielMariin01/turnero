@@ -1,7 +1,10 @@
 import { use } from "react";
 import Tarjeta from "../components/Tarjeta";
 import { useLocation } from "react-router-dom";
-
+import radiografia from "../../imagenes/radiografia.png";
+import laboratorio from "../../imagenes/laboratorio.png";
+import oncologia from "../../imagenes/oncologia.png";
+import consulta_externa from "../../imagenes/consulta_externa.png";
 
 
 export default function BienvenidaPage() {
@@ -16,34 +19,38 @@ const formatearNombre = (texto) => {
 
   return (
 
-<div className="min-h-screen bg-clinica from-blue-50 to-blue-100 flex flex-col items-center justify-center p-10">
-      <h1 className="text-4xl font-bold text-blue-800 mb-6">
-        Bienvenido {formatearNombre(paciente.nombre)} {formatearNombre(paciente.apellido)}!
-      </h1>
-      <p className="text-xl text-gray-700 mb-12 text-center">
-        Gracias por visitarnos en la Clínica Central del Eje.  
-        Por favor, seleccione una de las siguientes opciones:
-      </p>
+<div className="min-h-screen bg-white from-blue-50 to-blue-100 flex flex-col items-center justify-center p-10">
+<h1 className="text-5xl font-extrabold text-blue-700 mb-4 text-center animate-fade-in">
+  👋 Bienvenido{" "}
+  <span className="text-blue-900">
+    {formatearNombre(paciente.nombre)} {formatearNombre(paciente.apellido)}!
+  </span>
+</h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
+<div className="bg-blue-50 p-6 rounded-2xl shadow-lg text-center mt-6 mb-6">
+  <h2 className="text-4xl font-extrabold text-blue-900 mb-4">
+    ¿Podrías indicar qué necesitas hoy?
+  </h2>
+  <p className="text-lg text-gray-700">
+    Solo elige una de las opciones que ves a continuación 💙
+  </p>
+</div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-8 justify-items-center">
         <Tarjeta
           titulo="Consulta Externa"
           icono="🏥"
           color="blue"
+          imagen={consulta_externa}
           onClick={() => alert("Ingresando a Admisiones...")}
         />
         <Tarjeta
           titulo="Oncología"
           icono="🧬"
           color="pink"
+          imagen={oncologia}
           onClick={() => alert("Ingresando a Oncología...")}
         />
-        <Tarjeta
-          titulo="Laboratorios"
-          icono="🧪"
-          color="green"
-          onClick={() => alert("Ingresando a Laboratorios...")}
-        />
+       
       </div>
     </div>
   );

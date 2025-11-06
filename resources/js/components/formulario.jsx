@@ -1,6 +1,7 @@
 import React, { use } from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import logo from "../../imagenes/logo.png";
 
 
 
@@ -109,18 +110,31 @@ const [cargando,setCargando] = useState(false);
  
 
 {cargando && (
-  <div className="flex flex-col items-center justify-center mt-6">
-    <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-solid"></div>
-    <p className="mt-4 text-blue-700 text-lg font-medium">
-      Buscando paciente, por favor espere...
-    </p>
+  <div className="flex flex-col items-center justify-center mt-6 mb-8 animate-fade-in">
+    {/* Spinner */}
+    <div className="relative">
+      <div className="animate-spin rounded-full h-20 w-20 border-t-4 border-b-4 border-green-500"></div>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <img src={logo} alt="logo" 
+        className="w-10 h-10 object-contain" />
+       
+      </div>
+    </div>
+
+    {/* Texto de carga */}
+ 
+
+    {/* Subtexto opcional */}
+  
   </div>
+
+
 )}
 
    <button
           type="button"
           onClick={handleBuscar}
-          className="bg-green-600 text-white px-10 py-5 rounded-2xl hover:bg-green-700 w-full text-2xl font-bold"
+          className="bg-blue-600 text-white px-10 py-5 rounded-2xl hover:bg-blue-700 w-full text-2xl font-bold"
         >
           Ingresar
         </button>

@@ -1,7 +1,10 @@
 import React from "react";
 import { motion } from "framer-motion";
 
-export default function Tarjeta({ titulo, icono, color, onClick }) {
+
+
+
+export default function Tarjeta({ titulo, icono, color, onClick, imagen }) {
   return (
     <motion.button
       onClick={onClick}
@@ -17,7 +20,14 @@ export default function Tarjeta({ titulo, icono, color, onClick }) {
                   focus:outline-none focus:ring-4 focus:ring-${color}-200 
                   p-6 text-center`}
     >
-      <span className="text-7xl mb-4">{icono}</span>
+           {imagen && (
+        <img
+          src={imagen}
+          alt={titulo}
+          className="w-30 h-30 object-cover mb-6 rounded-full border-4 border-white shadow-lg"
+        />
+      )}
+ 
       <h2 className="text-3xl font-bold text-blue-800 mb-2">
         {titulo}
       </h2>
