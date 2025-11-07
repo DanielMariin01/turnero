@@ -1,81 +1,87 @@
-import React from "react";
-import { useState } from "react";
-import { useLocation , useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import Tarjeta from "../components/Tarjeta";
 
+// Imágenes
+import gestante from "../../imagenes/gestante.png";
+import movilidad_reducida1 from "../../imagenes/movilidad_reducida1.png";
+import adulto_mayor from "../../imagenes/adulto_mayor.png";
+import adulto_niño from "../../imagenes/adulto_niño.png";
 
-export default function CondicionPage(){
+export default function CondicionPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
 
+  const paciente = location.state?.paciente || null;
+  const motivo = location.state?.motivo || null;
 
-    const Location = useLocation();
-    const navigate = useNavigate();
-    const paciente = Location.state?.paciente || null;
-    const motivo = Location.state?.motivo || null;
+  const [condicion, setCondicion] = useState("ninguna");
 
-    const [condicion, setCondicion] = useState("ninguna")
+  console.log(paciente);
 
-   console.log(paciente);
-   console
+  const confirmarCondicion = () => {
+    navigate("/turno", {
+      state: {
+        paciente,
+        motivo,
+        condicion,
+      },
+    });
+  };
 
-    const confirmarCondicion = () => {
+  return (
+    <div className="min-h-screen bg-white from-blue-50 to-blue-100 flex flex-col items-center justify-center p-5">
+      
 
-  navigate('/turno', 
-    {state :
-        {
-            paciente,
-            motivo,
-            condicion
-
-        }
-    }
-  );
-    }
-
-    return(
-
-
- <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-blue-50 to-white p-8">
-      <h1 className="text-4xl font-bold text-blue-700 mb-6 text-center">
-        {motivo} - Información adicional
-      </h1>
-      <p className="text-lg text-gray-700 mb-8 text-center">
-        Por favor, indícanos si presentas alguna condición especial 🧑‍🦽
-      </p>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-        {[
-          { label: "Movilidad reducida", value: "movilidad_reducida" },
-          { label: "Embarazada", value: "embarazada" },
-          { label: "Adulto mayor", value: "adulto_mayor" },
-          { label: "Ninguna", value: "ninguna" },
-        ].map((op) => (
-          <button
-            key={op.value}
-            onClick={() => setCondicion(op.value)}
-            className={`px-6 py-4 rounded-xl text-xl font-semibold shadow-md transition-all ${
-              condicion === op.value
-                ? "bg-blue-600 text-white"
-                : "bg-white text-blue-700 border border-blue-300"
-            }`}
-          >
-            {op.label}
-          </button>
-        ))}
+      <div className="bg-blue-50 p-6 rounded-2xl shadow-lg text-center mt-6 mb-6">
+        <h2 className="text-4xl font-extrabold text-blue-900 mb-4">
+          Para atenderte de la mejor manera, ¿podrías indicarnos si presentas
+          alguna condición especial?
+        </h2>
       </div>
 
-      <button
-        onClick={confirmarCondicion}
-        className="px-10 py-4 bg-blue-700 hover:bg-blue-800 text-white text-xl font-bold rounded-2xl shadow-lg transition-all"
-      >
-        Confirmar ➜
-      </button>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 justify-items-center">
+        <Tarjeta
+          titulo="Gestante"
+          color="green"
+          imagen={gestante}
+          descripcion="Toque aquí para generar su turno"
+          onClick={() => setCondicion("gestante")}
+        />
+
+        <Tarjeta
+          titulo="Movilidad Reducida"
+          color="green"
+          imagen={movilidad_reducida1}
+          descripcion="Toque aquí para generar su turno"
+          onClick={() => setCondicion("movilidad_reducida")}
+        />
+
+        <Tarjeta
+          titulo="Adulto mayor"
+          color="green"
+          imagen={adulto_mayor}
+          descripcion="Toque aquí para generar su turno"
+          onClick={() => setCondicion("adulto_mayor")}
+        />
+
+        <Tarjeta
+          titulo="Acompañado por un menor"
+          color="green"
+          imagen={adulto_niño}
+          descripcion="Toque aquí para generar su turno"
+          onClick={() => setCondicion("adulto_niño")}
+        />
+
+           <Tarjeta
+          titulo="No tengo"
+          color="green"
+          descripcion="Toque aquí para generar su turno"
+          onClick={() => setCondicion("ninguna")}
+        />
+
+
+      </div>
     </div>
-
-
-
-
-
-
-    );
-
-
+  );
 }

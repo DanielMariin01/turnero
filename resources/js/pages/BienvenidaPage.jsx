@@ -1,7 +1,7 @@
 import { use } from "react";
 import Tarjeta from "../components/Tarjeta";
 import { useLocation , useNavigate} from "react-router-dom";
-
+import imagenes from "../../imagenes/radiografia.png";
 import oncologia from "../../imagenes/oncologia.png";
 import consulta_externa from "../../imagenes/consulta_externa.png";
 
@@ -21,7 +21,7 @@ const formatearNombre = (texto) => {
 const manejarClick = (motivo) =>{
 
 const datosPaciente = { ...paciente, motivo };
-  navigate('/condicion', {state : {paciente : datosPaciente}});
+  navigate('/condicion', {state : {paciente : datosPaciente, motivo}});
 
 }
   return (
@@ -42,20 +42,24 @@ const datosPaciente = { ...paciente, motivo };
     Solo elige una de las opciones que ves a continuación 💙
   </p>
 </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-8 justify-items-center">
+      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-8 justify-items-center">
         <Tarjeta
           titulo="Consulta Externa"
-          icono="🏥"
           color="blue"
           imagen={consulta_externa}
           onClick={() => manejarClick("Consulta Externa")}
         />
         <Tarjeta
           titulo="Oncología"
-          icono="🧬"
           color="pink"
           imagen={oncologia}
           onClick={() => manejarClick("Oncología")}
+        />
+           <Tarjeta
+          titulo="Imagenes"
+          color="pink"
+          imagen={imagenes}
+          onClick={() => manejarClick("Imagenes")}
         />
        
       </div>
