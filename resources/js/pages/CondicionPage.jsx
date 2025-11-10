@@ -108,7 +108,7 @@ export default function CondicionPage() {
           color="green"
           imagen={movilidad_reducida1}
           descripcion="Toque aquí para generar su turno"
-          onClick={() => setCondicion("movilidad_reducida")}
+          onClick={() => generarYGuardarTurno("movilidad_reducida")}
         />
 
         <Tarjeta
@@ -116,7 +116,7 @@ export default function CondicionPage() {
           color="green"
           imagen={adulto_mayor}
           descripcion="Toque aquí para generar su turno"
-          onClick={() => setCondicion("adulto_mayor")}
+       onClick={() => generarYGuardarTurno("adulto_mayor")}
         />
 
         <Tarjeta
@@ -124,14 +124,14 @@ export default function CondicionPage() {
           color="green"
           imagen={adulto_niño}
           descripcion="Toque aquí para generar su turno"
-          onClick={() => setCondicion("adulto_niño")}
+     onClick={() => generarYGuardarTurno("acompañado_con_un_menor")}
         />
 
            <Tarjeta
           titulo="No tengo"
           color="green"
           descripcion="Toque aquí para generar su turno"
-          onClick={() => setCondicion("ninguna")}
+            onClick={() => generarYGuardarTurno("ninguna")}
         />
 
 

@@ -20,7 +20,7 @@ class TurnoController extends Controller
 
         // Intenta generar un código único
         for ($i = 0; $i < $intentosMax; $i++) {
-            $numero = mt_rand(0, 99); // número entre 0 y 99
+            $numero = mt_rand(0, 1000); // número entre 0 y 99
             $codigo = $letras . str_pad($numero, 2, '0', STR_PAD_LEFT);
 
             if (!Turno::where('numero_turno', $codigo)->exists()) {

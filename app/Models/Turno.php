@@ -8,7 +8,7 @@ class Turno extends Model
 {
 
     protected $table = 'turno';
-    protected $primary_key = 'id_turno';
+    protected $primaryKey = 'id_turno';
 
     protected $fillable = [
 
@@ -21,5 +21,7 @@ class Turno extends Model
 
 
     ];
+
+
 
 }
