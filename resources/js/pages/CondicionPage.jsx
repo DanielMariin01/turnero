@@ -16,18 +16,72 @@ export default function CondicionPage() {
   const motivo = location.state?.motivo || null;
 
   const [condicion, setCondicion] = useState("ninguna");
+  const [cargando , setCargando] = useState(false);
 
-  console.log(paciente);
 
-  const confirmarCondicion = () => {
-    navigate("/turno", {
-      state: {
-        paciente,
-        motivo,
-        condicion,
-      },
-    });
-  };
+
+  const generarYGuardarTurno = async (condicion) => {
+ 
+    if(!paciente){
+      return  alert("no se encontraron datos del paciente")
+    }
+    setCargando(true);
+
+   try{
+
+      const payload = {
+        fk_paciente: paciente.id_paciente ?? null,           // si usas id en BD local
+        motivo: motivo,
+        condicion: condicion,
+
+      };
+
+      const res = await fetch("http://127.0.0.1:8000/api/turno",{
+
+
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(payload),
+
+
+      });
+      const data = await res.json();
+
+      if(!res.ok){
+
+        const msg = data.message || "Error al generar el turno";
+        alert(msg);
+        setCargando(false);
+        return;
+
+      }
+
+
+     navigate("/turno", { state: { turno: data.turno } });
+
+   }catch (error) {
+      console.error(error);
+      alert("Error de conexión con el servidor");
+      setCargando(false);
+    }
+
+
+
+
+  }
+
+
+
+
+  //const confirmarCondicion = () => {
+    //navigate("/turno", {
+      //state: {
+       // paciente,
+       // motivo,
+       // condicion,
+     // },
+    //});
+ // };
 
   return (
     <div className="min-h-screen bg-white from-blue-50 to-blue-100 flex flex-col items-center justify-center p-5">
@@ -46,7 +100,7 @@ export default function CondicionPage() {
           color="green"
           imagen={gestante}
           descripcion="Toque aquí para generar su turno"
-          onClick={() => setCondicion("gestante")}
+          onClick={() => generarYGuardarTurno("gestante")}
         />
 
         <Tarjeta

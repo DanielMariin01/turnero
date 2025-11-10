@@ -22,11 +22,4 @@ class PacienteController extends Controller
     }
 
     
-
-
-
-
-
-
-
 }

@@ -24,7 +24,7 @@ const [cargando,setCargando] = useState(false);
   const handleBuscar = async () => {
       setCargando(true);
     try {
-     const response = await fetch(`http://127.0.0.1:8000/pacientes/${paciente.numero_documento}`);
+     const response = await fetch(`http://127.0.0.1:8000/api/pacientes/${paciente.numero_documento}`);
       if (!response.ok) throw new Error("paciente no encontrado");
 
       const data = await response.json();
