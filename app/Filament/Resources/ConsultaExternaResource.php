@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
 
+
 class ConsultaExternaResource extends Resource
 {
     protected static ?string $model = Turno::class;
@@ -25,6 +26,13 @@ protected static ?string $navigationIcon = 'heroicon-o-user';
 protected static ?int $navigationSort = 2;
 protected static ?string $label = 'Consulta externa ';
 
+
+
+public static function getEloquentQuery(): Builder
+{
+    // Aplica el scope para mostrar solo los turnos de hoy
+    return parent::getEloquentQuery()->hoy();
+}
    public static function getNavigationBadge(): ?string
 {
         return Cache::remember('facturado_badge', 60, function () {
@@ -52,16 +60,14 @@ public static function canEdit(Model $record): bool
     public static function table(Table $table): Table
     {
         return $table
+    
             ->columns([
 
-             Tables\Columns\TextColumn::make('id_turno')
-            ->label('ID turno')
-            ->sortable(),
 
             Tables\Columns\TextColumn::make('numero_turno')
             ->label('Numero del turno')
             ->sortable(),
-            
+
             TextColumn::make('prioridad')
                 ->label('Prioridad')
                 ->getStateUsing(fn ($record) => match($record->condicion) {
@@ -75,8 +81,6 @@ public static function canEdit(Model $record): bool
         'success' => fn ($state) => $state === 'Baja',
     ])
     ->formatStateUsing(fn ($state) => "● $state"),
-              
-
 
             TextColumn::make('condicion')
             ->label('Condicion')
@@ -99,6 +103,8 @@ public static function canEdit(Model $record): bool
             
   
             ])
+            ->defaultSort('hora', 'asc')
+    
             ->filters([
                 //
             ])

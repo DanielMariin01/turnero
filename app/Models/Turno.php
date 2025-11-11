@@ -23,5 +23,12 @@ class Turno extends Model
     ];
 
 
+    public function scopeHoy($query)
+{
+    return $query->whereDate('fecha', now());
+}
+
+
+
 
 }
