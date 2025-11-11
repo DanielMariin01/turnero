@@ -62,6 +62,9 @@ class TurnoController extends Controller
             'estado' => 'en espera',
         ]);
 
+
+        $turno->load('paciente');
+        
         // Respuesta JSON
         return response()->json([
             'message' => 'Su turno se ha generado correctamente.',

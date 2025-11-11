@@ -50,7 +50,10 @@ return (
         <p className="text-2xl text-gray-700 mb-4">
           Paciente:{" "}
           <span className="font-semibold text-gray-900">
-            {turno.fk_paciente?.apellido ?? "Sin nombre registrado"}
+{turno.paciente
+  ? `${turno.paciente.apellido} ${turno.paciente.nombre}`
+  : "Sin nombre registrado"}
+  
           </span>
         </p>
 

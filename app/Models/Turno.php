@@ -14,6 +14,7 @@ class Turno extends Model
 
        'fk_paciente',
        'numero_turno',
+       'motivo',
        'hora',
        'fecha',
        'condicion',
@@ -26,6 +27,12 @@ class Turno extends Model
     public function scopeHoy($query)
 {
     return $query->whereDate('fecha', now());
+}
+
+
+public function paciente()
+{
+    return $this->belongsTo(Paciente::class, 'fk_paciente', 'id_paciente');
 }
 
 
