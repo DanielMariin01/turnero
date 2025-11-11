@@ -19,7 +19,7 @@ if (!turno) {
 
 return (
  
-    <div className="bg-white p-10 rounded-3xl shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-10 border-4 border-blue-200 w-full max-w-6xl">
+    <div className="bg-white p-10 rounded-3xl shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-10 border-4 border-green-200 w-full max-w-6xl">
 
       {/* 🟦 Columna izquierda - Número de turno */}
       <div className="flex-1 text-center lg:text-left">
@@ -51,7 +51,7 @@ return (
           Paciente:{" "}
           <span className="font-semibold text-gray-900">
 {turno.paciente
-  ? `${turno.paciente.apellido} ${turno.paciente.nombre}`
+  ? `${turno.paciente.nombre} ${turno.paciente.apellido}`
   : "Sin nombre registrado"}
   
           </span>
