@@ -82,6 +82,21 @@ public static function canEdit(Model $record): bool
     ])
     ->formatStateUsing(fn ($state) => "● $state"),
 
+TextColumn::make('paciente.nombre')
+    ->label('Paciente')
+    ->formatStateUsing(fn ($state, $record) =>
+        $record->paciente
+            ? $record->paciente->nombre . ' ' . $record->paciente->apellido
+            : '-'
+    )
+    ->sortable()
+    ->searchable(),
+
+TextColumn::make('motivo')
+->label('Motivo')
+    ->sortable()
+            ->searchable(),
+
             TextColumn::make('condicion')
             ->label('Condicion')
             ->sortable()
