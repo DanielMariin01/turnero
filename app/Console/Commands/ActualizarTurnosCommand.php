@@ -34,9 +34,9 @@ class ActualizarTurnosCommand extends Command
 
         $affected = DB::table('turno')
             ->whereDate('fecha', '<', $hoy)
-            ->where('estado', '!=', 'en espera')
+             ->where('estado', 'en_espera')
             ->update([
-                'estado' => 'no atendido',
+                'estado' => 'no_atendido',
                 'updated_at' => now(),
             ]);
 

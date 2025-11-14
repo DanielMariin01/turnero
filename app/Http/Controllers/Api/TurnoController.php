@@ -73,7 +73,7 @@ class TurnoController extends Controller
             'condicion' => $validated['condicion'] ?? null,
             'fecha' => $fecha,
             'hora' => $hora,
-            'estado' => 'en espera',
+            'estado' => 'en_espera',
         ]);
 
 

@@ -16,6 +16,9 @@ use Filament\Tables\Columns\Date;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
+use App\Events\TurnoLlamado;
+use Filament\Notifications\Notification;
+
 
 
 
@@ -30,9 +33,12 @@ protected static ?string $label = 'Consulta externa ';
 
 public static function getEloquentQuery(): Builder
 {
-    // Aplica el scope para mostrar solo los turnos de hoy
-    return parent::getEloquentQuery()->hoy();
+    // Combina ambos: solo turnos de hoy y estado 'en_espera'
+    return parent::getEloquentQuery()
+        ->hoy() // tu scope para turnos de hoy
+        ->where('estado', 'en_espera'); // solo los turnos en espera
 }
+
    public static function getNavigationBadge(): ?string
 {
         return Cache::remember('facturado_badge', 60, function () {
@@ -123,15 +129,40 @@ TextColumn::make('motivo')
             ->filters([
                 //
             ])
-            ->actions([
-                //Tables\Actions\EditAction::make(),
-                   Tables\Actions\Action::make('llamar')
-                ->label('Llamar')
-                ->button()
-                ->color('primary')
-                ->icon('heroicon-o-phone')
-                ->action(fn ($record) => null),
-            ])
+          
+        
+      ->actions([
+    Tables\Actions\Action::make('llamar')
+        ->label('Llamar')
+        ->button()
+        ->color('primary')
+        ->icon('heroicon-o-phone')
+        ->requiresConfirmation()
+        ->action(function ($record) {
+        
+
+
+            $updated = Turno::where('id_turno', $record->id_turno)
+                 ->where('estado', 'en_espera') // solo si está pendiente
+                 ->update(['estado' => 'llamado']);
+
+if ($updated) {
+    // Turno actualizado con éxito
+    \Filament\Notifications\Notification::make()
+        ->title('Turno llamado')
+        ->body("Se llamó al turno {$record->numero_turno}")
+        ->success()
+        ->send();
+} else {
+    // Otro módulo ya llamó este turno
+    \Filament\Notifications\Notification::make()
+        ->title('Error')
+        ->body("El turno {$record->numero_turno} ya fue llamado por otro módulo")
+        ->danger()
+        ->send();
+}
+        }),
+])
             
             ->bulkActions([
               
@@ -154,4 +185,7 @@ TextColumn::make('motivo')
             'edit' => Pages\EditConsultaExterna::route('/{record}/edit'),
         ];
     }
+
+
+
 }

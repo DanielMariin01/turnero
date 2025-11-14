@@ -58,7 +58,7 @@ const [cargando,setCargando] = useState(false);
 
     return (
       <div className="max-w-5xl mx-auto bg-white shadow-lg rounded-2xl p-10">
-  <h2 className="text-3xl font-bold mb-8 text-center text-blue-700">
+  <h2 className="text-3xl font-bold mb-8 text-center text-color-700">
     Formulario de ingreso
   </h2>
 
@@ -134,7 +134,7 @@ const [cargando,setCargando] = useState(false);
    <button
           type="button"
           onClick={handleBuscar}
-          className="bg-blue-600 text-white px-10 py-5 rounded-2xl hover:bg-blue-700 w-full text-2xl font-bold"
+          className="bg-color-600 text-white px-10 py-5 rounded-2xl hover:bg-color-700 w-full text-2xl font-bold"
         >
           Ingresar
         </button>

@@ -87,8 +87,8 @@ export default function CondicionPage() {
     <div className="min-h-screen bg-white from-blue-50 to-blue-100 flex flex-col items-center justify-center p-5">
       
 
-      <div className="bg-blue-50 p-6 rounded-2xl shadow-lg text-center mt-6 mb-6">
-        <h2 className="text-4xl font-extrabold text-blue-900 mb-4">
+      <div className="bg-color-50 p-6 rounded-2xl shadow-lg text-center mt-6 mb-6">
+        <h2 className="text-4xl font-extrabold text-color-900 mb-4">
           Para atenderte de la mejor manera, ¿podrías indicarnos si presentas
           alguna condición especial?
         </h2>

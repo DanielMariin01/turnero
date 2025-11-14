@@ -4,6 +4,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\PacienteController;
 use App\Http\Controllers\Api\TurnoController;
+use App\Http\Controllers\Api\TurnoPantallaController;
+use App\Filament\Resources\ConsultaExternaResource;
+use Illuminate\Support\Facades\Log;
 
 
 Route::get('/user', function (Request $request) {
@@ -12,3 +15,5 @@ Route::get('/user', function (Request $request) {
 
 Route::get('/pacientes/{numero_documento}', [PacienteController::class, 'show']);
 Route::post('/turno', [TurnoController::class, 'store']);
+
+Route::get('/turno-ultimo', [TurnoPantallaController::class, 'ultimo']);

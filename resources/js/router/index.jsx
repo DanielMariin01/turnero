@@ -3,6 +3,7 @@ import Formulario from "../components/formulario";
 import BienvenidaPage from "../pages/BienvenidaPage";
 import CondicionPage from "../pages/CondicionPage";
 import TurnoPage from "../pages/TurnoPage";
+import  PantallaTurnos from "../components/PantallaTurnos";
 
 
 export default function AppRouter() {
@@ -13,6 +14,8 @@ export default function AppRouter() {
         <Route path="/bienvenida" element={<BienvenidaPage />} />
         <Route path="/condicion" element={<CondicionPage />} />
         <Route path="/turno" element={<TurnoPage/>} />
+        <Route path="/pantalla" element={<PantallaTurnos />} />
+
       </Routes>
     </Router>
   );

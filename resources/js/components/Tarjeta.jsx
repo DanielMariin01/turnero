@@ -15,9 +15,9 @@ export default function Tarjeta({ titulo, color, onClick, imagen, descripcion })
       whileTap={{ scale: 0.95 }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
       className={`flex flex-col justify-center items-center 
-                  w-80 h-82 bg-white rounded-3xl border-4 border-${color}-300 
-                  shadow-md hover:border-${color}-500 
-                  focus:outline-none focus:ring-4 focus:ring-${color}-200 
+                  w-80 h-82 bg-white rounded-3xl border-4 border-color-300 
+                  shadow-md hover:border-color-500 
+                  focus:outline-none focus:ring-4 focus:ring-color-200 
                   p-6 text-center`}
     >
            {imagen && (
@@ -29,7 +29,7 @@ export default function Tarjeta({ titulo, color, onClick, imagen, descripcion })
         />
       )}
  
-      <h2 className="text-3xl font-bold text-blue-800 mb-2">
+      <h2 className="text-3xl font-bold text-color-800 mb-2">
         {titulo}
       </h2>
       <p className="text-lg text-gray-600 leading-tight max-w-[80%]">

@@ -19,14 +19,14 @@ if (!turno) {
 
 return (
  
-    <div className="bg-white p-10 rounded-3xl shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-10 border-4 border-green-200 w-full max-w-6xl">
+    <div className="bg-white p-10 rounded-3xl shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-10 border-4 border-color-200 w-full max-w-6xl">
 
       {/* 🟦 Columna izquierda - Número de turno */}
       <div className="flex-1 text-center lg:text-left">
-        <h1 className="text-5xl font-extrabold text-blue-800 mb-6">
+        <h1 className="text-5xl font-extrabold text-color-800 mb-6">
           ¡Tu turno es!
         </h1>
-        <h2 className="text-9xl font-extrabold text-blue-700 mb-6  drop-shadow-lg">
+        <h2 className="text-9xl font-extrabold text-color-700 mb-6  drop-shadow-lg">
           {turno.numero_turno}
         </h2>
        
@@ -38,11 +38,11 @@ return (
       {/* 🟩 Columna derecha - Detalles */}
       <div className="flex-1 text-center lg:text-left">
         <p className="text-3xl text-gray-800 font-semibold mb-4">
-          Motivo: <span className="text-blue-800 font-bold">{turno.motivo}</span>
+          Motivo: <span className="text-color-800 font-bold">{turno.motivo}</span>
         </p>
         <p className="text-3xl text-gray-800 font-semibold mb-4">
           Condición:{" "}
-          <span className="text-blue-800 font-bold">
+          <span className="text-color-800 font-bold">
             {turno.condicion ?? "Ninguna"}
           </span>
         </p>
@@ -67,12 +67,12 @@ return (
         </div> */}
 
         {/* 🟣 Mensaje dinámico según el motivo */}
-        <p className="text-3xl text-blue-800 font-bold mb-6">
+        <p className="text-3xl text-color-800 font-bold mb-6">
           {turno.motivo === "Consulta Externa"
-            ? "Por favor, dirígete a Consulta Externa 💙"
+            ? "Por favor, dirígete a Consulta Externa"
             : turno.motivo === "Oncología"
-            ? "Por favor, dirígete al área de Oncología 🧬"
-            : "Por favor, dirígete al área correspondiente 🩵"}
+            ? "Por favor, dirígete al área de Oncología "
+            : "Por favor, dirígete al área correspondiente"}
         </p>
 
         {/* 🟢 Botón de ayuda */}
@@ -82,9 +82,9 @@ return (
           </p>
           <button
             onClick={() =>
-              window.open("https://www.youtube.com/watch?v=HBxTsyvkluY&list=RDHBxTsyvkluY&start_radio=1", "_blank")
+              window.open("https://www.youtube.com/watch?v=bur6-jFXpmY")
             }
-            className="px-8 py-4 bg-blue-700 text-white text-2xl font-bold rounded-2xl shadow-lg hover:bg-blue-800 transition-all"
+            className="px-8 py-4 bg-color-700 text-white text-2xl font-bold rounded-2xl shadow-lg hover:bg-cyan-800 transition-all"
           >
             Ver video de ayuda ▶️
           </button>

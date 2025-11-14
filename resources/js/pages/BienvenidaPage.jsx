@@ -26,20 +26,21 @@ const datosPaciente = { ...paciente, motivo };
 }
   return (
 
-<div className="min-h-screen bg-white from-blue-50 to-blue-100 flex flex-col items-center justify-center p-10">
-<h1 className="text-5xl font-extrabold text-blue-700 mb-4 text-center animate-fade-in">
-  👋 Bienvenido{" "}
-  <span className="text-blue-900">
+<div className="min-h-screen  from-blue-50 to-blue-100 flex flex-col items-center justify-center p-10">
+<div className="bg-color-50 p-6 rounded-2xl shadow-lg text-center mt-6 mb-6">
+<h1 className="text-5xl font-extrabold text-color-700 mb-4 text-center animate-fade-in">
+   Bienvenido{" "}
+  <span className="text-color-900">
     {formatearNombre(paciente.nombre)} {formatearNombre(paciente.apellido)}!
   </span>
 </h1>
 
-<div className="bg-blue-50 p-6 rounded-2xl shadow-lg text-center mt-6 mb-6">
-  <h2 className="text-4xl font-extrabold text-blue-900 mb-4">
-    ¿Podrías indicar qué necesitas hoy?
+
+  <h2 className="text-4xl font-extrabold text-color-900 mb-4">
+    ¿Podrías indicar a donde te diriges hoy?
   </h2>
   <p className="text-lg text-gray-700">
-    Solo elige una de las opciones que ves a continuación 💙
+    Solo elige una de las opciones que ves a continuación 
   </p>
 </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-8 justify-items-center">
@@ -51,13 +52,13 @@ const datosPaciente = { ...paciente, motivo };
         />
         <Tarjeta
           titulo="Oncología"
-          color="pink"
+          color="blue"
           imagen={oncologia}
           onClick={() => manejarClick("Oncología")}
         />
            <Tarjeta
           titulo="Imagenes"
-          color="pink"
+          color="blue"
           imagen={imagenes}
           onClick={() => manejarClick("Imagenes")}
         />
