@@ -57,81 +57,54 @@ const [cargando,setCargando] = useState(false);
 
 
     return (
-      <div className="max-w-5xl mx-auto bg-white shadow-lg rounded-2xl p-10">
-  <h2 className="text-3xl font-bold mb-8 text-center text-color-700">
-    Formulario de ingreso
-  </h2>
+  <div className="max-w-6xl mx-auto bg-white shadow-lg rounded-2xl p-10">
+    <h2 className="text-3xl font-bold mb-8 text-center text-color-700">
+      Formulario de ingreso
+    </h2>
 
-  {/* Fila: Documento */}
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-    <div>
-      <label className="block text-2xl font-semibold mb-3 text-gray-800">
-        Seleccione su tipo de documento
-      </label>
-      <select
-        value={paciente.tipo_documento}
-        onChange={(e) => setPaciente(e.target.value)}
-        className="border border-gray-400 rounded-2xl p-5 w-full text-xl"
-        placeholder="Seleccione el tipo de documento"
-      >
-        
-        <option value="CC">Cédula de ciudadanía</option>
-        <option value="TI">Tarjeta de identidad</option>
-        <option value="CE">Cédula de extranjería</option>
-        <option value="PA">Pasaporte</option>
-      </select>
-    </div>
+    {/* CONTENEDOR PRINCIPAL: FORMULARIO IZQUIERDA / TECLADO DERECHA */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
 
-    <div>
-      <label className="block text-2xl font-semibold mb-3 text-gray-800">
-        Número de documento
-      </label>
-      <div className="flex gap-4">
-       <input
-  type="text"
-  className="border border-gray-400 rounded-2xl p-5 w-full text-xl"
-  value={paciente.numero_documento}
-  onChange={(e) => {
-    const valor = e.target.value;
-    // Solo permitir dígitos del 0 al 9
-    if (/^\d*$/.test(valor)) {
-      setPaciente({ ...paciente, numero_documento: valor });
-    }
-  }}
-  placeholder="Ingrese su numero de documento"
-/>
+      {/* ---------------------- COLUMNA IZQUIERDA: FORMULARIO ---------------------- */}
+      <div>
+        {/* Tipo de documento */}
+        <label className="block text-2xl font-semibold mb-3 text-gray-800">
+          Seleccione su tipo de documento
+        </label>
+        <select
+          value={paciente.tipo_documento}
+          onChange={(e) =>
+            setPaciente({ ...paciente, tipo_documento: e.target.value })
+          }
+          className="border border-gray-400 rounded-2xl p-5 w-full text-xl mb-8"
+        >
+          <option value="">Seleccione...</option>
+          <option value="CC">Cédula de ciudadanía</option>
+          <option value="TI">Tarjeta de identidad</option>
+          <option value="CE">Cédula de extranjería</option>
+          <option value="PA">Pasaporte</option>
+        </select>
 
-     
-      </div>
-    </div>
-  </div>
+        {/* Número documento */}
+        <label className="block text-2xl font-semibold mb-3 text-gray-800">
+          Número de documento
+        </label>
 
+        <input
+          type="text"
+          className="border border-gray-400 rounded-2xl p-5 w-full text-xl mb-8"
+          value={paciente.numero_documento}
+          onChange={(e) => {
+            const valor = e.target.value;
+            if (/^\d*$/.test(valor)) {
+              setPaciente({ ...paciente, numero_documento: valor });
+            }
+          }}
+          placeholder="Ingrese su número de documento"
+        />
 
- 
-
-{cargando && (
-  <div className="flex flex-col items-center justify-center mt-6 mb-8 animate-fade-in">
-    {/* Spinner */}
-    <div className="relative">
-      <div className="animate-spin rounded-full h-20 w-20 border-t-4 border-b-4 border-green-500"></div>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <img src={logo} alt="logo" 
-        className="w-10 h-10 object-contain" />
-       
-      </div>
-    </div>
-
-    {/* Texto de carga */}
- 
-
-    {/* Subtexto opcional */}
-  
-  </div>
-
-
-)}
-
-   <button
+        {/* Botón */}
+        <button
           type="button"
           onClick={handleBuscar}
           className="bg-color-600 text-white px-10 py-5 rounded-2xl hover:bg-color-700 w-full text-2xl font-bold"
@@ -139,24 +112,62 @@ const [cargando,setCargando] = useState(false);
           Ingresar
         </button>
 
+        {/* Mensaje */}
+        {mensaje && (
+          <p className="mt-6 text-center text-xl text-red-600 font-medium">
+            {mensaje}
+          </p>
+        )}
 
-  {/* Botón Guardar 
-  <button
-    type="submit"
-    onClick={handleGuardar}
-    className="bg-green-600 text-white px-10 py-5 rounded-2xl hover:bg-green-700 w-full text-2xl font-bold"
-  >
-    Guardar
-  </button>*/}
+        {/* Cargando */}
+        {cargando && (
+          <div className="flex flex-col items-center justify-center mt-6 mb-8">
+            <div className="relative">
+              <div className="animate-spin rounded-full h-20 w-20 border-t-4 border-b-4 border-green-500"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <img src={logo} alt="logo" className="w-10 h-10 object-contain" />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
-  {/* Mensaje */}
-  {mensaje && (
-    <p className="mt-6 text-center text-xl text-red-600 font-medium">
-      {mensaje}
-    </p>
-  )}
-</div>
+      {/* ---------------------- COLUMNA DERECHA: TECLADO NUMÉRICO ---------------------- */}
+      <div className="flex justify-center">
+        <div className="grid grid-cols-3 gap-4 w-60">
 
+          {["1","2","3","4","5","6","7","8","9","0"].map((num) => (
+            <button
+              key={num}
+              className="bg-gray-200 hover:bg-gray-300 text-3xl font-bold py-6 rounded-xl shadow"
+              onClick={() =>
+                setPaciente({
+                  ...paciente,
+                  numero_documento: paciente.numero_documento + num,
+                })
+              }
+            >
+              {num}
+            </button>
+          ))}
 
-    );
+          {/* Botón borrar */}
+          <button
+            className="col-span-3 bg-red-500 hover:bg-red-600 text-white text-2xl font-bold py-4 rounded-xl shadow"
+            onClick={() =>
+              setPaciente({
+                ...paciente,
+                numero_documento: paciente.numero_documento.slice(0, -1),
+              })
+            }
+          >
+            Borrar
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+);
+
 }
