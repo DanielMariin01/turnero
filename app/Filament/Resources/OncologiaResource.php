@@ -16,7 +16,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Filament\Tables\Columns\Date;
 use Filament\Tables\Columns\TextColumn;
-
+use App\Events\TurnoLlamado;
+use Filament\Notifications\Notification;
 
 
 class OncologiaResource extends Resource
@@ -27,9 +28,18 @@ protected static ?string $navigationIcon = 'heroicon-o-user';
 protected static ?int $navigationSort = 3;
 protected static ?string $label = 'Oncologia ';
 
+public static function getEloquentQuery(): Builder
+{
+    // Combina ambos: solo turnos de hoy y estado 'en_espera'
+    return parent::getEloquentQuery()
+        ->hoy() // tu scope para turnos de hoy
+        ->where('estado', 'en_espera')
+        ->where('motivo', 'oncologia');  // solo los turnos en espera
+}
+
    public static function getNavigationBadge(): ?string
 {
-        return Cache::remember('facturado_badge', 60, function () {
+        return Cache::remember('oncologia_badge', 60, function () {
         return static::getEloquentQuery()->count();
     });
    }
@@ -57,13 +67,38 @@ public static function canEdit(Model $record): bool
     {
         return $table
             ->columns([
-                        Tables\Columns\TextColumn::make('id_turno')
-            ->label('ID turno')
-            ->sortable(),
-
-            Tables\Columns\TextColumn::make('numero_turno')
+          Tables\Columns\TextColumn::make('numero_turno')
             ->label('Numero del turno')
             ->sortable(),
+
+            TextColumn::make('prioridad')
+                ->label('Prioridad')
+                ->getStateUsing(fn ($record) => match($record->condicion) {
+                    'movilidad_reducida', 'adulto_mayor', 'gestante' => 'Alta',
+                    'acompañado_con_un_menor' => 'Media',
+                    default => 'Baja',
+                })
+                  ->colors([
+        'danger' => fn ($state) => $state === 'Alta',
+        'warning' => fn ($state) => $state === 'Media',
+        'success' => fn ($state) => $state === 'Baja',
+    ])
+    ->formatStateUsing(fn ($state) => "● $state"),
+
+TextColumn::make('paciente.nombre')
+    ->label('Paciente')
+    ->formatStateUsing(fn ($state, $record) =>
+        $record->paciente
+            ? $record->paciente->nombre . ' ' . $record->paciente->apellido
+            : '-'
+    )
+    ->sortable()
+    ->searchable(),
+
+TextColumn::make('motivo')
+->label('Motivo')
+    ->sortable()
+            ->searchable(),
 
             TextColumn::make('condicion')
             ->label('Condicion')
@@ -83,18 +118,46 @@ public static function canEdit(Model $record): bool
            TextColumn::make('estado')
            ->label('Estado')
           ->color('success')
+            
+  
             ])
+            ->defaultSort('hora', 'asc')
+       
             ->filters([
                 //
             ])
             ->actions([
                 //Tables\Actions\EditAction::make(),
-                      Tables\Actions\Action::make('llamar')
-                ->label('Llamar')
-                ->button()
-                ->color('primary')
-                ->icon('heroicon-o-phone')
-                ->action(fn ($record) => null),
+                   Tables\Actions\Action::make('llamar')
+        ->label('Llamar')
+        ->button()
+        ->color('primary')
+        ->icon('heroicon-o-phone')
+        ->requiresConfirmation()
+        ->action(function ($record) {
+        
+
+
+            $updated = Turno::where('id_turno', $record->id_turno)
+                 ->where('estado', 'en_espera') // solo si está pendiente
+                 ->update(['estado' => 'llamado']);
+
+if ($updated) {
+    // Turno actualizado con éxito
+    \Filament\Notifications\Notification::make()
+        ->title('Turno llamado')
+        ->body("Se llamó al turno {$record->numero_turno}")
+        ->success()
+        ->send();
+} else {
+    // Otro módulo ya llamó este turno
+    \Filament\Notifications\Notification::make()
+        ->title('Error')
+        ->body("El turno {$record->numero_turno} ya fue llamado por otro módulo")
+        ->danger()
+        ->send();
+}
+        }),
             ])
             ->bulkActions([
              

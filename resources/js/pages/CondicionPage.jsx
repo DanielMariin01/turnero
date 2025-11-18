@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Tarjeta from "../components/Tarjeta";
-
+import Swal from "sweetalert2";
 // Imágenes
 import gestante from "../../imagenes/gestante.png";
 import movilidad_reducida1 from "../../imagenes/movilidad_reducida1.png";
@@ -25,7 +25,32 @@ export default function CondicionPage() {
     if(!paciente){
       return  alert("no se encontraron datos del paciente")
     }
-    setCargando(true);
+Swal.fire({
+  html: `
+    <div style="display: flex; flex-direction: column; align-items: center;">
+      
+      <div class="loader-hospital"></div>
+
+      <h2 style="font-size: 55px; font-weight: bold; color: #00B5B5; margin-top: 20px;">
+        Generando tu turno
+      </h2>
+
+      <p style="font-size: 30px; color: #444; margin-top: 10px;">
+        Por favor espera un momento
+      </p>
+    </div>
+  `,
+  width: "40rem",
+  background: "#ffffff",
+  showConfirmButton: false,
+  allowOutsideClick: false,
+  allowEscapeKey: false,
+   didOpen: () => {
+    Swal.showLoading();
+  }
+});
+
+
 
    try{
 
@@ -48,14 +73,17 @@ export default function CondicionPage() {
       const data = await res.json();
 
       if(!res.ok){
-
-        const msg = data.message || "Error al generar el turno";
-        alert(msg);
-        setCargando(false);
-        return;
+          Swal.close();
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: data.message || "Error al generar el turno",
+      });
+      return;
 
       }
 
+  Swal.close();
 
      navigate("/turno", { state: { turno: data.turno } });
 
@@ -72,20 +100,8 @@ export default function CondicionPage() {
 
 
 
-
-  //const confirmarCondicion = () => {
-    //navigate("/turno", {
-      //state: {
-       // paciente,
-       // motivo,
-       // condicion,
-     // },
-    //});
- // };
-
   return (
     <div className="min-h-screen bg-white from-blue-50 to-blue-100 flex flex-col items-center justify-center p-5">
-      
 
       <div className="bg-color-50 p-6 rounded-2xl shadow-lg text-center mt-6 mb-6">
         <h2 className="text-4xl font-extrabold text-color-900 mb-4">

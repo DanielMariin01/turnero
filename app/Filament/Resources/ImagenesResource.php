@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\ConsultaExternaResource\Pages;
-use App\Filament\Resources\ConsultaExternaResource\RelationManagers;
+use App\Filament\Resources\ImagenesResource\Pages;
+use App\Filament\Resources\ImagenesResource\RelationManagers;
 use App\Models\Turno;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -12,37 +12,34 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Tables\Columns\Date;
 use Filament\Tables\Columns\TextColumn;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Cache;
 use App\Events\TurnoLlamado;
 use Filament\Notifications\Notification;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 
-
-
-class ConsultaExternaResource extends Resource
+class ImagenesResource extends Resource
 {
-    protected static ?string $model = Turno::class;
-protected static ?string $navigationIcon = 'heroicon-o-user';      
-protected static ?int $navigationSort = 2;
-protected static ?string $label = 'Consulta externa ';
+  protected static ?string $model = Turno::class;
+
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?int $navigationSort = 4;
+    protected static ?string $label = 'Imagenes ';
 
 
-
-public static function getEloquentQuery(): Builder
+    public static function getEloquentQuery(): Builder
 {
     // Combina ambos: solo turnos de hoy y estado 'en_espera'
     return parent::getEloquentQuery()
         ->hoy() // tu scope para turnos de hoy
         ->where('estado', 'en_espera')
-        ->where('motivo', 'consulta externa'); // solo los turnos en espera
+        ->where('motivo', 'imagenes');  // solo los turnos en espera
 }
 
    public static function getNavigationBadge(): ?string
 {
-        return Cache::remember('consultaExterna_badge', 60, function () {
+        return Cache::remember('imagenes_badge', 60, function () {
         return static::getEloquentQuery()->count();
     });
    }
@@ -60,18 +57,15 @@ public static function canEdit(Model $record): bool
     {
         return $form
             ->schema([
-                //
+                
             ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
-    
             ->columns([
-
-
-            Tables\Columns\TextColumn::make('numero_turno')
+                 Tables\Columns\TextColumn::make('numero_turno')
             ->label('Numero del turno')
             ->sortable(),
 
@@ -126,14 +120,13 @@ TextColumn::make('motivo')
   
             ])
             ->defaultSort('hora', 'asc')
-    
+       
             ->filters([
-                //
+                 
             ])
-          
-        
-      ->actions([
-    Tables\Actions\Action::make('llamar')
+            ->actions([
+              
+ Tables\Actions\Action::make('llamar')
         ->label('Llamar')
         ->button()
         ->color('primary')
@@ -163,12 +156,18 @@ if ($updated) {
         ->send();
 }
         }),
-])
             
-            ->bulkActions([
-              
-            ]);
 
+
+
+
+
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ]);
     }
 
     public static function getRelations(): array
@@ -181,12 +180,9 @@ if ($updated) {
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListConsultaExternas::route('/'),
-            'create' => Pages\CreateConsultaExterna::route('/create'),
-            'edit' => Pages\EditConsultaExterna::route('/{record}/edit'),
+            'index' => Pages\ListImagenes::route('/'),
+            'create' => Pages\CreateImagenes::route('/create'),
+            'edit' => Pages\EditImagenes::route('/{record}/edit'),
         ];
     }
-
-
-
 }
