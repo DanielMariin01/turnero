@@ -9,6 +9,8 @@ export default function Formulario() {
 
 const [cargando,setCargando] = useState(false);
  const navigate = useNavigate();
+ const [mostrarRegistro, setMostrarRegistro] = useState(false);
+
 
   const [paciente, setPaciente] = useState({
     nombre: "",
@@ -21,37 +23,42 @@ const [cargando,setCargando] = useState(false);
 
   const [mensaje, setMensaje] = useState("");
 
-  const handleBuscar = async () => {
-      setCargando(true);
-    try {
-     const response = await fetch(`http://127.0.0.1:8000/api/pacientes/${paciente.numero_documento}`);
-      if (!response.ok) throw new Error("paciente no encontrado");
+ const handleBuscar = async () => {
+  setCargando(true);
+  setMensaje("");
 
-      const data = await response.json();
+  try {
+    const response = await fetch(`http://127.0.0.1:8000/api/pacientes/${paciente.numero_documento}`);
 
-
-
-      if (data) {
-        setPaciente({
-          nombre: data.nombre || "",
-          apellido: data.apellido || "",
-          tipo_documento: data.tipo_documento || "",
-          numero_documento: data.numero_documento || "",
-          condicion_especial: data.condicion_especial || "",
-          
-        });
-        setMensaje("Paciente encontrado ✅");
-      } else {
-        setMensaje("No se encontró el paciente ❌");
-      }
-        navigate("/bienvenida", { state: { paciente: data } });
-    } catch (error) {
-      setMensaje("Error al conectar con el servidor ⚠️");
+    if (response.status === 404) {
+      // paciente NO existe → permitir registro
+      setMensaje("Paciente no encontrado. Por favor regístrese.");
+      setMostrarRegistro(true);
+      setCargando(false);
+      return;
     }
-    finally {
+
+    if (!response.ok) throw new Error("Error en el servidor");
+
+    const data = await response.json();
+
+    // paciente existe → rellenar datos y navegar
+    setPaciente({
+      nombre: data.nombre || "",
+      apellido: data.apellido || "",
+      tipo_documento: data.tipo_documento || "",
+      numero_documento: data.numero_documento || "",
+      condicion_especial: data.condicion_especial || "",
+    });
+
+    navigate("/bienvenida", { state: { paciente: data } });
+
+  } catch (error) {
+    setMensaje("Error al conectar con el servidor ⚠️");
+  } finally {
     setCargando(false);
   }
-  };
+};
 
 
 
@@ -104,13 +111,24 @@ const [cargando,setCargando] = useState(false);
         />
 
         {/* Botón */}
-        <button
-          type="button"
-          onClick={handleBuscar}
-          className="bg-color-600 text-white px-10 py-5 rounded-2xl hover:bg-color-700 w-full text-2xl font-bold"
-        >
-          Ingresar
-        </button>
+       <div className="flex gap-4">
+  <button
+    type="button"
+    onClick={handleBuscar}
+    className="bg-color-600 text-white px-10 py-5 rounded-2xl hover:bg-color-700 w-full text-2xl font-bold"
+  >
+    Ingresar
+  </button>
+
+  <button
+    type="button"
+  onClick={() => navigate("/registro")}
+    className="bg-sky-500 text-white px-10 py-5 rounded-2xl hover:bg-gray-600 w-full text-2xl font-bold"
+  >
+    Registrarse
+  </button>
+</div>
+
 
         {/* Mensaje */}
         {mensaje && (

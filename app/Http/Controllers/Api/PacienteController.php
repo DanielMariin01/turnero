@@ -21,5 +21,24 @@ class PacienteController extends Controller
         return response()->json($paciente);
     }
 
+    public function crear_paciente(Request $request)
+    {
+
+
+  $validated = $request->validate([
+        'nombre' => 'required|string|max:250',
+        'apellido' => 'required|string|max:250',
+        'tipo_documento' => 'required|string|max:10',
+        'numero_documento' => 'required|string|max:150|unique:paciente,numero_documento',
+
+    ]);
+
+    $paciente = Paciente::create($validated);
+
+    return response()->json($paciente, 201);
+
+
+    }
+
     
 }

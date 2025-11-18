@@ -15,5 +15,6 @@ Route::get('/user', function (Request $request) {
 
 Route::get('/pacientes/{numero_documento}', [PacienteController::class, 'show']);
 Route::post('/turno', [TurnoController::class, 'store']);
-
 Route::get('/turno-ultimo', [TurnoPantallaController::class, 'ultimo']);
+
+Route::post('/pacientes', [PacienteController:: class, 'crear_paciente']);
