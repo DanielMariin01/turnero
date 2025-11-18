@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Tarjeta from "../components/Tarjeta";
 import Swal from "sweetalert2";
+
+
 // Imágenes
 import gestante from "../../imagenes/gestante.png";
 import movilidad_reducida1 from "../../imagenes/movilidad_reducida1.png";
@@ -17,6 +19,34 @@ export default function CondicionPage() {
 
   const [condicion, setCondicion] = useState("ninguna");
   const [cargando , setCargando] = useState(false);
+
+
+  useEffect(() => {
+  let timer = setTimeout(() => {
+    navigate("/"); // ⬅ Ajusta la ruta si tu menú principal es diferente
+  }, 20000); // 20 segundos
+
+  const resetTimer = () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      navigate("/");
+    }, 20000);
+  };
+
+  window.addEventListener("mousemove", resetTimer);
+  window.addEventListener("keydown", resetTimer);
+  window.addEventListener("click", resetTimer);
+  window.addEventListener("touchstart", resetTimer);
+
+  return () => {
+    clearTimeout(timer);
+    window.removeEventListener("mousemove", resetTimer);
+    window.removeEventListener("keydown", resetTimer);
+    window.removeEventListener("click", resetTimer);
+    window.removeEventListener("touchstart", resetTimer);
+  };
+}, [navigate]);
+
 
 
 

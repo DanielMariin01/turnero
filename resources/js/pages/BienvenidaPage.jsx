@@ -4,6 +4,8 @@ import { useLocation , useNavigate} from "react-router-dom";
 import imagenes from "../../imagenes/radiografia.png";
 import oncologia from "../../imagenes/oncologia.png";
 import consulta_externa from "../../imagenes/consulta_externa.png";
+import { useEffect } from "react";
+
 
 
 
@@ -12,6 +14,42 @@ export default function BienvenidaPage() {
 const Location = useLocation();
 const paciente = Location.state?.paciente || null;
  const navigate = useNavigate();
+
+
+   // -----------------------------
+  // 🔥 SISTEMA DE INACTIVIDAD (30s)
+  // -----------------------------
+  useEffect(() => {
+    let temporizador;
+
+    const tiempoMaximo = 30000; // 20 segundos
+
+    const resetTimer = () => {
+      clearTimeout(temporizador);
+      temporizador = setTimeout(() => {
+        navigate("/"); // ⬅ cambia la ruta si deseas otro menú
+      }, tiempoMaximo);
+    };
+
+    // Detecta actividad
+    window.addEventListener("mousemove", resetTimer);
+    window.addEventListener("keydown", resetTimer);
+    window.addEventListener("click", resetTimer);
+    window.addEventListener("scroll", resetTimer);
+
+    // Iniciar temporizador la primera vez
+    resetTimer();
+
+    // Cleanup cuando se desmonta el componente
+    return () => {
+      clearTimeout(temporizador);
+      window.removeEventListener("mousemove", resetTimer);
+      window.removeEventListener("keydown", resetTimer);
+      window.removeEventListener("click", resetTimer);
+      window.removeEventListener("scroll", resetTimer);
+    };
+  }, [navigate]);
+
 
 const formatearNombre = (texto) => {
   if (!texto) return "";

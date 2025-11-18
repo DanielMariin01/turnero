@@ -1,5 +1,8 @@
-import react  from "react";
-import { useLocation } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+
+
+
 
 export default function TurnoPage(){
 
@@ -7,6 +10,34 @@ export default function TurnoPage(){
 const location = useLocation();
 const turno = location.state?.turno
 const motivo = location.state?.motivo || null;
+const navigate = useNavigate();
+
+
+ useEffect(() => {
+  let timer = setTimeout(() => {
+    navigate("/"); // ⬅ Ajusta la ruta si tu menú principal es diferente
+  }, 20000); // 20 segundos
+
+  const resetTimer = () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      navigate("/");
+    }, 20000);
+  };
+
+  window.addEventListener("mousemove", resetTimer);
+  window.addEventListener("keydown", resetTimer);
+  window.addEventListener("click", resetTimer);
+  window.addEventListener("touchstart", resetTimer);
+
+  return () => {
+    clearTimeout(timer);
+    window.removeEventListener("mousemove", resetTimer);
+    window.removeEventListener("keydown", resetTimer);
+    window.removeEventListener("click", resetTimer);
+    window.removeEventListener("touchstart", resetTimer);
+  };
+}, [navigate]);
 
 if (!turno) {
   return (
