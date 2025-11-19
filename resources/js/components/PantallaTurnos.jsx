@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, use } from "react";
 
 function PantallaTurnos() {
   const [turno, setTurno] = useState(null);
   const [sonidoActivado, setSonidoActivado] = useState(false);
   const prevTurnoRef = useRef(null);
   const audioRef = useRef(null);
+  const [turnosLlamados, setTurnosLlamados] = useState([]);
 
   // 👉 Función que faltaba
   const activarSonido = () => {
@@ -54,6 +55,25 @@ function PantallaTurnos() {
     return () => clearInterval(interval);
   }, [sonidoActivado]);  // ← importante
 
+
+useEffect(() => {
+
+ const fetchTurnosLlamados = async () => {
+      try {
+        const res = await fetch("http://127.0.0.1:8000/api/turnos-llamados");
+        const data = await res.json();
+        setTurnosLlamados(data);
+      } catch (error) {
+        console.error("Error al obtener turnos llamados:", error);
+      }
+    };
+
+    fetchTurnosLlamados();
+    const interval = setInterval(fetchTurnosLlamados, 2000);
+    return () => clearInterval(interval);
+
+}, []);
+
   // Pantalla inicial para activar sonido
   if (!sonidoActivado) {
     return (
@@ -71,30 +91,62 @@ function PantallaTurnos() {
   if (!turno) return <div>No hay turno llamado</div>;
 
   return (
-    <div className="bg-white shadow-2xl rounded-3xl p-10 max-w-2xl w-full text-center mx-auto border-4 border-color-700/50">
-      <h1 className="text-4xl font-extrabold text-gray-800 mb-6 tracking-wide">
-        Turno Actual
-      </h1>
+    <div className="p-10 max-w-5xl mx-auto">
+      {/* --- PANEL PRINCIPAL --- */}
+      <div className="bg-white shadow-2xl rounded-3xl p-10 text-center border-4">
+        <h1 className="text-4xl font-extrabold text-gray-800 mb-6 tracking-wide">
+          Turno Actual
+        </h1>
 
-      <div className="bg-color-700 text-white rounded-xl py-6 px-4 mb-8 shadow-inner">
-        <p className="text-7xl md:text-8xl lg:text-9xl font-black mt-2 leading-none">
-          {turno.numero_turno}
-        </p>
+        <div className="bg-color-700 text-white rounded-xl py-6 px-4 mb-8 shadow-inner">
+          <p className="text-7xl md:text-8xl lg:text-9xl font-black mt-2 leading-none">
+            {turno.numero_turno}
+          </p>
+        </div>
+
+        <div className="text-gray-800">
+          <p className="text-3xl font-light mb-2">Paciente:</p>
+          <p className="text-4xl md:text-5xl font-bold uppercase tracking-wider">
+            {turno.nombre} {turno.apellido}
+          </p>
+        </div>
       </div>
 
-      <div className="border-t border-gray-300 w-1/3 mx-auto my-6"></div>
+      {/* --- TABLA DE LLAMADOS --- */}
+      <div className="mt-12">
+        <h2 className="text-3xl font-bold mb-4 text-gray-800 text-center">
+          Pacientes Llamados
+        </h2>
 
-      <div className="text-gray-800">
-        <p className="text-3xl font-light mb-2">Paciente:</p>
-        <p className="text-4xl md:text-5xl font-bold uppercase tracking-wider">
-          {turno.nombre} {turno.apellido}
-        </p>
+        <table className="w-full table-auto border-collapse shadow-lg">
+          <thead className="bg-gray-700 text-white">
+            <tr>
+              <th className="p-3">Turno</th>
+              <th className="p-3">Paciente</th>
+              <th className="p-3">Hora Llamado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {turnosLlamados.map((t) => (
+              <tr key={t.id_turno} className="border-b text-center">
+                <td className="p-3 font-bold text-xl">{t.numero_turno}</td>
+                <td className="p-3">
+                  {t.paciente?.nombre} {t.paciente?.apellido}
+                </td>
+                <td className="p-3">{t.updated_at}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {turnosLlamados.length === 0 && (
+          <p className="text-center text-gray-500 mt-4">
+            No hay pacientes llamados.
+          </p>
+        )}
       </div>
-
-      <p className="text-xl text-gray-600 mt-10">
-        Por favor, espere su turno 👋
-      </p>
     </div>
+
   );
 }
 

@@ -18,3 +18,4 @@ Route::post('/turno', [TurnoController::class, 'store']);
 Route::get('/turno-ultimo', [TurnoPantallaController::class, 'ultimo']);
 
 Route::post('/pacientes', [PacienteController:: class, 'crear_paciente']);
+Route::get('/turnos-llamados', [TurnoPantallaController:: class, 'turnosLlamados']);

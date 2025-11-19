@@ -1,9 +1,40 @@
-import React, { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useRef, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
 
 export default function FormularioRegistro() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+
+  useEffect(
+()=>{
+
+     let timer = setTimeout(() => {
+    navigate("/"); // ⬅ Ajusta la ruta si tu menú principal es diferente
+  }, 20000); // 20 segundos
+
+  const resetTimer = () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      navigate("/");
+    }, 20000);
+  };
+
+  window.addEventListener("mousemove", resetTimer);
+  window.addEventListener("keydown", resetTimer);
+  window.addEventListener("click", resetTimer);
+  window.addEventListener("touchstart", resetTimer);
+
+  return () => {
+    clearTimeout(timer);
+    window.removeEventListener("mousemove", resetTimer);
+    window.removeEventListener("keydown", resetTimer);
+    window.removeEventListener("click", resetTimer);
+    window.removeEventListener("touchstart", resetTimer);
+  };
+}, [navigate])
+
 
   const [paciente, setPaciente] = useState({
     nombre: "",

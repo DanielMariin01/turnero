@@ -23,4 +23,15 @@ class TurnoPantallaController extends Controller
             'apellido' => $ultimoTurno?->paciente?->apellido ?? '',
         ]);
     }
+
+   public function turnosLlamados(){
+
+    return Turno::with('paciente')
+    ->where('estado','llamado')
+   ->orderBy('updated_at', 'desc')
+    ->get();
+
+   }
+
+
 }
