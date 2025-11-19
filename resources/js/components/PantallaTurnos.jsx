@@ -55,22 +55,22 @@ function PantallaTurnos() {
     return () => clearInterval(interval);
   }, [sonidoActivado]);  // ← importante
 
-
+//FUNCION TURNOS LLAMADOS
 useEffect(() => {
 
  const fetchTurnosLlamados = async () => {
-      try {
+    try {
         const res = await fetch("http://127.0.0.1:8000/api/turnos-llamados");
         const data = await res.json();
         setTurnosLlamados(data);
       } catch (error) {
         console.error("Error al obtener turnos llamados:", error);
       }
-    };
+   };
 
     fetchTurnosLlamados();
     const interval = setInterval(fetchTurnosLlamados, 2000);
-    return () => clearInterval(interval);
+   return () => clearInterval(interval);
 
 }, []);
 
@@ -116,7 +116,7 @@ useEffect(() => {
       </div>
     </div>
 
-    {/* --- TABLA DE LLAMADOS (antes izquierda → AHORA DERECHA) --- */}
+    {/* --- TABLA DE LLAMADOS (antes izquierda → AHORA DERECHA) --- 
     <div className="bg-white shadow-2xl rounded-3xl p-10 text-center border-4">
     <div className="w-full">
       <h2 className="text-4xl font-extrabold text-bg-white mb-6 tracking-wide">
@@ -156,7 +156,7 @@ useEffect(() => {
         </p>
       )}
     </div>
-</div>
+</div>*/}
   </div>
 </div>
 
