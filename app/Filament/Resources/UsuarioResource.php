@@ -33,11 +33,19 @@ public static function form(Form $form): Form
                         ->required()
                         ->maxLength(255),
 
+                    Forms\Components\TextInput::make('cedula')
+                        ->label('Cedula')
+                
+                        //->unique(ignoreRecord: true)
+                        ->required(),
+
                     Forms\Components\TextInput::make('email')
                         ->label('Correo electrónico')
                         ->email()
                         ->unique(ignoreRecord: true)
                         ->required(),
+               
+
 
                     Forms\Components\Select::make('roles')
                         ->label('Roles')
@@ -75,8 +83,13 @@ public static function form(Form $form): Form
     {
         return $table
             ->columns([
-                     Tables\Columns\TextColumn::make('name')
+            Tables\Columns\TextColumn::make('name')
                 ->label('Nombre')
+                ->sortable()
+                ->searchable(),
+
+    Tables\Columns\TextColumn::make('cedula')
+                ->label('Cedula')
                 ->sortable()
                 ->searchable(),
 
@@ -84,6 +97,7 @@ public static function form(Form $form): Form
                 ->label('Correo electrónico')
                 ->sortable()
                 ->searchable(),
+        
 
             Tables\Columns\TextColumn::make('roles.name')
                 ->label('Roles')
