@@ -26,9 +26,14 @@ class TurnoPantallaController extends Controller
 
    public function turnosLlamados(){
 
+
+  
+
     return Turno::with('paciente')
     ->where('estado','llamado')
+   //->whereDate('updated_at', $hoy)
    ->orderBy('updated_at', 'desc')
+   ->take(5) 
     ->get();
 
    }
