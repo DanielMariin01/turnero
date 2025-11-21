@@ -12,7 +12,6 @@
     <div id="root"></div>
 
     <!-- JS compilado -->
-<script type="module" src="/build/assets/app-7f3Lxy4Q.js"></script>
+    <script type="module" src="{{ asset('build/app-7f3Lxy4Q.js') }}"></script>
 </body>
 </html>
-

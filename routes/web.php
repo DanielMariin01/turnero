@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 
 
+
 Route::get('/', function () {
     return view('welcome');
 });
@@ -11,3 +12,8 @@ Route::get('/', function () {
 Route::get('/pantalla', function() {
     return view('app'); // aquí se monta React
 });
+
+
+Route::get('/{any}', function () {
+    return view('welcome');
+})->where('any', '.*');
