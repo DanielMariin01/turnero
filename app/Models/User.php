@@ -47,4 +47,12 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+
+    
+    public function consultorios()
+    {
+        return $this->belongsToMany(Consultorio::class, 'usuario_consultorio')
+                    ->withPivot( 'fecha');
+    }
 }

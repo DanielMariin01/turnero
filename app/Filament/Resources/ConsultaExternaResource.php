@@ -18,6 +18,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use App\Events\TurnoLlamado;
 use Filament\Notifications\Notification;
+use App\Models\User;
+use App\Models\Turno_Medico;
+
 
 
 
@@ -140,8 +143,6 @@ TextColumn::make('motivo')
         ->icon('heroicon-o-phone')
         ->requiresConfirmation()
         ->action(function ($record) {
-        
-
 
             $updated = Turno::where('id_turno', $record->id_turno)
                  ->where('estado', 'en_espera') // solo si está pendiente
@@ -163,7 +164,49 @@ if ($updated) {
         ->send();
 }
         }),
+
+
+//asignar medico
+
+
+
+        Tables\Actions\Action::make('asignar_medico')
+    ->label('Asignar Médico')
+    ->icon('heroicon-o-user')
+    ->action(function ($record, array $data) {
+        // Actualiza el turno con el id del usuario médico seleccionado
+       $record->update([
+    'fk_users' => $data['fk_users'], // coincide con tu campo en la tabla turnos
+]);
+
+       $usuario = User::find($data['fk_users']);
+Turno_Medico::create([
+            'fk_paciente' => $record->fk_paciente,
+            'fk_users' => $usuario->id,
+            //'fk_consultorio' => $consultorioActivo?->id_consultorio, // si existe
+            'hora' => now(),
+        ]);
+
+        // 4️⃣ Notificación
+        Notification::make()
+            ->title('Médico asignado y turno creado')
+            ->success()
+            ->send();
+    })
+    ->requiresConfirmation()
+    ->form([
+      Forms\Components\Select::make('fk_users')
+    ->label('Seleccione el médico')
+    ->options(User::role('medico')->pluck('name','id')) // solo usuarios con rol médico
+    ->required()
+
+           
+    ])
+    ->requiresConfirmation()
+
 ])
+
+
             
             ->bulkActions([
               

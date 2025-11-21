@@ -15,4 +15,11 @@ class Consultorio extends Model
         'ubicacion',
      
     ];
+
+
+    public function usuarios()
+    {
+        return $this->belongsToMany(User::class, 'user_consultorio')
+                    ->withPivot('fecha');
+    }
 }
