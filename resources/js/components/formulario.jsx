@@ -28,7 +28,7 @@ const [cargando,setCargando] = useState(false);
   setMensaje("");
 
   try {
-    const response = await fetch(`http://127.0.0.1:8000/api/pacientes/${paciente.numero_documento}`);
+    const response = await fetch(`/api/pacientes/${paciente.numero_documento}`);
 
     if (response.status === 404) {
       // paciente NO existe → permitir registro
