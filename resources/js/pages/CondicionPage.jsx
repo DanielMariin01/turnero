@@ -91,7 +91,7 @@ Swal.fire({
 
       };
 
-      const res = await fetch("http://127.0.0.1:8000/api/turno",{
+      const res = await fetch("/api/turno",{
 
 
   method: "POST",

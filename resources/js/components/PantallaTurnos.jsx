@@ -27,7 +27,7 @@ function PantallaTurnos() {
   useEffect(() => {
     const fetchTurno = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/turno-ultimo");
+        const res = await fetch("/api/turno-ultimo");
         if (!res.ok) throw new Error("Error en la API");
         const data = await res.json();
 
@@ -60,7 +60,7 @@ useEffect(() => {
 
  const fetchTurnosLlamados = async () => {
     try {
-        const res = await fetch("http://127.0.0.1:8000/api/turnos-llamados");
+        const res = await fetch("/api/turnos-llamados");
         const data = await res.json();
         setTurnosLlamados(data);
       } catch (error) {
