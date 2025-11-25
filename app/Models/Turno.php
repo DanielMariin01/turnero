@@ -19,7 +19,9 @@ class Turno extends Model
        'fecha',
        'condicion',
        'estado',
-       'fk_consultorio'
+       'fk_consultorio',
+       'observaciones'
+
 
 
     ];

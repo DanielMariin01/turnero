@@ -119,9 +119,15 @@ class MedicoResource extends Resource
                     ->date()
                     ->sortable(),
 
-                TextColumn::make('estado')
-                    ->label('Estado')
-                    ->color('success'),
+               TextColumn::make('estado')
+    ->label('Estado')
+    ->badge()
+    ->color(fn (string $state): string => match ($state) {
+        'llamado' => 'info',        // Azul
+        'en_espera' => 'warning',   // Naranja
+        'asignado' => 'success',    // Verde
+        default => 'gray',
+    }),
             ])
             ->defaultSort('hora', 'asc')
             
