@@ -160,6 +160,7 @@ class ConsultaExternaResource extends Resource
         $record->update([
             'estado' => 'asignado',
             'fk_consultorio' => $data['fk_consultorio'],
+            'hora' => now()->format('H:i:s'),
         ]);
 
         Notification::make()
