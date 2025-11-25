@@ -20,3 +20,4 @@ Route::get('/turno-ultimo', [TurnoPantallaController::class, 'ultimo']);
 //api para crear un nuevo paciente
 Route::post('/pacientes', [PacienteController:: class, 'crear_paciente']);
 Route::get('/turnos-llamados', [TurnoPantallaController:: class, 'turnosLlamados']);
+Route::get('/turnos-medicos', [TurnoPantallaController:: class, 'turnosMedico']);

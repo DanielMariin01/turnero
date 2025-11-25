@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pantalla de Turnos</title>
+    <title>Sistema de Gestión de Turnos</title>
     <style>
         * {
             margin: 0;
@@ -18,10 +18,11 @@
 
         .container {
             padding: 40px;
-            max-width: 80rem;
+            max-width: 90rem;
             margin: 0 auto;
         }
 
+        /* LAYOUT PRINCIPAL - 3 COLUMNAS EN ESCRITORIO */
         .grid-container {
             display: grid;
             grid-template-columns: 1fr;
@@ -30,10 +31,11 @@
 
         @media (min-width: 1024px) {
             .grid-container {
-                grid-template-columns: 1fr 1fr;
+                grid-template-columns: 1fr 1fr 1fr;
             }
         }
 
+        /* ESTILOS DE PANELES */
         .panel {
             background-color: #ffffff;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
@@ -42,16 +44,19 @@
             padding: 40px;
             text-align: center;
             border: 4px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
         }
 
         .titulo {
-            font-size: 36px;
+            font-size: 28px;
             font-weight: 800;
             color: #1f2937;
             margin-bottom: 24px;
             letter-spacing: 0.025em;
         }
 
+        /* PANEL 1: TURNO ACTUAL */
         .turno-box {
             background-color: #00B5B5;
             color: #ffffff;
@@ -74,108 +79,141 @@
             }
         }
 
-        @media (min-width: 1024px) {
-            .numero-turno {
-                font-size: 80px;
-            }
-        }
-
         .paciente-info {
             color: #1f2937;
         }
 
         .paciente-label {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 300;
             margin-bottom: 8px;
         }
 
         .paciente-nombre {
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.125em;
         }
 
-        @media (min-width: 768px) {
-            .paciente-nombre {
-                font-size: 40px;
-            }
-        }
-
-        /* Colores personalizados */
-        .bg-color {
-            background-color: #00B5B5;
-        }
-
-        .bg-color-700 {
-            background-color: #00B5B5;
-        }
-
-   .panel-full {
-            width: 100%;
-        }
-
-        .titulo {
-            font-size: 36px;
-            font-weight: 800;
-            color: #1f2937;
-            margin-bottom: 24px;
-            letter-spacing: 0.025em;
+        /* TABLAS */
+        .tabla-container {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 600px;
         }
 
         .tabla {
             width: 100%;
             border-collapse: collapse;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
-                        0 4px 6px -2px rgba(0, 0, 0, 0.05);
             background-color: #ffffff;
         }
 
         .tabla thead {
             background-color: #0ea5e9;
             color: #ffffff;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         .tabla th {
-            padding: 12px;
+            padding: 12px 8px;
             font-weight: 600;
             text-align: left;
-            border-bottom: 2px solid #0ea5e9;
+            border-bottom: 2px solid #0284c7;
+            font-size: 14px;
         }
 
         .tabla td {
-            padding: 12px;
+            padding: 12px 8px;
             border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
         }
 
         .tabla tbody tr:hover {
-            background-color: #f9fafb;
+            background-color: #f0f9ff;
         }
 
         .tabla tbody tr:last-child td {
             border-bottom: none;
         }
 
+        /* TABLA DE MÉDICOS - Color diferente */
+        .tabla-medicos thead {
+            background-color: #10b981;
+        }
+
+        .tabla-medicos th {
+            border-bottom: 2px solid #059669;
+        }
+
+        .tabla-medicos tbody tr:hover {
+            background-color: #f0fdf4;
+        }
+
         .mensaje-sin-turnos {
             text-align: center;
             color: #9ca3af;
             margin-top: 16px;
+            font-size: 14px;
         }
 
+        /* BADGE DE ESTADO */
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-activo {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-espera {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        /* RESPONSIVO */
+        @media (max-width: 1023px) {
+            .panel {
+                padding: 24px;
+            }
+
+            .titulo {
+                font-size: 24px;
+            }
+
+            .numero-turno {
+                font-size: 48px;
+            }
+
+            .paciente-nombre {
+                font-size: 24px;
+            }
+
+            .tabla th,
+            .tabla td {
+                padding: 8px 6px;
+                font-size: 12px;
+            }
+        }
     </style>
 </head>
 <body>
     
     <div class="container">
-        <!-- CONTENEDOR DIVIDIDO EN 2 COLUMNAS -->
         <div class="grid-container">
             
-            <!-- PANEL PRINCIPAL (IZQUIERDA) -->
+            <!-- ============================================ -->
+            <!-- PANEL 1: TURNO ACTUAL -->
+            <!-- ============================================ -->
             <div class="panel">
-                <h1 class="titulo">
-                    Turno Actual
-                </h1>
+             
 
                 <div class="turno-box">
                     <p id="numeroTurno" class="numero-turno">
@@ -191,44 +229,66 @@
                 </div>
             </div>
 
-<div class="panel">
-                <div class="panel-full">
-                    <h2 class="titulo">
-                        Pacientes Llamados
-                    </h2>
+            <!-- ============================================ -->
+            <!-- PANEL 2: PACIENTES LLAMADOS -->
+            <!-- ============================================ -->
+            <div class="panel">
+              
 
+                <div class="tabla-container">
                     <table class="tabla">
                         <thead>
                             <tr>
                                 <th>Turno</th>
                                 <th>Paciente</th>
-                                <th>Hora Llamado</th>
+                                <th>Hora</th>
                             </tr>
                         </thead>
                         <tbody id="tablaTurnos">
                             <!-- Se llena dinámicamente -->
                         </tbody>
                     </table>
-
-                    <p id="mensajeSinTurnos" class="mensaje-sin-turnos" style="display: none;">
-                        No hay pacientes llamados.
-                    </p>
                 </div>
+
+                <p id="mensajeSinTurnos" class="mensaje-sin-turnos" style="display: none;">
+                    No hay pacientes llamados.
+                </p>
             </div>
 
+            <!-- ============================================ -->
+            <!-- PANEL 3: TURNOS POR MÉDICOS -->
+            <!-- ============================================ -->
+            <div class="panel">
+               
 
+                <div class="tabla-container">
+                    <table class="tabla tabla-medicos">
+                        <thead>
+                            <tr>
+                                <th>Turno</th>
+                                <th>Consultorio</th>
+                                <th>Paciente</th>
+                                <th>Hora</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaTurnosMedicos">
+                            <!-- Se llena dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
 
-
+                <p id="mensajeSinTurnosMedicos" class="mensaje-sin-turnos" style="display: none;">
+                    No hay turnos asignados a médicos.
+                </p>
+            </div>
 
         </div>
     </div>
 
-    <!-- Audio con autoplay y muted inicial para garantizar carga -->
+    <!-- Audio con autoplay y muted inicial -->
     <audio id="audio" preload="auto" muted>
         <source src="/audio/audio1.mp3" type="audio/mpeg">
     </audio>
-
-
 
     <script>
         var turnoAnterior = null;
@@ -239,7 +299,6 @@
         window.addEventListener('load', function() {
             audio.load();
             
-            // Intentar reproducir (algunos navegadores lo permiten)
             audio.play().then(function() {
                 console.log('Audio activado automáticamente');
                 sonidoListo = true;
@@ -247,7 +306,6 @@
                 audio.currentTime = 0;
             }).catch(function() {
                 console.log('Audio requiere interacción del usuario');
-                // El sonido se activará en el primer clic
             });
         });
 
@@ -266,7 +324,9 @@
             }
         }, { once: true });
 
-        // Obtener turno actual
+        // ============================================
+        // FUNCIÓN 1: OBTENER TURNO ACTUAL
+        // ============================================
         function obtenerTurno() {
             var xhr = new XMLHttpRequest();
             xhr.open('GET', '/api/turno-ultimo');
@@ -300,7 +360,9 @@
             xhr.send();
         }
 
-        // Obtener turnos llamados
+        // ============================================
+        // FUNCIÓN 2: OBTENER PACIENTES LLAMADOS
+        // ============================================
         function obtenerTurnosLlamados() {
             var xhr = new XMLHttpRequest();
             xhr.open('GET', '/api/turnos-llamados');
@@ -320,28 +382,24 @@
                         
                         data.forEach(function(t) {
                             var tr = document.createElement('tr');
-                            tr.className = 'border-b text-center';
                             
                             // Columna Turno
                             var tdTurno = document.createElement('td');
-                            tdTurno.className = 'p-3 font-bold text-xl';
+                            tdTurno.style.fontWeight = 'bold';
                             tdTurno.textContent = t.numero_turno;
                             
                             // Columna Paciente
                             var tdPaciente = document.createElement('td');
-                            tdPaciente.className = 'p-3';
                             tdPaciente.textContent = (t.paciente && t.paciente.nombre ? 
                                 t.paciente.nombre + ' ' + (t.paciente.apellido || '') : '-');
                             
                             // Columna Hora
                             var tdHora = document.createElement('td');
-                            tdHora.className = 'p-3';
                             var fecha = new Date(t.updated_at);
-                         var horas = fecha.getHours() % 12 || 12;
-var minutos = fecha.getMinutes().toString().padStart(2, '0');
-var ampm = fecha.getHours() >= 12 ? 'PM' : 'AM';
-tdHora.textContent = horas + ':' + minutos + ' ' + ampm;
-// Resultado: 2:30 PM
+                            var horas = fecha.getHours() % 12 || 12;
+                            var minutos = fecha.getMinutes().toString().padStart(2, '0');
+                            var ampm = fecha.getHours() >= 12 ? 'PM' : 'AM';
+                            tdHora.textContent = horas + ':' + minutos + ' ' + ampm;
                             
                             tr.appendChild(tdTurno);
                             tr.appendChild(tdPaciente);
@@ -359,13 +417,97 @@ tdHora.textContent = horas + ':' + minutos + ' ' + ampm;
             xhr.send();
         }
 
+        // ============================================
+        // FUNCIÓN 3: OBTENER TURNOS POR MÉDICOS (NUEVA)
+        // ============================================
+   function obtenerTurnosMedicos() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '/api/turnos-medicos');
+            
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    var data = JSON.parse(xhr.responseText);
+                    var tbody = document.getElementById('tablaTurnosMedicos');
+                    var mensaje = document.getElementById('mensajeSinTurnosMedicos');
+                    
+                    if (data.length === 0) {
+                        tbody.innerHTML = '';
+                        mensaje.style.display = 'block';
+                    } else {
+                        mensaje.style.display = 'none';
+                        tbody.innerHTML = '';
+                        
+                        data.forEach(function(t) {
+                            var tr = document.createElement('tr');
+                            
+                            // Columna Turno
+                            var tdTurno = document.createElement('td');
+                            tdTurno.style.fontWeight = 'bold';
+                            tdTurno.textContent = t.numero_turno || '-';
+                            
+                            // Columna Consultorio
+                            var tdConsultorio = document.createElement('td');
+                            tdConsultorio.style.fontWeight = '600';
+                            tdConsultorio.style.color = '#059669';
+                            
+                            // Verificar si consultorio es un objeto con nombre, o solo el ID/código
+                            if (t.consultorio && typeof t.consultorio === 'object' && t.consultorio.nombre) {
+                                tdConsultorio.textContent = t.consultorio.nombre;
+                            } else if (t.consultorio && typeof t.consultorio === 'string') {
+                                tdConsultorio.textContent = t.consultorio;
+                            } else if (t.fk_consultorio) {
+                                tdConsultorio.textContent = 'Consultorio ' + t.fk_consultorio;
+                            } else {
+                                tdConsultorio.textContent = '-';
+                            }
+                            
+                            // Columna Paciente
+                            var tdPaciente = document.createElement('td');
+                            tdPaciente.textContent = (t.paciente && t.paciente.nombre ? 
+                                t.paciente.nombre + ' ' + (t.paciente.apellido || '') : '-');
+                            
+                            // Columna Hora
+                            var tdHora = document.createElement('td');
+                            if (t.updated_at) {
+                                var fecha = new Date(t.updated_at);
+                                var horas = fecha.getHours() % 12 || 12;
+                                var minutos = fecha.getMinutes().toString().padStart(2, '0');
+                                var ampm = fecha.getHours() >= 12 ? 'PM' : 'AM';
+                                tdHora.textContent = horas + ':' + minutos + ' ' + ampm;
+                            } else {
+                                tdHora.textContent = '-';
+                            }
+                            
+                            tr.appendChild(tdTurno);
+                            tr.appendChild(tdConsultorio);
+                            tr.appendChild(tdPaciente);
+                            tr.appendChild(tdHora);
+                            tbody.appendChild(tr);
+                        });
+                    }
+                }
+            };
+            
+            xhr.onerror = function() {
+                console.error('Error al obtener turnos de consultorios');
+            };
+            
+            xhr.send();
+        }
+
+        // ============================================
+        // EJECUCIÓN INICIAL Y ACTUALIZACIÓN PERIÓDICA
+        // ============================================
+        
         // Ejecutar al cargar
         obtenerTurno();
         obtenerTurnosLlamados();
+        obtenerTurnosMedicos();
 
         // Actualizar cada 2 segundos
         setInterval(obtenerTurno, 2000);
         setInterval(obtenerTurnosLlamados, 2000);
+        setInterval(obtenerTurnosMedicos, 2000);
     </script>
 </body>
 </html>
