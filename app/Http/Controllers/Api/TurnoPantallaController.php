@@ -30,7 +30,7 @@ class TurnoPantallaController extends Controller
   
 
     return Turno::with('paciente')
-    ->where('estado','llamado')
+     ->whereIn('estado', ['llamado', 'llamado_medico'])
    //->whereDate('updated_at', $hoy)
    ->orderBy('updated_at', 'desc')
    ->take(5) 
