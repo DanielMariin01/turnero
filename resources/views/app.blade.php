@@ -140,7 +140,7 @@
         }
 
         .tabla-horizontal thead {
-            background-color: #0ea5e9;
+            background-color: #00B5B5;
             color: #ffffff;
         }
 
@@ -148,7 +148,7 @@
             padding: 12px 16px;
             font-weight: 600;
             text-align: center;
-            border-bottom: 2px solid #0284c7;
+            border-bottom: 2px solid #00B5B5;
             font-size: 14px;
             white-space: nowrap;
         }
@@ -218,7 +218,7 @@
             <!-- ============================================ -->
             <div class="panel">
                 <h1 class="titulo">
-                    🔵 Turno Actual
+                    Turno Actual
                 </h1>
 
                 <div class="turno-box">
@@ -240,19 +240,19 @@
             <!-- ============================================ -->
             <div class="panel">
                 <h1 class="titulo">
-                    🏥 Consultorio Actual
+                    Consultorio Actual
                 </h1>
 
                 <!-- Número de Turno -->
                 <div class="info-section">
-                    <p class="info-label">Turno:</p>
+                    <p class="info-label" >Turno:</p>
                     <p id="numeroTurnoConsultorio" class="info-value">
                         -
                     </p>
                 </div>
 
                 <!-- Nombre del Consultorio (GRANDE) -->
-                <div class="turno-box" style="background-color: #10b981;">
+                <div class="turno-box" style="background-color: #00B5B5;">
                     <p id="nombreConsultorio" class="numero-turno">
                         -
                     </p>
@@ -272,7 +272,7 @@
         <!-- FILA INFERIOR: TABLA HORIZONTAL -->
         <div class="panel-horizontal">
             <h2 class="titulo">
-                📋 Pacientes Llamados
+                Pacientes Llamados
             </h2>
 
             <div class="tabla-horizontal-container">
