@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\ConsultaExternaResource\Pages;
-use App\Filament\Resources\ConsultaExternaResource\RelationManagers;
+use App\Filament\Resources\MedicoResource\Pages;
+use App\Filament\Resources\MedicoResource\RelationManagers;
 use App\Models\Turno;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -12,35 +12,29 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Tables\Columns\Date;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
-use App\Events\TurnoLlamado;
-use Filament\Notifications\Notification;
-use App\Models\User;
-use App\Models\Turno_Medico;
-use App\Models\Consultorio;
-use Illuminate\Support\Facades\DB;
 
-class ConsultaExternaResource extends Resource
+class MedicoResource extends Resource
 {
     protected static ?string $model = Turno::class;
-    protected static ?string $navigationIcon = 'heroicon-o-user';      
-    protected static ?int $navigationSort = 2;
-    protected static ?string $label = 'Consulta externa';
+  protected static ?string $label = 'Turnos medicos';
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+
 
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
             ->hoy()
-            ->where('estado', 'en_espera')
-            ->where('motivo', 'consulta externa');
+            ->where('estado', 'asignado');
+            //->where('motivo', 'consulta externa');
     }
 
     public static function getNavigationBadge(): ?string
     {
-        return Cache::remember('consultaExterna_badge', 60, function () {
+        return Cache::remember('asignado_badge', 60, function () {
             return static::getEloquentQuery()->count();
         });
     }
@@ -55,17 +49,23 @@ class ConsultaExternaResource extends Resource
         return false;
     }
 
+
+
+
     public static function form(Form $form): Form
     {
-        return $form->schema([]);
+        return $form
+            ->schema([
+                //
+            ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
-            ->poll('5s')
+        ->poll('5s')
             ->columns([
-                Tables\Columns\TextColumn::make('numero_turno')
+                  Tables\Columns\TextColumn::make('numero_turno')
                     ->label('Numero del turno')
                     ->sortable(),
 
@@ -103,9 +103,15 @@ class ConsultaExternaResource extends Resource
                     ->sortable()
                     ->searchable(),
 
-                TextColumn::make('hora')
-                    ->label('Hora')
+                TextColumn::make('consultorio.nombre')
+                    ->label('Consultorio')
                     ->sortable()
+                    ->searchable(),
+
+
+               TextColumn::make('hora')
+                    ->label('Hora')
+                    //->sortable()
                     ->time('g:i A'),
 
                 TextColumn::make('fecha')
@@ -118,75 +124,33 @@ class ConsultaExternaResource extends Resource
                     ->color('success'),
             ])
             ->defaultSort('hora', 'asc')
-            ->filters([])
-            ->actions([
-           Tables\Actions\Action::make('llamar')
-    ->label('Llamar')
-    ->button()
-    ->color('primary')
-    ->icon('heroicon-o-phone')
-    ->requiresConfirmation(false)   // 🔹 Permite que el formulario SÍ se abra
-
-    ->modalHeading('Asignar Consultorio')
-    ->modalSubmitActionLabel('Asignar')
-
-    ->form([
-        Forms\Components\Select::make('fk_consultorio')
-            ->label('Consultorio')
-            ->options(
-                Consultorio::pluck('nombre', 'id_consultorio')
-            )
-            ->required()
-            ->placeholder('Seleccione un consultorio'),
-    ])
-
-    // 🔹 Este “before” se ejecuta al abrir el formulario
-    ->before(function (Turno $record) {
-        $record->update(['estado' => 'llamado']);
-
-        Notification::make()
-            ->title('Turno llamado')
-            ->body("Se llamó al turno {$record->numero_turno}")
-            ->success()
-            ->send();
-    })
-
-    // 🔹 Esta acción SÍ recibe el formulario ($data)
-    ->action(function (Turno $record, array $data) {
-
-        // Verificar que lleguen los datos
-        // dd($data);  // <-- Actívalo si quieres ver qué llega
-
-        $record->update([
-            'estado' => 'asignado',
-            'fk_consultorio' => $data['fk_consultorio'],
-        ]);
-
-        Notification::make()
-            ->title('Consultorio asignado')
-            ->body("Turno {$record->numero_turno} asignado correctamente")
-            ->success()
-            ->send();
-    })
-
+            
+            ->filters([
+                //
             ])
-    
-    //->hidden(fn (Turno $record): bool => $record->estado !== 'en_espera')
-
-            ->bulkActions([]);
+            ->actions([
+                Tables\Actions\EditAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ]);
     }
 
     public static function getRelations(): array
     {
-        return [];
+        return [
+            //
+        ];
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListConsultaExternas::route('/'),
-            'create' => Pages\CreateConsultaExterna::route('/create'),
-            'edit' => Pages\EditConsultaExterna::route('/{record}/edit'),
+            'index' => Pages\ListMedicos::route('/'),
+            'create' => Pages\CreateMedico::route('/create'),
+            'edit' => Pages\EditMedico::route('/{record}/edit'),
         ];
     }
 }

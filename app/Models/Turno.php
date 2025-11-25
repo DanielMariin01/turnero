@@ -18,7 +18,8 @@ class Turno extends Model
        'hora',
        'fecha',
        'condicion',
-       'estado'
+       'estado',
+       'fk_consultorio'
 
 
     ];
@@ -35,7 +36,10 @@ public function paciente()
     return $this->belongsTo(Paciente::class, 'fk_paciente', 'id_paciente');
 }
 
-
+public function consultorio()
+{
+    return $this->belongsTo(Consultorio::class, 'fk_consultorio', 'id_consultorio');
+}
 
 
 }
