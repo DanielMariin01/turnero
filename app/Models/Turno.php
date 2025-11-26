@@ -20,6 +20,7 @@ class Turno extends Model
        'condicion',
        'estado',
        'fk_consultorio',
+       'fk_modulo',
        'observaciones'
 
 
@@ -43,5 +44,9 @@ public function consultorio()
     return $this->belongsTo(Consultorio::class, 'fk_consultorio', 'id_consultorio');
 }
 
+public function modulo()
+{
+    return $this->belongsTo(Modulo::class, 'fk_modulo', 'id_modulo');
+}
 
 }

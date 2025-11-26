@@ -21,6 +21,7 @@ use Filament\Notifications\Notification;
 use App\Models\User;
 use App\Models\Turno_Medico;
 use App\Models\Consultorio;
+use App\Models\Modulo;
 use Illuminate\Support\Facades\DB;
 
 class ConsultaExternaResource extends Resource
@@ -97,7 +98,8 @@ class ConsultaExternaResource extends Resource
                     ->label('Motivo')
                     ->sortable()
                     ->searchable(),
-
+                
+          
                 TextColumn::make('condicion')
                     ->label('Condicion')
                     ->sortable()
@@ -112,6 +114,12 @@ class ConsultaExternaResource extends Resource
                     ->label('Fecha')
                     ->date()
                     ->sortable(),
+           
+                TextColumn::make('modulo.nombre')
+                    ->label('Ventanilla')
+                    ->sortable()
+                    ->searchable(),
+
 
               TextColumn::make('estado')
     ->label('Estado')
@@ -128,23 +136,52 @@ class ConsultaExternaResource extends Resource
     ->actions([
     // ACCIÓN: Llamar (solo visible cuando estado = 'en_espera')
     Tables\Actions\Action::make('llamar')
-        ->label('Llamar')
-        ->button()
-        ->color('primary')
-        ->icon('heroicon-o-phone')
-        ->requiresConfirmation()
-        ->modalHeading('¿Llamar a este turno?')
-        ->modalDescription('Se marcará como llamado')
-        ->modalSubmitActionLabel('Sí, llamar')
-        ->action(function (Turno $record) {
-            $record->update(['estado' => 'llamado']);
+    ->label('Llamar')
+    ->button()
+    ->color('primary')
+    ->icon('heroicon-o-phone')
+    ->requiresConfirmation(false)   // 🔹 Permite que el formulario SÍ se abra
 
-            Notification::make()
-                ->title('Turno llamado')
-                ->body("Se llamó al turno {$record->numero_turno}")
-                ->success()
-                ->send();
-        })
+    ->modalHeading('Asignar Modulo')
+    ->modalSubmitActionLabel('Llamar')
+
+    ->form([
+        Forms\Components\Select::make('fk_modulo')
+            ->label('Modulo')
+            ->options(
+                Modulo::pluck('nombre', 'id_modulo')
+            )
+            ->required()
+            ->placeholder('Seleccione un modulo'),
+    ])
+
+    // 🔹 Este “before” se ejecuta al abrir el formulario
+    ->before(function (Turno $record) {
+        $record->update(['estado' => 'llamado']);
+
+        Notification::make()
+            ->title('Turno llamado')
+            ->body("Se llamó al turno {$record->numero_turno}")
+            ->success()
+            ->send();
+    })
+
+    // 🔹 Esta acción SÍ recibe el formulario ($data)
+    ->action(function (Turno $record, array $data) {
+
+        // Verificar que lleguen los datos
+        // dd($data);  // <-- Actívalo si quieres ver qué llega
+
+        $record->update([
+            'fk_modulo' => $data['fk_modulo'],
+        ]);
+
+        Notification::make()
+            ->title('Paciente Llamado')
+            ->body("Turno {$record->numero_turno} asignado correctamente")
+            ->success()
+            ->send();
+    })
         ->visible(fn (Turno $record): bool => $record->estado === 'en_espera'),
 
     // ACCIÓN: Asignar consultorio (solo visible cuando estado = 'llamado')

@@ -10,19 +10,21 @@ use Illuminate\Support\Facades\Log;
 
 class TurnoPantallaController extends Controller
 {
-    public function ultimo()
-    {
-        $ultimoTurno = Turno::where('estado', 'llamado')
-            ->orderBy('updated_at', 'desc')
-            ->first();
+   public function ultimo()
+{
+    $ultimoTurno = Turno::with(['paciente', 'modulo']) // Agregar relación con modulo
+        ->where('estado', 'llamado')
+        ->orderBy('updated_at', 'desc')
+        ->first();
 
-
-        return response()->json([
-            'numero_turno' => $ultimoTurno?->numero_turno ?? null,
-            'nombre' => $ultimoTurno?->paciente?->nombre ?? '',
-            'apellido' => $ultimoTurno?->paciente?->apellido ?? '',
-        ]);
-    }
+    return response()->json([
+        'numero_turno' => $ultimoTurno?->numero_turno ?? null,
+        'nombre' => $ultimoTurno?->paciente?->nombre ?? '',
+        'apellido' => $ultimoTurno?->paciente?->apellido ?? '',
+        'modulo' => $ultimoTurno?->modulo ?? null, // Agregar módulo completo
+        'fk_modulo' => $ultimoTurno?->fk_modulo ?? null, // Agregar ID del módulo como respaldo
+    ]);
+}
 
    public function turnosLlamados(){
 

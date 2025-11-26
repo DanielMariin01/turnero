@@ -227,6 +227,12 @@
                     </p>
                 </div>
 
+                <div class="turno-box" style="background-color: #00B5B5;">
+                    <p id="nombreModulo" class="numero-turno">
+                        -
+                    </p>
+                </div>
+
                 <div class="paciente-info">
                     <p class="paciente-label">Paciente:</p>
                     <p id="nombrePaciente" class="paciente-nombre">
@@ -244,9 +250,9 @@
                 </h1>
 
                 <!-- Número de Turno -->
-                <div class="info-section">
-                    <p class="info-label" >Turno:</p>
-                    <p id="numeroTurnoConsultorio" class="info-value">
+                <div class="turno-box" style="background-color: #00B5B5;">
+                   
+                    <p id="numeroTurnoConsultorio" class="numero-turno">
                         -
                     </p>
                 </div>
@@ -357,8 +363,21 @@
                         });
                     }
                     
-                    // Actualizar pantalla
+                    // Actualizar Número de Turno
                     document.getElementById('numeroTurno').textContent = data.numero_turno || '-';
+                    
+                    // Actualizar Nombre del Módulo
+                    var nombreModulo = '-';
+                    if (data.modulo && typeof data.modulo === 'object' && data.modulo.nombre) {
+                        nombreModulo = data.modulo.nombre;
+                    } else if (data.modulo && typeof data.modulo === 'string') {
+                        nombreModulo = data.modulo;
+                    } else if (data.fk_modulo) {
+                        nombreModulo = 'Módulo ' + data.fk_modulo;
+                    }
+                    document.getElementById('nombreModulo').textContent = nombreModulo;
+                    
+                    // Actualizar Nombre del Paciente
                     document.getElementById('nombrePaciente').textContent = 
                         (data.nombre || '-') + ' ' + (data.apellido || '');
                     
@@ -520,4 +539,5 @@
     </script>
 
 </body>
+
 </html>
