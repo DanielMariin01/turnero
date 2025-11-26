@@ -18,6 +18,10 @@ use Filament\Tables\Columns\Date;
 use Filament\Tables\Columns\TextColumn;
 use App\Events\TurnoLlamado;
 use Filament\Notifications\Notification;
+use App\Models\Turno_Medico;
+use App\Models\Consultorio;
+use App\Models\Modulo;
+use Illuminate\Support\Facades\DB;
 
 
 class OncologiaResource extends Resource
@@ -33,7 +37,7 @@ public static function getEloquentQuery(): Builder
     // Combina ambos: solo turnos de hoy y estado 'en_espera'
     return parent::getEloquentQuery()
         ->hoy() // tu scope para turnos de hoy
-        ->where('estado', 'en_espera')
+         ->whereIn('estado', ['en_espera', 'llamado'])
         ->where('motivo', 'oncologia');  // solo los turnos en espera
 }
 
@@ -116,6 +120,11 @@ TextColumn::make('motivo')
     ->date()          // formatea como fecha
     ->sortable(), 
 
+       TextColumn::make('modulo.nombre')
+                    ->label('Ventanilla')
+                    ->sortable()
+                    ->searchable(),
+
            TextColumn::make('estado')
            ->label('Estado')
           ->color('success')
@@ -128,37 +137,118 @@ TextColumn::make('motivo')
                 //
             ])
             ->actions([
-                //Tables\Actions\EditAction::make(),
-                   Tables\Actions\Action::make('llamar')
-        ->label('Llamar')
+      Tables\Actions\Action::make('llamar')
+    ->label('Llamar')
+    ->button()
+    ->color('primary')
+    ->icon('heroicon-o-phone')
+    ->requiresConfirmation(false)   // 🔹 Permite que el formulario SÍ se abra
+
+    ->modalHeading('Asignar Modulo')
+    ->modalSubmitActionLabel('Llamar')
+
+    ->form([
+        Forms\Components\Select::make('fk_modulo')
+            ->label('Modulo')
+            ->options(
+                Modulo::pluck('nombre', 'id_modulo')
+            )
+            ->required()
+            ->placeholder('Seleccione un modulo'),
+    ])
+
+    // 🔹 Este “before” se ejecuta al abrir el formulario
+    ->before(function (Turno $record) {
+        $record->update(['estado' => 'llamado']);
+
+        Notification::make()
+            ->title('Turno llamado')
+            ->body("Se llamó al turno {$record->numero_turno}")
+            ->success()
+            ->send();
+    })
+
+    // 🔹 Esta acción SÍ recibe el formulario ($data)
+    ->action(function (Turno $record, array $data) {
+
+        // Verificar que lleguen los datos
+        // dd($data);  // <-- Actívalo si quieres ver qué llega
+
+        $record->update([
+            'fk_modulo' => $data['fk_modulo'],
+        ]);
+
+        Notification::make()
+            ->title('Paciente Llamado')
+            ->body("Turno {$record->numero_turno} asignado correctamente")
+            ->success()
+            ->send();
+    })
+        ->visible(fn (Turno $record): bool => $record->estado === 'en_espera'),
+
+    // ACCIÓN: Asignar consultorio (solo visible cuando estado = 'llamado')
+    Tables\Actions\Action::make('asignar_consultorio')
+        ->label('Asignar Consultorio')
         ->button()
-        ->color('primary')
-        ->icon('heroicon-o-phone')
-        ->requiresConfirmation()
-        ->action(function ($record) {
-        
+        ->color('success')
+        ->icon('heroicon-o-check')
+       ->modalHeading('Selecciona el consultorio para este turno')
+    //->modalDescription('Selecciona el consultorio para este turno')
+    ->modalSubmitActionLabel('Asignar')
+    ->modalCancelActionLabel('Cancelar')
+        ->form([
+            Forms\Components\Select::make('fk_consultorio')
+                ->label('Consultorio')
+                ->options(Consultorio::pluck('nombre', 'id_consultorio'))
+                ->placeholder('Selecciona el consultorio')
+                ->required(),
+        ])
+        ->action(function (Turno $record, array $data) {
+            $record->update([
+                'estado' => 'asignado',
+                'hora' => now()->format('H:i:s'),
+                'fk_consultorio' => $data['fk_consultorio']
+            ]);
 
+            Notification::make()
+                ->title('Consultorio asignado')
+                ->body("Turno asignado correctamente")
+                ->success()
+                ->send();
+        })
+        ->visible(fn (Turno $record): bool => $record->estado === 'llamado'),
 
-            $updated = Turno::where('id_turno', $record->id_turno)
-                 ->where('estado', 'en_espera') // solo si está pendiente
-                 ->update(['estado' => 'llamado']);
+    // ACCIÓN: Cancelar (solo visible cuando estado = 'llamado')
+    Tables\Actions\Action::make('cancelar')
+        ->label('Cancelar')
+        ->color('danger')
+        ->icon('heroicon-o-x-circle')
+        ->requiresConfirmation(false)
+        ->modalHeading('Cancelar turno')
+        ->modalSubmitActionLabel('Guardar')
+        ->modalCancelActionLabel('Cancelar')
+        ->form([
+            Forms\Components\Textarea::make('observaciones')
+                ->label('Observaciones')
+                ->placeholder('Escribe el motivo de la cancelación...')
+                ->required()
+                ->columnSpanFull(),
+        ])
+        ->action(function (Turno $record, array $data) {
+            $record->update([
+                'estado' => 'no_atendido',
+                'observaciones' => $data['observaciones'],
+                'hora' => now()->format('H:i:s'),
+            ]);
 
-if ($updated) {
-    // Turno actualizado con éxito
-    \Filament\Notifications\Notification::make()
-        ->title('Turno llamado')
-        ->body("Se llamó al turno {$record->numero_turno}")
-        ->success()
-        ->send();
-} else {
-    // Otro módulo ya llamó este turno
-    \Filament\Notifications\Notification::make()
-        ->title('Error')
-        ->body("El turno {$record->numero_turno} ya fue llamado por otro módulo")
-        ->danger()
-        ->send();
-}
-        }),
+            Notification::make()
+                ->title('Turno cancelado')
+                ->body("El turno {$record->numero_turno} fue marcado como no atendido.")
+                ->danger()
+                ->send();
+        })
+        ->visible(fn (Turno $record): bool => $record->estado === 'llamado'),
+             
             ])
             ->bulkActions([
              
