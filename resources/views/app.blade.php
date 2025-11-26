@@ -301,23 +301,99 @@
     </div>
 
     <!-- Audio con autoplay y muted inicial -->
-    <audio id="audio" preload="auto" muted>
+   <!-- Audio con autoplay y muted inicial para garantizar carga -->
+      <audio id="audio" preload="auto" muted>
         <source src="/audio/audio1.mp3" type="audio/mpeg">
     </audio>
+
+
 
     <script>
         var turnoAnterior = null;
         var audio = document.getElementById('audio');
         var sonidoListo = false;
+        var ultimoTurnoConsultorio = null;
 
-        // ============================================
-        // CONFIGURACIÓN DE AUDIO
-        // ============================================
-        
+// ============================================
+// FUNCIÓN 3: OBTENER TURNO ACTUAL DE CONSULTORIO
+// ============================================
+function obtenerTurnosMedicos() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/api/turnos-medicos');
+    
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            var data = JSON.parse(xhr.responseText);
+
+            if (data.length > 0) {
+                var turno = data[0];
+
+                // Guardamos el turno actual
+                var turnoActual = turno.numero_turno || '-';
+
+                // ⭐ DETECTAR SI CAMBIÓ EL NÚMERO DE TURNO ⭐
+                if (ultimoTurnoConsultorio !== null && ultimoTurnoConsultorio !== turnoActual) {
+                    console.log("Cambio de turno detectado: " + turnoActual);
+                    
+                    // REPRODUCIR AUDIO
+                    try {
+                        audio.muted = false;
+                        audio.currentTime = 0;
+                        audio.play()
+                            .then(() => console.log("Audio reproducido"))
+                            .catch(err => console.warn("No se pudo reproducir el audio:", err));
+                    } catch(e) {
+                        console.error("Error al reproducir el audio:", e);
+                    }
+                }
+
+                // Actualizar el último turno consultorio
+                ultimoTurnoConsultorio = turnoActual;
+
+                // Actualizar Número de Turno en pantalla
+                document.getElementById('numeroTurnoConsultorio').textContent = turnoActual;
+
+                // --- Nombre grande del consultorio ---
+                var nombreConsultorio = '-';
+                if (turno.consultorio && typeof turno.consultorio === 'object' && turno.consultorio.nombre) {
+                    nombreConsultorio = turno.consultorio.nombre;
+                } else if (turno.consultorio && typeof turno.consultorio === 'string') {
+                    nombreConsultorio = turno.consultorio;
+                } else if (turno.fk_consultorio) {
+                    nombreConsultorio = 'Consultorio ' + turno.fk_consultorio;
+                }
+                document.getElementById('nombreConsultorio').textContent = nombreConsultorio;
+
+                // --- Nombre del paciente ---
+                var nombrePaciente = '-';
+                if (turno.paciente && turno.paciente.nombre) {
+                    nombrePaciente = turno.paciente.nombre + " " + (turno.paciente.apellido || '');
+                }
+                document.getElementById('nombrePacienteConsultorio').textContent = nombrePaciente;
+
+            } else {
+                // No hay turnos
+                document.getElementById('numeroTurnoConsultorio').textContent = '-';
+                document.getElementById('nombreConsultorio').textContent = '-';
+                document.getElementById('nombrePacienteConsultorio').textContent = '-';
+            }
+        }
+    };
+
+    xhr.onerror = function() {
+        console.error('Error al obtener turno de consultorio');
+    };
+
+    xhr.send();
+}
+
+
         // 🔊 Intentar cargar audio automáticamente al inicio
         window.addEventListener('load', function() {
             audio.load();
+            audio.muted = true;
             
+            // Intentar reproducir (algunos navegadores lo permiten)
             audio.play().then(function() {
                 console.log('Audio activado automáticamente');
                 sonidoListo = true;
@@ -325,12 +401,14 @@
                 audio.currentTime = 0;
             }).catch(function() {
                 console.log('Audio requiere interacción del usuario');
+                // El sonido se activará en el primer clic
             });
         });
 
         // Activar audio con cualquier clic en la página
         document.addEventListener('click', function activarAudio() {
             if (!sonidoListo) {
+                audio.muted = false;
                 audio.play().then(function() {
                     sonidoListo = true;
                     audio.pause();
@@ -342,6 +420,8 @@
                 document.removeEventListener('click', activarAudio);
             }
         }, { once: true });
+
+
 
         // ============================================
         // FUNCIÓN 1: OBTENER TURNO ACTUAL
@@ -473,55 +553,75 @@
         // ============================================
         // FUNCIÓN 3: OBTENER TURNO ACTUAL DE CONSULTORIO
         // ============================================
-        function obtenerTurnosMedicos() {
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', '/api/turnos-medicos');
-            
-            xhr.onload = function() {
-                if (xhr.status === 200) {
-                    var data = JSON.parse(xhr.responseText);
+       function obtenerTurnosMedicos() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/api/turnos-medicos');
+    
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            var data = JSON.parse(xhr.responseText);
+
+            if (data.length > 0) {
+                var turno = data[0];
+
+                // Guardamos el turno actual
+                var turnoActual = turno.numero_turno || '-';
+
+                // ⭐ DETECTAR SI CAMBIÓ EL NÚMERO DE TURNO ⭐
+                if (ultimoTurnoConsultorio !== null && ultimoTurnoConsultorio !== turnoActual) {
+                    console.log("Cambio de turno detectado: " + turnoActual);
                     
-                    // Obtener el primer turno (más reciente)
-                    if (data.length > 0) {
-                        var turno = data[0];
-                        
-                        // Actualizar Número de Turno
-                        document.getElementById('numeroTurnoConsultorio').textContent = 
-                            turno.numero_turno || '-';
-                        
-                        // Actualizar Nombre del Consultorio (GRANDE)
-                        var nombreConsultorio = '-';
-                        if (turno.consultorio && typeof turno.consultorio === 'object' && turno.consultorio.nombre) {
-                            nombreConsultorio = turno.consultorio.nombre;
-                        } else if (turno.consultorio && typeof turno.consultorio === 'string') {
-                            nombreConsultorio = turno.consultorio;
-                        } else if (turno.fk_consultorio) {
-                            nombreConsultorio = 'Consultorio ' + turno.fk_consultorio;
-                        }
-                        document.getElementById('nombreConsultorio').textContent = nombreConsultorio;
-                        
-                        // Actualizar Nombre del Paciente
-                        var nombrePaciente = '-';
-                        if (turno.paciente && turno.paciente.nombre) {
-                            nombrePaciente = turno.paciente.nombre + ' ' + (turno.paciente.apellido || '');
-                        }
-                        document.getElementById('nombrePacienteConsultorio').textContent = nombrePaciente;
-                        
-                    } else {
-                        // Si no hay turnos
-                        document.getElementById('numeroTurnoConsultorio').textContent = '-';
-                        document.getElementById('nombreConsultorio').textContent = '-';
-                        document.getElementById('nombrePacienteConsultorio').textContent = '-';
+                    // REPRODUCIR AUDIO
+                    try {
+                        audio.muted = false;
+                        audio.currentTime = 0;
+                        audio.play()
+                            .then(() => console.log("Audio reproducido"))
+                            .catch(err => console.warn("No se pudo reproducir el audio:", err));
+                    } catch(e) {
+                        console.error("Error al reproducir el audio:", e);
                     }
                 }
-            };
-            
-            xhr.onerror = function() {
-                console.error('Error al obtener turno de consultorio');
-            };
-            
-            xhr.send();
+
+                // Actualizar el último turno consultorio
+                ultimoTurnoConsultorio = turnoActual;
+
+                // Actualizar Número de Turno en pantalla
+                document.getElementById('numeroTurnoConsultorio').textContent = turnoActual;
+
+                // --- Nombre grande del consultorio ---
+                var nombreConsultorio = '-';
+                if (turno.consultorio && typeof turno.consultorio === 'object' && turno.consultorio.nombre) {
+                    nombreConsultorio = turno.consultorio.nombre;
+                } else if (turno.consultorio && typeof turno.consultorio === 'string') {
+                    nombreConsultorio = turno.consultorio;
+                } else if (turno.fk_consultorio) {
+                    nombreConsultorio = 'Consultorio ' + turno.fk_consultorio;
+                }
+                document.getElementById('nombreConsultorio').textContent = nombreConsultorio;
+
+                // --- Nombre del paciente ---
+                var nombrePaciente = '-';
+                if (turno.paciente && turno.paciente.nombre) {
+                    nombrePaciente = turno.paciente.nombre + " " + (turno.paciente.apellido || '');
+                }
+                document.getElementById('nombrePacienteConsultorio').textContent = nombrePaciente;
+
+            } else {
+                // No hay turnos
+                document.getElementById('numeroTurnoConsultorio').textContent = '-';
+                document.getElementById('nombreConsultorio').textContent = '-';
+                document.getElementById('nombrePacienteConsultorio').textContent = '-';
+            }
         }
+    };
+
+    xhr.onerror = function() {
+        console.error('Error al obtener turno de consultorio');
+    };
+
+    xhr.send();
+}
 
         // ============================================
         // EJECUCIÓN INICIAL Y ACTUALIZACIÓN PERIÓDICA
