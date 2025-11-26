@@ -11,10 +11,14 @@
             box-sizing: border-box;
         }
 
-        body {
-            background-color: #f3f4f6;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        }
+      body {
+    background-image: url('{{ asset('imagenes/fondo.png') }}');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    font-family: Arial, sans-serif;
+}
 
         .container {
             padding: 40px;
@@ -70,7 +74,7 @@
 
         /* PANEL: TURNO ACTUAL Y CONSULTORIO */
         .turno-box {
-            background-color: #00B5B5;
+            background-color: #117dacff;
             color: #ffffff;
             border-radius: 12px;
             padding: 20px 16px;
@@ -192,7 +196,7 @@
             }
 
             .paciente-nombre {
-                font-size: 24px;
+                font-size: 48px;
             }
 
             .tabla-horizontal th,
@@ -218,26 +222,18 @@
             <!-- ============================================ -->
             <div class="panel">
                 <h1 class="titulo">
-                    Turno Actual
+                    Turno
                 </h1>
-
-                <div class="turno-box">
+                  <div class="turno-box">
                     <p id="numeroTurno" class="numero-turno">
                         -
                     </p>
                 </div>
-
-                <div class="turno-box" style="background-color: #00B5B5;">
+                 <div class="turno-box" style="background-color: #00B5B5;">
                     <p id="nombreModulo" class="numero-turno">
                         -
                     </p>
-                </div>
-
-                <div class="paciente-info">
-                    <p class="paciente-label">Paciente:</p>
-                    <p id="nombrePaciente" class="paciente-nombre">
-                        -
-                    </p>
+                          <p id="nombrePaciente" class="numero-turno">
                 </div>
             </div>
 
@@ -246,11 +242,11 @@
             <!-- ============================================ -->
             <div class="panel">
                 <h1 class="titulo">
-                    Consultorio Actual
+                    Consultorio
                 </h1>
 
                 <!-- Número de Turno -->
-                <div class="turno-box" style="background-color: #00B5B5;">
+                <div class="turno-box" style="background-color: #117dacff;">
                    
                     <p id="numeroTurnoConsultorio" class="numero-turno">
                         -
@@ -262,15 +258,11 @@
                     <p id="nombreConsultorio" class="numero-turno">
                         -
                     </p>
+                    <p id="nombrePacienteConsultorio" class="numero-turno">
                 </div>
 
                 <!-- Nombre del Paciente -->
-                <div class="paciente-info">
-                    <p class="paciente-label">Paciente:</p>
-                    <p id="nombrePacienteConsultorio" class="paciente-nombre">
-                        -
-                    </p>
-                </div>
+               
             </div>
 
         </div>
