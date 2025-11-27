@@ -65,7 +65,7 @@
            width: 100%;        /* Ocupa todo el ancho */
     max-width: 100%;    /* Evita que se limite el ancho */
     margin: 0 auto;
-              margin-left: calc(50% - 50vw);
+            
         }
 
         .titulo {
@@ -285,9 +285,7 @@
 
         <!-- FILA INFERIOR: TABLA HORIZONTAL -->
      <div class="panel-horizontal">
-            <h2 class="titulo">
-                Pacientes Llamados
-            </h2>
+         
 
             <div class="tabla-horizontal-container">
                 <table class="tabla-horizontal">
@@ -665,10 +663,10 @@ tr.appendChild(tdConsultorio);
         obtenerTurnosLlamados();
         obtenerTurnosMedicos();
 
-        // Actualizar cada 2 segundos
-        setInterval(obtenerTurno, 2000);
-        setInterval(obtenerTurnosLlamados, 2000);
-        setInterval(obtenerTurnosMedicos, 2000);
+        // Actualizar cada 60 segundos
+        setInterval(obtenerTurno, 5000);
+        setInterval(obtenerTurnosLlamados, 5000);
+        setInterval(obtenerTurnosMedicos, 5000);
     </script>
 
 </body>

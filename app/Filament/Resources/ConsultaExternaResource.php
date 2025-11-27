@@ -96,7 +96,17 @@ class ConsultaExternaResource extends Resource
                     ->sortable()
                     ->searchable(),
 
-                
+           
+TextColumn::make('motivo')
+                    ->label('Motivo')
+                    ->sortable()
+                    ->searchable(),
+    
+                TextColumn::make('modulo.nombre')
+                    ->label('Ventanilla')
+                    ->sortable()
+                    ->searchable(),
+                                
          TextColumn::make('prioridad_texto')
     ->label('Prioridad')
     ->badge()
@@ -106,21 +116,6 @@ class ConsultaExternaResource extends Resource
         'Baja' => 'success',
     }),
 
-
-                TextColumn::make('hora')
-                    ->label('Hora')
-                    ->sortable()
-                    ->time('g:i A'),
-
-           
-                TextColumn::make('modulo.nombre')
-                    ->label('Ventanilla')
-                    ->sortable()
-                    ->searchable(),
-TextColumn::make('motivo')
-                    ->label('Motivo')
-                    ->sortable()
-                    ->searchable(),
 
               TextColumn::make('estado')
     ->label('Estado')
@@ -134,7 +129,10 @@ TextColumn::make('motivo')
         default => 'gray',
     }),
            
-                
+           TextColumn::make('hora')
+                    ->label('Hora')
+                    ->sortable()
+                    ->time('g:i A'),     
             ])
             ->defaultSort('hora', 'asc')
             ->filters([])

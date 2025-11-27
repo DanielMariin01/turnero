@@ -71,19 +71,7 @@ class MedicoResource extends Resource
                     ->label('Numero del turno')
                     ->sortable(),
 
-                TextColumn::make('prioridad')
-                    ->label('Prioridad')
-                    ->getStateUsing(fn ($record) => match($record->condicion) {
-                        'movilidad_reducida', 'adulto_mayor', 'gestante' => 'Alta',
-                        'acompañado_con_un_menor' => 'Media',
-                        default => 'Baja',
-                    })
-                    ->colors([
-                        'danger' => fn ($state) => $state === 'Alta',
-                        'warning' => fn ($state) => $state === 'Media',
-                        'success' => fn ($state) => $state === 'Baja',
-                    ])
-                    ->formatStateUsing(fn ($state) => "● $state"),
+            
 
                 TextColumn::make('paciente.nombre')
                     ->label('Paciente')
@@ -110,7 +98,14 @@ class MedicoResource extends Resource
                     ->sortable()
                     ->searchable(),
 
-
+        TextColumn::make('prioridad_texto')
+    ->label('Prioridad')
+    ->badge()
+    ->color(fn ($state) => match ($state) {
+        'Alta' => 'danger',
+        'Media' => 'warning',
+        'Baja' => 'success',
+    }),
                TextColumn::make('hora')
                     ->label('Hora')
                     //->sortable()
@@ -148,9 +143,9 @@ class MedicoResource extends Resource
         ->color('primary')
         ->icon('heroicon-o-phone')
         //->requiresConfirmation()
-        ->modalHeading('¿Llamar a este turno?')
-        ->modalDescription('Se marcará como llamado')
-        ->modalSubmitActionLabel('Sí, llamar')
+        //->modalHeading('¿Llamar a este turno?')
+        //->modalDescription('Se marcará como llamado')
+        //->modalSubmitActionLabel('Sí, llamar')
         ->action(function (Turno $record) {
             $record->update(['estado' => 'llamado_medico']);
 

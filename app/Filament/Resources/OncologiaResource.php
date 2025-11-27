@@ -37,7 +37,7 @@ public static function getEloquentQuery(): Builder
     // Combina ambos: solo turnos de hoy y estado 'en_espera'
     return parent::getEloquentQuery()
         ->hoy() // tu scope para turnos de hoy
-         ->whereIn('estado', ['en_espera', 'llamado'])
+         ->whereIn('estado', ['en_espera'])
         ->where('motivo', 'oncologia')
         ->with(['paciente', 'modulo', 'consultorio']);
 }
@@ -129,14 +129,18 @@ TextColumn::make('motivo')
     ->date()          // formatea como fecha
     ->sortable(), 
 
-       TextColumn::make('modulo.nombre')
-                    ->label('Ventanilla')
-                    ->sortable()
-                    ->searchable(),
+  
 
-           TextColumn::make('estado')
-           ->label('Estado')
-          ->color('success')
+      
+                 TextColumn::make('estado')
+    ->label('Estado')
+    ->badge()
+    ->color(fn (string $state): string => match ($state) {
+        'llamado' => 'success',        // Azul
+        'en_espera' => 'warning',   // Naranja
+           // Verde
+        default => 'gray',
+    }),
             
   
             ])
@@ -159,7 +163,7 @@ TextColumn::make('motivo')
     ->form([
         Forms\Components\Select::make('fk_modulo')
             ->label('Modulo')
-                   ->options(function () {
+           ->options(function () {
     return Cache::remember('modulos_select', 300, function () {
         return Modulo::pluck('nombre', 'id_modulo');
     });
@@ -175,7 +179,6 @@ TextColumn::make('motivo')
 
         Notification::make()
             ->title('Turno llamado')
-            ->body("Se llamó al turno {$record->numero_turno}")
             ->success()
             ->send();
     })
@@ -192,49 +195,11 @@ TextColumn::make('motivo')
 
         Notification::make()
             ->title('Paciente Llamado')
-            ->body("Turno {$record->numero_turno} asignado correctamente")
+            ->body("Turno asignado correctamente")
             ->success()
             ->send();
     })
-        ->visible(fn (Turno $record): bool => $record->estado === 'en_espera'),
-
-    // ACCIÓN: Asignar consultorio (solo visible cuando estado = 'llamado')
-    Tables\Actions\Action::make('asignar_consultorio')
-        ->label('Asignar Consultorio')
-        ->button()
-        ->color('success')
-        ->icon('heroicon-o-check')
-       ->modalHeading('Selecciona el consultorio para este turno')
-    //->modalDescription('Selecciona el consultorio para este turno')
-    ->modalSubmitActionLabel('Asignar')
-    ->modalCancelActionLabel('Cancelar')
-        ->form([
-            Forms\Components\Select::make('fk_consultorio')
-                ->label('Consultorio')
-                                    ->options(function () {
-    return Cache::remember('consultorio_select', 300, function () {
-        return Consultorio::pluck('nombre', 'id_consultorio');
-    });
-})
-
-                ->placeholder('Selecciona el consultorio')
-                ->required(),
-        ])
-        ->action(function (Turno $record, array $data) {
-            $record->update([
-                'estado' => 'asignado',
-                'hora' => now()->format('H:i:s'),
-                'fk_consultorio' => $data['fk_consultorio']
-            ]);
-
-            Notification::make()
-                ->title('Consultorio asignado')
-                ->body("Turno asignado correctamente")
-                ->success()
-                ->send();
-        })
-        ->visible(fn (Turno $record): bool => $record->estado === 'llamado'),
-
+      ->visible(fn (Turno $record): bool => $record->estado === 'en_espera'),
     // ACCIÓN: Cancelar (solo visible cuando estado = 'llamado')
     Tables\Actions\Action::make('cancelar')
         ->label('Cancelar')
