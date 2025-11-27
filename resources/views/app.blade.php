@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Gestión de Turnos</title>
     <style>
-        * {
+       * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -62,6 +62,10 @@
             padding: 32px;
             text-align: center;
             border: 4px solid #e5e7eb;
+           width: 100%;        /* Ocupa todo el ancho */
+    max-width: 100%;    /* Evita que se limite el ancho */
+    margin: 0 auto;
+              margin-left: calc(50% - 50vw);
         }
 
         .titulo {
@@ -153,16 +157,28 @@
             font-weight: 600;
             text-align: center;
             border-bottom: 2px solid #00B5B5;
-            font-size: 14px;
+            border-right: 1px solid #e5e7eb;
+            font-size: 40px;
             white-space: nowrap;
+            background-color: #00B5B5;
+            color: #ffffff;
+        }
+
+        .tabla-horizontal th:last-child {
+            border-right: none;
         }
 
         .tabla-horizontal td {
             padding: 12px 16px;
             border-bottom: 1px solid #e5e7eb;
-            font-size: 14px;
+            border-right: 1px solid #e5e7eb;
+            font-size: 40px;
             text-align: center;
             white-space: nowrap;
+        }
+
+        .tabla-horizontal td:last-child {
+            border-right: none;
         }
 
         .tabla-horizontal tbody tr:hover {
@@ -268,7 +284,7 @@
         </div>
 
         <!-- FILA INFERIOR: TABLA HORIZONTAL -->
-        <div class="panel-horizontal">
+     <div class="panel-horizontal">
             <h2 class="titulo">
                 Pacientes Llamados
             </h2>
@@ -276,8 +292,12 @@
             <div class="tabla-horizontal-container">
                 <table class="tabla-horizontal">
                     <thead>
-                        <tr id="tablaTurnosHeader">
-                            <!-- Se llena dinámicamente con los encabezados -->
+                        <tr>
+                            <th>Turno</th>
+                            <th>Paciente</th>
+                             <th>Módulo</th> 
+                             <th>Consultorio</th> 
+                            <th>Hora</th>
                         </tr>
                     </thead>
                     <tbody id="tablaTurnos">
@@ -474,40 +494,20 @@ function obtenerTurnosMedicos() {
             xhr.onload = function() {
                 if (xhr.status === 200) {
                     var data = JSON.parse(xhr.responseText);
-                    var thead = document.getElementById('tablaTurnosHeader');
                     var tbody = document.getElementById('tablaTurnos');
                     var mensaje = document.getElementById('mensajeSinTurnos');
                     
                     if (data.length === 0) {
-                        thead.innerHTML = '';
                         tbody.innerHTML = '';
                         mensaje.style.display = 'block';
                     } else {
                         mensaje.style.display = 'none';
-                        
-                        // Limpiar encabezados y datos
-                        thead.innerHTML = '';
                         tbody.innerHTML = '';
                         
-                        // Crear encabezados (repetidos para cada turno)
-                        data.forEach(function() {
-                            var thTurno = document.createElement('th');
-                            thTurno.textContent = 'Turno';
-                            thead.appendChild(thTurno);
-                            
-                            var thPaciente = document.createElement('th');
-                            thPaciente.textContent = 'Paciente';
-                            thead.appendChild(thPaciente);
-                            
-                            var thHora = document.createElement('th');
-                            thHora.textContent = 'Hora';
-                            thead.appendChild(thHora);
-                        });
-                        
-                        // Crear fila única con todos los datos
-                        var tr = document.createElement('tr');
-                        
+                        // Crear una fila por cada turno
                         data.forEach(function(t) {
+                            var tr = document.createElement('tr');
+                            
                             // Columna Turno
                             var tdTurno = document.createElement('td');
                             tdTurno.style.fontWeight = 'bold';
@@ -519,6 +519,48 @@ function obtenerTurnosMedicos() {
                             tdPaciente.textContent = (t.paciente && t.paciente.nombre ? 
                                 t.paciente.nombre + ' ' + (t.paciente.apellido || '') : '-');
                             tr.appendChild(tdPaciente);
+
+                            var tdModulo = document.createElement('td');
+
+var nombreModulo = '-';
+
+// Si la API devuelve objeto: { modulo: { nombre: 'Módulo A' } }
+if (t.modulo && typeof t.modulo === 'object' && t.modulo.nombre) {
+    nombreModulo = t.modulo.nombre;
+
+// Si la API solo devuelve texto
+} else if (t.modulo && typeof t.modulo === 'string') {
+    nombreModulo = t.modulo;
+
+// Si solo llega fk_modulo
+} else if (t.fk_modulo) {
+    nombreModulo = 'Módulo ' + t.fk_modulo;
+}
+
+tdModulo.textContent = nombreModulo;
+tr.appendChild(tdModulo);
+
+
+//Columna Consultorio 
+var tdConsultorio = document.createElement('td');
+
+var nombreConsultorio = '-';
+
+// Si la API devuelve objeto: { modulo: { nombre: 'Módulo A' } }
+if (t.consultorio && typeof t.consultorio === 'object' && t.consultorio.nombre) {
+    nombreConsultorio = t.consultorio.nombre;
+
+// Si la API solo devuelve texto
+} else if (t.consultorio && typeof t.consultorio === 'string') {
+    nombreConsultorio = t.consultorio;
+
+// Si solo llega fk_modulo
+} else if (t.fk_consultorio) {
+    nombreConsultorio = 'Consultorio ' + t.fk_consultorio;
+}
+
+tdConsultorio.textContent = nombreConsultorio;
+tr.appendChild(tdConsultorio);
                             
                             // Columna Hora
                             var tdHora = document.createElement('td');
@@ -528,9 +570,9 @@ function obtenerTurnosMedicos() {
                             var ampm = fecha.getHours() >= 12 ? 'PM' : 'AM';
                             tdHora.textContent = horas + ':' + minutos + ' ' + ampm;
                             tr.appendChild(tdHora);
+                            
+                            tbody.appendChild(tr);
                         });
-                        
-                        tbody.appendChild(tr);
                     }
                 }
             };
@@ -541,7 +583,6 @@ function obtenerTurnosMedicos() {
             
             xhr.send();
         }
-
         // ============================================
         // FUNCIÓN 3: OBTENER TURNO ACTUAL DE CONSULTORIO
         // ============================================
