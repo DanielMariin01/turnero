@@ -49,4 +49,14 @@ public function modulo()
     return $this->belongsTo(Modulo::class, 'fk_modulo', 'id_modulo');
 }
 
+
+public function getPrioridadTextoAttribute()
+{
+    return match($this->condicion) {
+        'movilidad_reducida', 'adulto_mayor', 'gestante' => 'Alta',
+        'acompañado_con_un_menor' => 'Media',
+        default => 'Baja',
+    };
+}
+
 }

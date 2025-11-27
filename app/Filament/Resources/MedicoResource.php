@@ -147,7 +147,7 @@ class MedicoResource extends Resource
         ->button()
         ->color('primary')
         ->icon('heroicon-o-phone')
-        ->requiresConfirmation()
+        //->requiresConfirmation()
         ->modalHeading('¿Llamar a este turno?')
         ->modalDescription('Se marcará como llamado')
         ->modalSubmitActionLabel('Sí, llamar')
@@ -161,17 +161,23 @@ class MedicoResource extends Resource
                 ->send();
         })
         ->visible(fn (Turno $record): bool => $record->estado === 'asignado'),
-             Tables\Actions\Action::make('Finalizar')
-        ->label('Finalizar')
+
+
+        Tables\Actions\Action::make('Facturar')
+        ->label('Enviar a facturar')
         ->button()
-        ->color('gray')
+        ->color('info')
         //->icon('heroicon-o-phone')
-        ->requiresConfirmation()
-        ->modalHeading('¿Esta seguro de finalizar la consulta?')
-        ->modalDescription('Se marcará como atentido')
-        ->modalSubmitActionLabel('Sí, Finalizar')
+        //->requiresConfirmation()
+        //->modalHeading('¿Esta seguro de finalizar la consulta?')
+        //->modalDescription('El paciente se enviara para que facture')
+        //->modalSubmitActionLabel('Sí, Enviar a facturar')
         ->action(function (Turno $record) {
-            $record->update(['estado' => 'atentido']);
+               $record->update([
+        'estado' => 'facturar',
+        'motivo' => 'pendiente para facturar',
+        'ventanilla' => null, // o '' si realmente lo necesitas vacío
+    ]);
 
             Notification::make()
                 ->title('Paciente atendido')
@@ -210,6 +216,17 @@ class MedicoResource extends Resource
                 ->send();
         })
         ->visible(fn (Turno $record): bool => $record->estado === 'llamado_medico'),
+
+
+
+
+
+
+
+
+
+
+        
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

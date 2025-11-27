@@ -35,8 +35,9 @@ class ConsultaExternaResource extends Resource
 {
     return parent::getEloquentQuery()
         ->hoy()
-        ->whereIn('estado', ['en_espera', 'llamado'])
-        ->where('motivo', 'consulta externa');
+        ->whereIn('estado', ['en_espera', 'llamado','facturar'])
+       ->whereIn('motivo', ['consulta externa', 'pendiente para facturar'])
+       ->with(['paciente', 'modulo', 'consultorio']);
 }
 
     public static function getNavigationBadge(): ?string
@@ -64,25 +65,19 @@ class ConsultaExternaResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->poll('5s')
+            ->poll('60s')
             ->columns([
+
+
+                
+                TextColumn::make('fecha')
+                    ->label('Fecha')
+                    ->date()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('numero_turno')
                     ->label('Numero del turno')
                     ->sortable(),
 
-                TextColumn::make('prioridad')
-                    ->label('Prioridad')
-                    ->getStateUsing(fn ($record) => match($record->condicion) {
-                        'movilidad_reducida', 'adulto_mayor', 'gestante' => 'Alta',
-                        'acompañado_con_un_menor' => 'Media',
-                        default => 'Baja',
-                    })
-                    ->colors([
-                        'danger' => fn ($state) => $state === 'Alta',
-                        'warning' => fn ($state) => $state === 'Media',
-                        'success' => fn ($state) => $state === 'Baja',
-                    ])
-                    ->formatStateUsing(fn ($state) => "● $state"),
 
                 TextColumn::make('paciente.nombre')
                     ->label('Paciente')
@@ -94,42 +89,52 @@ class ConsultaExternaResource extends Resource
                     ->sortable()
                     ->searchable(),
 
-                TextColumn::make('motivo')
-                    ->label('Motivo')
-                    ->sortable()
-                    ->searchable(),
-                
+         
           
                 TextColumn::make('condicion')
                     ->label('Condicion')
                     ->sortable()
                     ->searchable(),
 
+                
+         TextColumn::make('prioridad_texto')
+    ->label('Prioridad')
+    ->badge()
+    ->color(fn ($state) => match ($state) {
+        'Alta' => 'danger',
+        'Media' => 'warning',
+        'Baja' => 'success',
+    }),
+
+
                 TextColumn::make('hora')
                     ->label('Hora')
                     ->sortable()
                     ->time('g:i A'),
 
-                TextColumn::make('fecha')
-                    ->label('Fecha')
-                    ->date()
-                    ->sortable(),
            
                 TextColumn::make('modulo.nombre')
                     ->label('Ventanilla')
                     ->sortable()
                     ->searchable(),
-
+TextColumn::make('motivo')
+                    ->label('Motivo')
+                    ->sortable()
+                    ->searchable(),
 
               TextColumn::make('estado')
     ->label('Estado')
     ->badge()
     ->color(fn (string $state): string => match ($state) {
-        'llamado' => 'info',        // Azul
+        'llamado' => 'success',        // Azul
         'en_espera' => 'warning',   // Naranja
-        'asignado' => 'success',    // Verde
+        'asignado' => 'success', 
+        'facturar' => 'info', 
+           // Verde
         default => 'gray',
     }),
+           
+                
             ])
             ->defaultSort('hora', 'asc')
             ->filters([])
@@ -148,9 +153,12 @@ class ConsultaExternaResource extends Resource
     ->form([
         Forms\Components\Select::make('fk_modulo')
             ->label('Modulo')
-            ->options(
-                Modulo::pluck('nombre', 'id_modulo')
-            )
+           ->options(function () {
+    return Cache::remember('modulos_select', 300, function () {
+        return Modulo::pluck('nombre', 'id_modulo');
+    });
+})
+
             ->required()
             ->placeholder('Seleccione un modulo'),
     ])
@@ -161,7 +169,6 @@ class ConsultaExternaResource extends Resource
 
         Notification::make()
             ->title('Turno llamado')
-            ->body("Se llamó al turno {$record->numero_turno}")
             ->success()
             ->send();
     })
@@ -178,11 +185,12 @@ class ConsultaExternaResource extends Resource
 
         Notification::make()
             ->title('Paciente Llamado')
-            ->body("Turno {$record->numero_turno} asignado correctamente")
+            ->body("Turno asignado correctamente")
             ->success()
             ->send();
-    })
-        ->visible(fn (Turno $record): bool => $record->estado === 'en_espera'),
+    }),
+//->visible(fn (Turno $record): bool => in_array($record->estado, ['en_espera', 'facturar'])),
+
 
     // ACCIÓN: Asignar consultorio (solo visible cuando estado = 'llamado')
     Tables\Actions\Action::make('asignar_consultorio')
@@ -197,7 +205,12 @@ class ConsultaExternaResource extends Resource
         ->form([
             Forms\Components\Select::make('fk_consultorio')
                 ->label('Consultorio')
-                ->options(Consultorio::pluck('nombre', 'id_consultorio'))
+                         ->options(function () {
+    return Cache::remember('consultorio_select', 300, function () {
+        return Consultorio::pluck('nombre', 'id_consultorio');
+    });
+})
+
                 ->placeholder('Selecciona el consultorio')
                 ->required(),
         ])

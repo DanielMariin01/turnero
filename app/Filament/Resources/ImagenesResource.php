@@ -38,7 +38,8 @@ class ImagenesResource extends Resource
     return parent::getEloquentQuery()
         ->hoy() // tu scope para turnos de hoy
          ->whereIn('estado', ['en_espera', 'llamado'])
-        ->where('motivo', 'imagenes');  // solo los turnos en espera
+        ->where('motivo', 'imagenes')
+        ->with(['paciente', 'modulo', 'consultorio']);
 }
 
    public static function getNavigationBadge(): ?string
@@ -68,25 +69,13 @@ public static function canEdit(Model $record): bool
     public static function table(Table $table): Table
     {
         return $table
-             ->poll('5s')
+             ->poll('60s')
             ->columns([
                  Tables\Columns\TextColumn::make('numero_turno')
             ->label('Numero del turno')
             ->sortable(),
 
-            TextColumn::make('prioridad')
-                ->label('Prioridad')
-                ->getStateUsing(fn ($record) => match($record->condicion) {
-                    'movilidad_reducida', 'adulto_mayor', 'gestante' => 'Alta',
-                    'acompañado_con_un_menor' => 'Media',
-                    default => 'Baja',
-                })
-                  ->colors([
-        'danger' => fn ($state) => $state === 'Alta',
-        'warning' => fn ($state) => $state === 'Media',
-        'success' => fn ($state) => $state === 'Baja',
-    ])
-    ->formatStateUsing(fn ($state) => "● $state"),
+
 
 TextColumn::make('paciente.nombre')
     ->label('Paciente')
@@ -108,6 +97,14 @@ TextColumn::make('motivo')
             ->sortable()
             ->searchable(),
 
+         TextColumn::make('prioridad_texto')
+    ->label('Prioridad')
+    ->badge()
+    ->color(fn ($state) => match ($state) {
+        'Alta' => 'danger',
+        'Media' => 'warning',
+        'Baja' => 'success',
+    }),
             TextColumn::make('hora')
             ->label('Hora')
             ->sortable()
@@ -149,9 +146,12 @@ TextColumn::make('motivo')
     ->form([
         Forms\Components\Select::make('fk_modulo')
             ->label('Modulo')
-            ->options(
-                Modulo::pluck('nombre', 'id_modulo')
-            )
+                   ->options(function () {
+    return Cache::remember('modulos_select', 300, function () {
+        return Modulo::pluck('nombre', 'id_modulo');
+    });
+})
+
             ->required()
             ->placeholder('Seleccione un modulo'),
     ])
@@ -198,7 +198,12 @@ TextColumn::make('motivo')
         ->form([
             Forms\Components\Select::make('fk_consultorio')
                 ->label('Consultorio')
-                ->options(Consultorio::pluck('nombre', 'id_consultorio'))
+                                    ->options(function () {
+    return Cache::remember('consultorio_select', 300, function () {
+        return Consultorio::pluck('nombre', 'id_consultorio');
+    });
+})
+
                 ->placeholder('Selecciona el consultorio')
                 ->required(),
         ])
