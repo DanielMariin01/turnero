@@ -293,8 +293,7 @@
                         <tr>
                             <th>Turno</th>
                             <th>Paciente</th>
-                             <th>Módulo</th> 
-                             <th>Consultorio</th> 
+                             <th>Ubicacion</th> 
                             <th>Hora</th>
                         </tr>
                     </thead>
@@ -485,102 +484,84 @@ function obtenerTurnosMedicos() {
         // ============================================
         // FUNCIÓN 2: OBTENER PACIENTES LLAMADOS (TABLA HORIZONTAL)
         // ============================================
-        function obtenerTurnosLlamados() {
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', '/api/turnos-llamados');
+function obtenerTurnosLlamados() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/api/turnos-llamados');
+    
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            var data = JSON.parse(xhr.responseText);
+            var tbody = document.getElementById('tablaTurnos');
+            var mensaje = document.getElementById('mensajeSinTurnos');
             
-            xhr.onload = function() {
-                if (xhr.status === 200) {
-                    var data = JSON.parse(xhr.responseText);
-                    var tbody = document.getElementById('tablaTurnos');
-                    var mensaje = document.getElementById('mensajeSinTurnos');
+            if (data.length === 0) {
+                tbody.innerHTML = '';
+                mensaje.style.display = 'block';
+            } else {
+                mensaje.style.display = 'none';
+                tbody.innerHTML = '';
+                
+                // Crear una fila por cada turno
+                data.forEach(function(t) {
+                    var tr = document.createElement('tr');
                     
-                    if (data.length === 0) {
-                        tbody.innerHTML = '';
-                        mensaje.style.display = 'block';
-                    } else {
-                        mensaje.style.display = 'none';
-                        tbody.innerHTML = '';
-                        
-                        // Crear una fila por cada turno
-                        data.forEach(function(t) {
-                            var tr = document.createElement('tr');
-                            
-                            // Columna Turno
-                            var tdTurno = document.createElement('td');
-                            tdTurno.style.fontWeight = 'bold';
-                            tdTurno.textContent = t.numero_turno;
-                            tr.appendChild(tdTurno);
-                            
-                            // Columna Paciente
-                            var tdPaciente = document.createElement('td');
-                            tdPaciente.textContent = (t.paciente && t.paciente.nombre ? 
-                                t.paciente.nombre + ' ' + (t.paciente.apellido || '') : '-');
-                            tr.appendChild(tdPaciente);
+                    // Columna Turno
+                    var tdTurno = document.createElement('td');
+                    tdTurno.style.fontWeight = 'bold';
+                    tdTurno.textContent = t.numero_turno;
+                    tr.appendChild(tdTurno);
+                    
+                    // Columna Paciente
+                    var tdPaciente = document.createElement('td');
+                    tdPaciente.textContent = (t.paciente && t.paciente.nombre ? 
+                        t.paciente.nombre + ' ' + (t.paciente.apellido || '') : '-');
+                    tr.appendChild(tdPaciente);
 
-                            var tdModulo = document.createElement('td');
+                    // Columna Ubicación (Módulo o Consultorio)
+                    var tdUbicacion = document.createElement('td');
+                    var ubicacion = '-';
 
-var nombreModulo = '-';
-
-// Si la API devuelve objeto: { modulo: { nombre: 'Módulo A' } }
-if (t.modulo && typeof t.modulo === 'object' && t.modulo.nombre) {
-    nombreModulo = t.modulo.nombre;
-
-// Si la API solo devuelve texto
-} else if (t.modulo && typeof t.modulo === 'string') {
-    nombreModulo = t.modulo;
-
-// Si solo llega fk_modulo
-} else if (t.fk_modulo) {
-    nombreModulo = 'Módulo ' + t.fk_modulo;
-}
-
-tdModulo.textContent = nombreModulo;
-tr.appendChild(tdModulo);
-
-
-//Columna Consultorio 
-var tdConsultorio = document.createElement('td');
-
-var nombreConsultorio = '-';
-
-// Si la API devuelve objeto: { modulo: { nombre: 'Módulo A' } }
-if (t.consultorio && typeof t.consultorio === 'object' && t.consultorio.nombre) {
-    nombreConsultorio = t.consultorio.nombre;
-
-// Si la API solo devuelve texto
-} else if (t.consultorio && typeof t.consultorio === 'string') {
-    nombreConsultorio = t.consultorio;
-
-// Si solo llega fk_modulo
-} else if (t.fk_consultorio) {
-    nombreConsultorio = 'Consultorio ' + t.fk_consultorio;
-}
-
-tdConsultorio.textContent = nombreConsultorio;
-tr.appendChild(tdConsultorio);
-                            
-                            // Columna Hora
-                            var tdHora = document.createElement('td');
-                            var fecha = new Date(t.updated_at);
-                            var horas = fecha.getHours() % 12 || 12;
-                            var minutos = fecha.getMinutes().toString().padStart(2, '0');
-                            var ampm = fecha.getHours() >= 12 ? 'PM' : 'AM';
-                            tdHora.textContent = horas + ':' + minutos + ' ' + ampm;
-                            tr.appendChild(tdHora);
-                            
-                            tbody.appendChild(tr);
-                        });
+                    // Priorizar Consultorio si existe
+                    if (t.consultorio && typeof t.consultorio === 'object' && t.consultorio.nombre) {
+                        ubicacion = t.consultorio.nombre;
+                    } else if (t.consultorio && typeof t.consultorio === 'string') {
+                        ubicacion = t.consultorio;
+                    } else if (t.fk_consultorio) {
+                        ubicacion = 'Consultorio ' + t.fk_consultorio;
                     }
-                }
-            };
-            
-            xhr.onerror = function() {
-                console.error('Error al obtener turnos llamados');
-            };
-            
-            xhr.send();
+                    // Si no hay consultorio, mostrar módulo
+                    else if (t.modulo && typeof t.modulo === 'object' && t.modulo.nombre) {
+                        ubicacion = t.modulo.nombre;
+                    } else if (t.modulo && typeof t.modulo === 'string') {
+                        ubicacion = t.modulo;
+                    } else if (t.fk_modulo) {
+                        ubicacion = 'Módulo ' + t.fk_modulo;
+                    }
+
+                    tdUbicacion.textContent = ubicacion;
+                    tr.appendChild(tdUbicacion);
+                    
+                    // Columna Hora
+                    var tdHora = document.createElement('td');
+                    var fecha = new Date(t.updated_at);
+                    var horas = fecha.getHours() % 12 || 12;
+                    var minutos = fecha.getMinutes().toString().padStart(2, '0');
+                    var ampm = fecha.getHours() >= 12 ? 'PM' : 'AM';
+                    tdHora.textContent = horas + ':' + minutos + ' ' + ampm;
+                    tr.appendChild(tdHora);
+                    
+                    tbody.appendChild(tr);
+                });
+            }
         }
+    };
+    
+    xhr.onerror = function() {
+        console.error('Error al obtener turnos llamados');
+    };
+    
+    xhr.send();
+}
         // ============================================
         // FUNCIÓN 3: OBTENER TURNO ACTUAL DE CONSULTORIO
         // ============================================
