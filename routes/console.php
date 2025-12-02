@@ -9,6 +9,9 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote')->hourly();
 
-Schedule::command('turnos:actualizar')->dailyAt('00:00');
+
+Schedule::command('turnos:actualizar')
+    ->everyFiveMinutes()
+    ->withoutOverlapping();
 
 

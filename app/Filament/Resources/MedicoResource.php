@@ -30,7 +30,7 @@ class MedicoResource extends Resource
     {
         return parent::getEloquentQuery()
             ->hoy()
-       ->whereIn('estado', ['asignado', 'llamado_medico']);
+       ->where('estado', 'asignado');
             //->where('motivo', 'consulta externa');
     }
 

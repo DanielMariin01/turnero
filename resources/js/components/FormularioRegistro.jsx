@@ -55,12 +55,30 @@ export default function FormularioRegistro() {
 
   const handleGuardar = async () => {
     try {
+    Swal.fire({
+      title: "Creando registro...",
+      text: "Por favor espere",
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
+  const datosMayus = {
+      nombre: paciente.nombre.toUpperCase(),
+      apellido: paciente.apellido.toUpperCase(),
+      tipo_documento: paciente.tipo_documento,       // sin cambios
+      numero_documento: paciente.numero_documento,   // sin cambios
+    };
+
+
       const response = await fetch("/api/pacientes", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(paciente),
+        body: JSON.stringify(datosMayus),
       });
 
       if (!response.ok) throw new Error("Error al registrar");

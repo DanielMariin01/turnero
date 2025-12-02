@@ -138,7 +138,7 @@ TextColumn::make('motivo')
             ->filters([])
     ->actions([
     // ACCIÓN: Llamar (solo visible cuando estado = 'en_espera')
-    Tables\Actions\Action::make('llamar')
+    Tables\Actions\Action::make('llamar_enespera')
     ->label('Llamar')
     ->button()
     ->color('primary')
@@ -186,11 +186,64 @@ TextColumn::make('motivo')
             ->body("Turno asignado correctamente")
             ->success()
             ->send();
-    }),
-//->visible(fn (Turno $record): bool => in_array($record->estado, ['en_espera', 'facturar'])),
+    })
+     ->visible(fn (Turno $record): bool => $record->estado === 'en_espera'),
 
 
-    // ACCIÓN: Asignar consultorio (solo visible cuando estado = 'llamado')
+
+//LLAMAR FACTURAR 
+Tables\Actions\Action::make('llamar')
+    ->label('Llamar')
+    ->button()
+    ->color('primary')
+    ->icon('heroicon-o-phone')
+    ->requiresConfirmation(false)   // 🔹 Permite que el formulario SÍ se abra
+
+    ->modalHeading('Asignar Modulo')
+    ->modalSubmitActionLabel('Llamar')
+
+    ->form([
+        Forms\Components\Select::make('fk_modulo')
+            ->label('Modulo')
+           ->options(function () {
+    return Cache::remember('modulos_select', 300, function () {
+        return Modulo::pluck('nombre', 'id_modulo');
+    });
+})
+
+            ->required()
+            ->placeholder('Seleccione un modulo'),
+    ])
+
+    // 🔹 Este “before” se ejecuta al abrir el formulario
+    ->before(function (Turno $record) {
+        $record->update(['estado' => 'llamado_facturar']);
+
+        Notification::make()
+            ->title('Turno llamado')
+            ->success()
+            ->send();
+    })
+
+    // 🔹 Esta acción SÍ recibe el formulario ($data)
+    ->action(function (Turno $record, array $data) {
+
+        // Verificar que lleguen los datos
+        // dd($data);  // <-- Actívalo si quieres ver qué llega
+
+        $record->update([
+            'fk_modulo' => $data['fk_modulo'],
+        ]);
+
+        Notification::make()
+            ->title('Paciente Llamado')
+            ->body("Turno asignado correctamente")
+            ->success()
+            ->send();
+    })
+    ->visible(fn (Turno $record): bool => $record->estado === 'facturar'),
+
+
     Tables\Actions\Action::make('asignar_consultorio')
         ->label('Asignar Consultorio')
         ->button()
@@ -257,6 +310,10 @@ TextColumn::make('motivo')
                 ->send();
         })
         ->visible(fn (Turno $record): bool => $record->estado === 'llamado'),
+
+
+        //BOTON DE LLAMAR EN ESTADO FACTURAR 
+        
 ])
     
     //->hidden(fn (Turno $record): bool => $record->estado !== 'en_espera')
