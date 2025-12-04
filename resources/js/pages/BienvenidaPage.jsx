@@ -4,6 +4,8 @@ import { useLocation , useNavigate} from "react-router-dom";
 import imagenes from "../../imagenes/radiografia.png";
 import oncologia from "../../imagenes/oncologia.png";
 import consulta_externa from "../../imagenes/consulta_externa.png";
+import laboratorio from "../../imagenes/laboratorio2.png";
+import cirugia from "../../imagenes/cirugia.jpg";
 import { useEffect } from "react";
 
 
@@ -81,7 +83,7 @@ const datosPaciente = { ...paciente, motivo };
     Solo elige una de las opciones que ves a continuación 
   </p>
 </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-8 justify-items-center">
+      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-8 justify-items-center">
         <Tarjeta
           titulo="Consulta Externa"
           color="blue"
@@ -99,6 +101,20 @@ const datosPaciente = { ...paciente, motivo };
           color="blue"
           imagen={imagenes}
           onClick={() => manejarClick("Imagenes")}
+        />
+
+             <Tarjeta
+          titulo="Laboratorios"
+          color="blue"
+          imagen={laboratorio}
+          onClick={() => manejarClick("Laboratorio")}
+        />
+
+            <Tarjeta
+          titulo="Cirugía"
+          color="blue"
+          imagen={cirugia}
+          onClick={() => manejarClick("cirugia")}
         />
        
       </div>
