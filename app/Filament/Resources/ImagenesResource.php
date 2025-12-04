@@ -32,6 +32,12 @@ class ImagenesResource extends Resource
     protected static ?string $label = 'Imagenes ';
 
 
+    public static function shouldRegisterNavigation(): bool
+{
+    return false;
+}
+
+
     public static function getEloquentQuery(): Builder
 {
     // Combina ambos: solo turnos de hoy y estado 'en_espera'

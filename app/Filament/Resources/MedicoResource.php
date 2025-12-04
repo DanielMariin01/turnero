@@ -25,7 +25,6 @@ class MedicoResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
 
-
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()

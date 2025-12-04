@@ -21,6 +21,12 @@ class ModuloResource extends Resource
     protected static ?int $navigationSort = 4;
        protected static ?string $navigationGroup = 'Administración';
 
+
+       public static function shouldRegisterNavigation(): bool
+{
+    return false;
+}
+
     public static function form(Form $form): Form
     {
         return $form

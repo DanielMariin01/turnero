@@ -34,7 +34,10 @@ class LaboratorioResource extends Resource
         //protected static ?string $navigationSort = 5;
    
 
-
+public static function shouldRegisterNavigation(): bool
+{
+    return false;
+}
 
    public static function getEloquentQuery(): Builder
 {

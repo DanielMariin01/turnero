@@ -32,6 +32,13 @@ protected static ?string $navigationIcon = 'heroicon-o-user';
 protected static ?int $navigationSort = 3;
 protected static ?string $label = 'Oncologia ';
 
+
+
+public static function shouldRegisterNavigation(): bool
+{
+    return false;
+}
+
 public static function getEloquentQuery(): Builder
 {
     // Combina ambos: solo turnos de hoy y estado 'en_espera'

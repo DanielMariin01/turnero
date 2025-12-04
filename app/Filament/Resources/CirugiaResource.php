@@ -29,7 +29,10 @@ class CirugiaResource extends Resource
      protected static ?string $label = 'Cirugias ';
 
 
-
+public static function shouldRegisterNavigation(): bool
+{
+    return false;
+}
     public static function getEloquentQuery(): Builder
 {
     // Combina ambos: solo turnos de hoy y estado 'en_espera'

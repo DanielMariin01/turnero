@@ -20,6 +20,16 @@ class ConsultorioResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-arrow-right-on-rectangle';
     protected static ?string $navigationGroup = 'Administración';
 
+
+
+public static function shouldRegisterNavigation(): bool
+{
+    return false;
+}
+
+
+
+
     public static function form(Form $form): Form
     {
         return $form

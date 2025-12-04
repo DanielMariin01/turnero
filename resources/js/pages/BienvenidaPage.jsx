@@ -83,14 +83,14 @@ const datosPaciente = { ...paciente, motivo };
     Solo elige una de las opciones que ves a continuación 
   </p>
 </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-8 justify-items-center">
+      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-8 justify-items-center">
         <Tarjeta
           titulo="Consulta Externa"
           color="blue"
           imagen={consulta_externa}
           onClick={() => manejarClick("Consulta Externa")}
         />
-        <Tarjeta
+        {/*<Tarjeta
           titulo="Oncología"
           color="blue"
           imagen={oncologia}
@@ -115,7 +115,7 @@ const datosPaciente = { ...paciente, motivo };
           color="blue"
           imagen={cirugia}
           onClick={() => manejarClick("cirugia")}
-        />
+        />*/}
        
       </div>
     </div>
