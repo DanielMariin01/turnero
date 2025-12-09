@@ -22,7 +22,7 @@ class MedicoResource extends Resource
 {
     protected static ?string $model = Turno::class;
   protected static ?string $label = 'Turnos medicos';
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+ protected static ?string $navigationIcon = 'heroicon-o-user-group';
 
 
     public static function getEloquentQuery(): Builder

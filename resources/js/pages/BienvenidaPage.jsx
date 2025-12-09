@@ -24,7 +24,7 @@ const paciente = Location.state?.paciente || null;
   useEffect(() => {
     let temporizador;
 
-    const tiempoMaximo = 30000; // 20 segundos
+    const tiempoMaximo = 7000; // 20 segundos
 
     const resetTimer = () => {
       clearTimeout(temporizador);

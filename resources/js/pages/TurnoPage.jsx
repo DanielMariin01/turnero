@@ -16,13 +16,13 @@ const navigate = useNavigate();
  useEffect(() => {
   let timer = setTimeout(() => {
     navigate("/"); // ⬅ Ajusta la ruta si tu menú principal es diferente
-  }, 20000); // 20 segundos
+  }, 5000); // 20 segundos
 
   const resetTimer = () => {
     clearTimeout(timer);
     timer = setTimeout(() => {
       navigate("/");
-    }, 20000);
+    }, 5000);
   };
 
   window.addEventListener("mousemove", resetTimer);

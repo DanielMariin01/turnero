@@ -90,6 +90,7 @@ const [cargando,setCargando] = useState(false);
           <option value="TI">Tarjeta de identidad</option>
           <option value="CE">Cédula de extranjería</option>
           <option value="PA">Pasaporte</option>
+          <option value="RC">Registro Civil</option>
         </select>
 
         {/* Número documento */}
