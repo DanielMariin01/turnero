@@ -21,7 +21,8 @@ class Turno extends Model
        'estado',
        'fk_consultorio',
        'fk_modulo',
-       'observaciones'
+       'observaciones',
+       'llamado_en'
 
 
 

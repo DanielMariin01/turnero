@@ -23,6 +23,7 @@ class TurnoPantallaController extends Controller
         'apellido' => $ultimoTurno?->paciente?->apellido ?? '',
         'modulo' => $ultimoTurno?->modulo ?? null, // Agregar módulo completo
         'fk_modulo' => $ultimoTurno?->fk_modulo ?? null, // Agregar ID del módulo como respaldo
+        'llamado_en'   => $ultimoTurno?->llamado_en,
     ]);
 }
 
@@ -35,7 +36,7 @@ class TurnoPantallaController extends Controller
      ->whereIn('estado', ['llamado', 'llamado_medico','llamado_facturar'])
    //->whereDate('updated_at', $hoy)
    ->orderBy('updated_at', 'desc')
-   ->take(5) 
+   ->take(6) 
     ->get();
 
    }
@@ -47,7 +48,7 @@ class TurnoPantallaController extends Controller
         ->where('estado','llamado_medico')
         //->whereDate('updated_at', $hoy)
         ->orderBy('updated_at', 'desc')
-        ->take(5) 
+        ->take(6) 
         ->get();
 }
 

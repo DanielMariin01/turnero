@@ -108,10 +108,10 @@ class ConsultaExternaResource extends Resource
                     ->searchable(),
 
                 // MOTIVO
-                Tables\Columns\TextColumn::make('motivo')
-                    ->label('Motivo')
-                    ->sortable()
-                    ->searchable(),
+                //Tables\Columns\TextColumn::make('motivo')
+                    //->label('Motivo')
+                    //->sortable()
+                    //->searchable(),
 
                 // MÓDULO
                 Tables\Columns\TextColumn::make('modulo.nombre')
@@ -159,7 +159,7 @@ class ConsultaExternaResource extends Resource
                  ================================= */
                 Tables\Actions\Action::make('llamar_enespera')
                     ->label('Llamar')
-                    ->button()
+                        ->iconButton()
                     ->color('primary')
                     ->icon('heroicon-o-phone')
                     ->requiresConfirmation(false)
@@ -192,7 +192,7 @@ class ConsultaExternaResource extends Resource
                  ================================= */
                 Tables\Actions\Action::make('llamar')
                     ->label('Llamar')
-                    ->button()
+                    ->iconButton()
                     ->color('primary')
                     ->icon('heroicon-o-phone')
                     ->requiresConfirmation(false)
@@ -227,6 +227,7 @@ class ConsultaExternaResource extends Resource
                     ->button()
                     ->color('success')
                     ->icon('heroicon-o-check')
+                    ->iconButton()
                     ->modalHeading('Selecciona el consultorio para este turno')
                     ->modalSubmitActionLabel('Asignar')
                     ->form([
@@ -251,6 +252,27 @@ class ConsultaExternaResource extends Resource
                     })
                     ->visible(fn (Turno $record): bool => $record->estado === 'llamado'),
 
+
+   /* ================================
+                 | ACCION RELLAMAR
+                 ================================= */
+                    Tables\Actions\Action::make('rellamar')
+     ->label('Volver a llamar')
+    ->icon('heroicon-o-speaker-wave')
+    ->iconButton()
+    ->color('warning')
+      ->visible(fn (Turno $record): bool =>
+                        in_array($record->estado, ['llamado', 'llamado_facturar'])
+                    )
+
+    //->requiresConfirmation()
+    ->action(function (Turno $record) {
+        $record->update([
+            'llamado_en' => now(),
+        ]);
+    }),
+
+
                 /* ================================
                  | CANCELAR TURNO
                  ================================= */
@@ -258,6 +280,7 @@ class ConsultaExternaResource extends Resource
                     ->label('Cancelar')
                     ->color('danger')
                     ->icon('heroicon-o-x-circle')
+                    ->iconButton()
                     ->requiresConfirmation(false)
                     ->modalHeading('Cancelar turno')
                     ->modalSubmitActionLabel('Guardar')
@@ -289,7 +312,7 @@ class ConsultaExternaResource extends Resource
                  ================================= */
                 Tables\Actions\Action::make('Finalizar')
                     ->label('Finalizar Atención')
-                    ->button()
+                    ->iconButton()
                     ->color('gray')
                     ->icon('heroicon-o-check-badge')
                     ->requiresConfirmation()

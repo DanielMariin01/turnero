@@ -444,13 +444,23 @@ function obtenerTurnosMedicos() {
                     var data = JSON.parse(xhr.responseText);
                     
                     // Reproducir sonido si cambió el turno
-                    if (turnoAnterior && turnoAnterior.numero_turno !== data.numero_turno && sonidoListo) {
-                        console.log('Nuevo turno detectado - Reproduciendo sonido');
-                        audio.currentTime = 0;
-                        audio.play().catch(function(err) {
-                            console.error('Error reproduciendo audio:', err);
-                        });
-                    }
+                 var cambioTurno =
+    turnoAnterior &&
+    turnoAnterior.numero_turno !== data.numero_turno;
+
+var rellamado =
+    turnoAnterior &&
+    turnoAnterior.llamado_en !== data.llamado_en &&
+    data.llamado_en !== null;
+
+if ((cambioTurno || rellamado) && sonidoListo) {
+    console.log('Nuevo llamado detectado - Reproduciendo sonido');
+    audio.currentTime = 0;
+    audio.play().catch(function(err) {
+        console.error('Error reproduciendo audio:', err);
+    });
+}
+
                     
                     // Actualizar Número de Turno
                     document.getElementById('numeroTurno').textContent = data.numero_turno || '-';
