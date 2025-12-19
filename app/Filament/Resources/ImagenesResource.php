@@ -28,7 +28,7 @@ class ImagenesResource extends Resource
   protected static ?string $model = Turno::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-    protected static ?int $navigationSort = 4;
+    //protected static ?int $navigationSort = 4;
     protected static ?string $label = 'Imagenes ';
 
 

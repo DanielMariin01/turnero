@@ -23,6 +23,7 @@ class MedicoResource extends Resource
     protected static ?string $model = Turno::class;
   protected static ?string $label = 'Turnos medicos';
  protected static ?string $navigationIcon = 'heroicon-o-user-group';
+  protected static ?int $navigationSort = 3;
 
 
     public static function getEloquentQuery(): Builder
@@ -146,7 +147,11 @@ class MedicoResource extends Resource
         //->modalDescription('Se marcará como llamado')
         //->modalSubmitActionLabel('Sí, llamar')
         ->action(function (Turno $record) {
-            $record->update(['estado' => 'llamado_medico']);
+            $record->update([
+                'estado' => 'llamado_medico',
+                'hora_llamado_medico' => now()->format('H:i:s'),
+        
+        ]);
 
             Notification::make()
                 ->title('Turno llamado')
