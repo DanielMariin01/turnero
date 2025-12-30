@@ -67,9 +67,8 @@ class MedicoResource extends Resource
         return $table
         ->poll('5s')
             ->columns([
-                  Tables\Columns\TextColumn::make('numero_turno')
-                    ->label('Numero del turno')
-                    ->sortable(),
+              
+
 
             
 
@@ -83,29 +82,13 @@ class MedicoResource extends Resource
                     ->sortable()
                     ->searchable(),
 
-                TextColumn::make('motivo')
-                    ->label('Motivo')
-                    ->sortable()
-                    ->searchable(),
-
-                TextColumn::make('condicion')
-                    ->label('Condicion')
-                    ->sortable()
-                    ->searchable(),
 
                 TextColumn::make('consultorio.nombre')
                     ->label('Consultorio')
                     ->sortable()
                     ->searchable(),
 
-        TextColumn::make('prioridad_texto')
-    ->label('Prioridad')
-    ->badge()
-    ->color(fn ($state) => match ($state) {
-        'Alta' => 'danger',
-        'Media' => 'warning',
-        'Baja' => 'success',
-    }),
+   
                TextColumn::make('hora')
                     ->label('Hora')
                     //->sortable()
@@ -116,16 +99,8 @@ class MedicoResource extends Resource
                     ->date()
                     ->sortable(),
 
-               TextColumn::make('estado')
-    ->label('Estado')
-    ->badge()
-    ->color(fn (string $state): string => match ($state) {
-        'llamado' => 'info',        // Azul
-        'en_espera' => 'warning',   // Naranja
-        'asignado' => 'success', 
-        'llamado_medico' => 'info',    // Verde
-        default => 'gray',
-    }),
+    
+  
             ])
             ->defaultSort('hora', 'asc')
             
@@ -217,15 +192,6 @@ class MedicoResource extends Resource
         ->visible(fn (Turno $record): bool => $record->estado === 'llamado_medico'),
 
 
-
-
-
-
-
-
-
-
-        
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

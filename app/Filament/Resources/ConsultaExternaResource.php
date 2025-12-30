@@ -296,11 +296,32 @@ class ConsultaExternaResource extends Resource
                     ->modalHeading('Cancelar turno')
                     ->modalSubmitActionLabel('Guardar')
                     ->form([
-                        Forms\Components\Textarea::make('observaciones')
-                            ->label('Observaciones')
-                            ->required()
-                            ->columnSpanFull(),
-                    ])
+    Forms\Components\Select::make('observaciones')
+        ->label('Motivo de cancelación')
+      ->placeholder('Selecciona una opción')
+    ->searchPrompt('Escribe para buscar...')
+    ->noSearchResultsMessage('No se encontraron resultados.')
+        ->required()
+        ->searchable()
+        ->options([
+            'laboratorios' => 'Laboratorios',
+            'imagenes' => 'Imagenes',
+            'oncologia' => 'Oncología',
+            'no_atiende_llamado_facturar' => 'No atiende llamado para facturar',
+            'no_atiende_llamado_historia' => 'No atiende llamado para historia clínica',
+            'con_cita_posterior' => 'Con cita posterior',
+            'error_de_agendamiento' => 'Error de agendamiento',
+            'turno_doble' => 'Turno doble',
+            'perdio_cita' => 'Perdió cita',
+            'sin_autorizacion ' => 'Sin autorizacion',
+            'procedimiento_no_QX' => 'Procedimiento no QX',
+            'paciente_erroneo' => 'Paciente erróneo',
+            'Cirugia' => 'Cirugía',
+            'Informacion' => 'Información',
+            'otro' => 'Otro motivo',
+        ])
+        ->columnSpanFull(),
+])
                     ->action(function (Turno $record, array $data) {
                         $record->update([
                             'estado' => 'no_atendido',
