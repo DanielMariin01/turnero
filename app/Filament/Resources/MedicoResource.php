@@ -23,6 +23,7 @@ class MedicoResource extends Resource
     protected static ?string $model = Turno::class;
   protected static ?string $label = 'Turnos medicos';
  protected static ?string $navigationIcon = 'heroicon-o-user-group';
+  protected static ?int $navigationSort = 3;
 
 
     public static function getEloquentQuery(): Builder
@@ -66,11 +67,7 @@ class MedicoResource extends Resource
         return $table
         ->poll('5s')
             ->columns([
-                  Tables\Columns\TextColumn::make('numero_turno')
-                    ->label('Numero del turno')
-                    ->sortable(),
-
-            
+                           
 
                 TextColumn::make('paciente.nombre')
                     ->label('Paciente')
@@ -82,29 +79,11 @@ class MedicoResource extends Resource
                     ->sortable()
                     ->searchable(),
 
-                TextColumn::make('motivo')
-                    ->label('Motivo')
-                    ->sortable()
-                    ->searchable(),
-
-                TextColumn::make('condicion')
-                    ->label('Condicion')
-                    ->sortable()
-                    ->searchable(),
-
                 TextColumn::make('consultorio.nombre')
                     ->label('Consultorio')
                     ->sortable()
                     ->searchable(),
 
-        TextColumn::make('prioridad_texto')
-    ->label('Prioridad')
-    ->badge()
-    ->color(fn ($state) => match ($state) {
-        'Alta' => 'danger',
-        'Media' => 'warning',
-        'Baja' => 'success',
-    }),
                TextColumn::make('hora')
                     ->label('Hora')
                     //->sortable()
@@ -115,16 +94,7 @@ class MedicoResource extends Resource
                     ->date()
                     ->sortable(),
 
-               TextColumn::make('estado')
-    ->label('Estado')
-    ->badge()
-    ->color(fn (string $state): string => match ($state) {
-        'llamado' => 'info',        // Azul
-        'en_espera' => 'warning',   // Naranja
-        'asignado' => 'success', 
-        'llamado_medico' => 'info',    // Verde
-        default => 'gray',
-    }),
+    
             ])
             ->defaultSort('hora', 'asc')
             
@@ -136,25 +106,44 @@ class MedicoResource extends Resource
                     ->searchable(),
             ])
             ->actions([
-                Tables\Actions\Action::make('llamar')
-        ->label('Llamar')
-        ->button()
-        ->color('primary')
-        ->icon('heroicon-o-phone')
-        //->requiresConfirmation()
-        //->modalHeading('¿Llamar a este turno?')
-        //->modalDescription('Se marcará como llamado')
-        //->modalSubmitActionLabel('Sí, llamar')
-        ->action(function (Turno $record) {
-            $record->update(['estado' => 'llamado_medico']);
+               Tables\Actions\Action::make('llamar')
+    ->label('Llamar')
+    ->button()
+    ->color('primary')
+    ->icon('heroicon-o-phone')
+    ->action(function (Turno $record) {
 
-            Notification::make()
-                ->title('Turno llamado')
-                ->body("Se llamó al turno {$record->numero_turno}")
-                ->success()
-                ->send();
-        })
-        ->visible(fn (Turno $record): bool => $record->estado === 'asignado'),
+
+        // ========================================
+        // PASO 2: Cambiar el turno ANTERIOR del mismo consultorio a "facturar"
+        // ========================================
+        Turno::where('fk_consultorio', $record->fk_consultorio)
+            ->where('estado', 'llamado_medico')
+            ->whereDate('fecha', today()) // Solo turnos de hoy
+            ->update([
+                'estado' => 'facturar',
+                'motivo' => 'pendiente para facturar', // Opcional: registrar cuándo se envió
+            ]);
+
+        // ========================================
+        // PASO 3: Llamar al turno actual
+        // ========================================
+        $record->update([
+            'estado' => 'llamado_medico',
+            'hora_llamado_medico' => now()->format('H:i:s'),
+        ]);
+
+        // ========================================
+        // PASO 4: Notificar éxito
+        // ========================================
+        Notification::make()
+            ->title('Turno llamado')
+            ->body("Se llamó al turno {$record->numero_turno}")
+            ->success()
+            ->send();
+    })
+    ->visible(fn (Turno $record): bool => $record->estado === 'asignado'),
+
 
 
         Tables\Actions\Action::make('Facturar')
@@ -223,9 +212,7 @@ class MedicoResource extends Resource
         
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+              
             ]);
     }
 

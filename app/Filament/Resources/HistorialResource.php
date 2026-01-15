@@ -21,6 +21,7 @@ class HistorialResource extends Resource
 
     protected static ?string $label = 'Historial de Turnos';
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
+     protected static ?int $navigationSort = 2;
 
 
         public static function canCreate(): bool

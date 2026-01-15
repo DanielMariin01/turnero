@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Cache;
 use Filament\Notifications\Notification;
 use App\Models\Consultorio;
 use App\Models\Modulo;
+use Filament\Tables\Columns\TextColumn;
 
 class ConsultaExternaResource extends Resource
 {
@@ -24,7 +25,7 @@ class ConsultaExternaResource extends Resource
 
     protected static ?string $model = Turno::class;
     protected static ?string $navigationIcon = 'heroicon-o-user';      
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 3;
     protected static ?string $label = 'Consulta externa ';
 
     /* ============================================
@@ -86,9 +87,11 @@ class ConsultaExternaResource extends Resource
                     ->sortable(),
 
                 // NÚMERO DE TURNO
-                Tables\Columns\TextColumn::make('numero_turno')
-                    ->label('Número del turno')
-                    ->sortable(),
+                TextColumn::make('paciente.numero_documento')
+                    ->label('Numero de Documento')
+                    ->sortable()
+                    ->searchable(),
+
 
                 // PACIENTE
                 Tables\Columns\TextColumn::make('paciente.nombre')
@@ -102,10 +105,10 @@ class ConsultaExternaResource extends Resource
                     ->sortable(),
 
                 // CONDICIÓN
-                Tables\Columns\TextColumn::make('condicion')
-                    ->label('Condición')
-                    ->sortable()
-                    ->searchable(),
+                //Tables\Columns\TextColumn::make('condicion')
+                    //->label('Condición')
+                    //->sortable()
+                    //->searchable(),
 
                 // MOTIVO
                 //Tables\Columns\TextColumn::make('motivo')
@@ -147,6 +150,10 @@ class ConsultaExternaResource extends Resource
                     ->label('Hora')
                     ->sortable()
                     ->time('g:i A'),
+                Tables\Columns\TextColumn::make('hora_llamado_medico')
+                    ->label('HM')
+                    ->sortable()
+                    ->time('g:i A'),
             ])
 
             /* ============================================
@@ -174,7 +181,10 @@ class ConsultaExternaResource extends Resource
                             ->placeholder('Seleccione un módulo'),
                     ])
                     ->before(function (Turno $record) {
-                        $record->update(['estado' => 'llamado']);
+                        $record->update([
+                            'estado' => 'llamado',
+                            'hora_llamado' => now()->format('H:i:s'),
+                    ]);
                         Notification::make()->title('Turno llamado')->success()->send();
                     })
                     ->action(function (Turno $record, array $data) {
@@ -206,7 +216,10 @@ class ConsultaExternaResource extends Resource
                             ->required(),
                     ])
                     ->before(function (Turno $record) {
-                        $record->update(['estado' => 'llamado_facturar']);
+                        $record->update([
+                            'estado' => 'llamado_facturar',
+                            'hora_llamado_facturar' => now()->format('H:i:s'),
+                    ]);
                         Notification::make()->title('Turno llamado')->success()->send();
                     })
                     ->action(function (Turno $record, array $data) {
@@ -240,7 +253,8 @@ class ConsultaExternaResource extends Resource
                     ->action(function (Turno $record, array $data) {
                         $record->update([
                             'estado' => 'asignado',
-                            'hora' => now()->format('H:i:s'),
+                            //'hora' => now()->format('H:i:s'),
+                            'hora_atendido' => now()->format('H:i:s'),
                             'fk_consultorio' => $data['fk_consultorio']
                         ]);
 
@@ -276,7 +290,7 @@ class ConsultaExternaResource extends Resource
                 /* ================================
                  | CANCELAR TURNO
                  ================================= */
-                Tables\Actions\Action::make('cancelar')
+               Tables\Actions\Action::make('cancelar')
                     ->label('Cancelar')
                     ->color('danger')
                     ->icon('heroicon-o-x-circle')
@@ -285,16 +299,37 @@ class ConsultaExternaResource extends Resource
                     ->modalHeading('Cancelar turno')
                     ->modalSubmitActionLabel('Guardar')
                     ->form([
-                        Forms\Components\Textarea::make('observaciones')
-                            ->label('Observaciones')
-                            ->required()
-                            ->columnSpanFull(),
-                    ])
+    Forms\Components\Select::make('observaciones')
+        ->label('Motivo de cancelación')
+      ->placeholder('Selecciona una opción')
+    ->searchPrompt('Escribe para buscar...')
+    ->noSearchResultsMessage('No se encontraron resultados.')
+        ->required()
+        ->searchable()
+        ->options([
+            'laboratorios' => 'Laboratorios',
+            'imagenes' => 'Imagenes',
+            'oncologia' => 'Oncología',
+            'no_atiende_llamado_facturar' => 'No atiende llamado para facturar',
+            'no_atiende_llamado_historia' => 'No atiende llamado para historia clínica',
+            'con_cita_posterior' => 'Con cita posterior',
+            'error_de_agendamiento' => 'Error de agendamiento',
+            'turno_doble' => 'Turno doble',
+            'perdio_cita' => 'Perdió cita',
+            'sin_autorizacion ' => 'Sin autorizacion',
+            'procedimiento_no_QX' => 'Procedimiento no QX',
+            'paciente_erroneo' => 'Paciente erróneo',
+            'Cirugia' => 'Cirugía',
+            'Informacion' => 'Información',
+            'otro' => 'Otro motivo',
+        ])
+        ->columnSpanFull(),
+])
                     ->action(function (Turno $record, array $data) {
                         $record->update([
                             'estado' => 'no_atendido',
                             'observaciones' => $data['observaciones'],
-                            'hora' => now()->format('H:i:s'),
+                            //'hora' => now()->format('H:i:s'),
                         ]);
 
                         Notification::make()
@@ -322,7 +357,8 @@ class ConsultaExternaResource extends Resource
                     ->action(function (Turno $record) {
                         $record->update([
                             'estado' => 'atendido',
-                            'hora' => now()->format('H:i:s'),
+                            //'hora' => now()->format('H:i:s'),
+                            'hora_finalizacion' => now()->format('H:i:s'),
                         ]);
 
                         Notification::make()

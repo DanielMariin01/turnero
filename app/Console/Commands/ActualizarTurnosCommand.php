@@ -65,7 +65,7 @@ class ActualizarTurnosCommand extends Command
      */
     private function actualizarTurnosFacturar()
     {
-        $limite = Carbon::now()->subMinutes(20);
+        $limite = Carbon::now()->subMinutes(10);
         $facturar = DB::table('turno')
             ->where('estado', 'llamado_medico')
             ->where('updated_at', '<=', $limite)

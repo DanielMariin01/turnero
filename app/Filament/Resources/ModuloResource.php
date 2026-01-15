@@ -18,7 +18,7 @@ class ModuloResource extends Resource
     protected static ?string $model = Modulo::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-building-storefront';
-    protected static ?int $navigationSort = 4;
+   //protected static ?int $navigationSort = 4;
        protected static ?string $navigationGroup = 'Administración';
 
 
