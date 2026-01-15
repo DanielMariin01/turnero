@@ -1,0 +1,47 @@
+* [33mac55082[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m copia de proyecto al cambiar de equipo
+* [33m782d61d[m se realizo el cambio y se agrego la accion de volver a llamar  y se cmabiaron las acciones solo por iconos
+* [33m7387b6f[m Se agrego el boton de finalizar atencion cuando el estado se enecuentra en llamado_facturar
+* [33m02d12df[m esta es la version turneroV6 funcional
+* [33m435a1d6[m se realizo los cmabios en el .env para sincronizar la base de datos con ssqlrsv y dehabilitaron los recursos y solo se dejo el recurso de consulta externa , usarios y medicos
+* [33md1c0411[m  se crearon los recursos laboratorios y el recurso cirugia
+* [33m1a49a24[m se cambio la consiguracion en el archivo blade y en viteconfig.js para vovolver a trabajar en local
+* [33m8c3bdd9[m en actualizar turnos se agrego la funcion para que cambie el estado que esta en llamado_medico , lo cambie a facturar en 15 minutos , en consulta externa se agrego otro boton llamar para realizar el llamado a facturar y cambiar el estado a llamado_facturar , en el recurso medico se cambio en la funcion getEloquentQuery para que filtre solo los datos que tienen el estado (asignado) . en el controlador turno pantalla se añadio el estado (llamado_facturar) para que detecte el llamado del turno facturar). en el componente formulario registro se agrego la funcion para que convierta los nombres al guardar en mayusculas , ademas muestre un mensaje cuando este creando el nuevo paciente , IMPORTANTE , en el archivo console.php se añadio la funcion para que se ejecute la tarea cada 5 minutos
+* [33mb4e151e[m commit 1 de diciembre , se corrigio la tabla de turnos llamados , se elimino la columna modulo y consultorio y se unifico en un sola columna que se llama ubicacion
+* [33m26b28e3[m se realizaron optimizaciones , se cmabiaron el orden de los cmapos de las tablas de los modulos , esta es la version V3 , la cual es la primera desplegada en el servidor
+* [33m7c6c9d2[m se realizaron cambios en en menus de medico , consulta externa, oncologia , imagenes , lo anterior se desarrrollo con el objetivo de optimizar el coidgo para que sea mas rapido al abrir las acciones
+* [33mf4639f4[m  se agrego los campos modulo y consultorio en la tabla de llamados pacientes , IMPORTANTE : esta es la VERSION 1 , falta correciones en ancho de pantalla y al mostrar los conusltrios
+* [33m07c21eb[m en los recursos de imagenes y oncologia se añadarion las acciones de llmar , asignr y cancelar
+* [33mc39aacc[m diseño pantalla turnos V2e añadieron estilos en la pantalla de turnos , se cmabiaron colores y el orden de de numero de turno y nombre de paciente
+* [33m599e32f[m commit !IMPORTANTE  26 de noviembre , se corrigio el error del audio , en este commit se reproduce el audio al cambiar el turno en turno actual ( ventanilla ) y en turno consultorio ( consultorios )
+* [33m4368085[m commit 26 de noviembre , se creo el campo fk_modulo  en la tabla turno, se grego el formulario en la accion llamar paciente , el cual permite seleccionar la ventanilla o modulo
+* [33m8339920[m se cambairon los colores de las pantallas de turnos
+* [33m93cdb00[m commit 25 de noviembre , diseño pantallas version V1
+* [33m65cf1fa[m se creo la api para turnos medico y en app.blade.php se añadio el cpomponente de turnos medicos
+* [33m772441e[m  25 de noviembre, se agrego las acciones de cancelar, finalizar y llamar en el panel de turnos medicos
+* [33ma3b903e[m se crearon las acciones de asignar consultorio y cancelar , ademas se añadio un filtro permanente de en_espera y llamado
+* [33m6ffad1b[m se actualiza la hora al asignar un turno al consultorio en el recurso de  cosulta externa
+* [33mfc623a9[m abrir modal al seleccionar boton llamar. se creo una accion en consulta externa la cual permite abrir un modal al seleccionar el boton llamar , esta accion primero se encarga de cmabiar el estado a llamado, despues se selecciona el consultorio al cual va el paciente y despues lo guarda en la base de datos
+* [33medb70c3[m se añadio en consulta externa una accion de llamar turno , esta accion prprimero cambia el estadoa a llamado , posteriormente abre un modal para seleccionar el consultorio el cual se va a asignar a un paciente
+* [33mc902d41[m commit 24 de noviembre , se añadio la tabla que muestra el numero de turno actual y los ultimos 5 turnos llamados , esto se realizo en el archivo app.blade
+* [33me31a134[m se corrigio las apis para que funcionen de manera correcta
+* [33m6efcf91[m  se corrigio el error de comunicacion de xampp con laravel , en este punto laravel ya no depende de php artisan serve , aun falta corregir las demas apis , solo funciona la api de consulta  de pacientes por numero de cedula
+* [33m0467e00[m se realizo la configuracion para cargar el proyecto en localhost , esta configuracion tiene defectos , no carga la url pantalla y tampoco admin
+* [33mc06d08e[m se creo el modelo turno_medico , en el recurso consulta externa se creo la accion de asignar medico funcional y guarda los datos
+* [33maa8e267[m commit 19 de noviembre, se agrego el campo cedula en la tabla users
+* [33m59858e3[m commit 19 de noviembre, se creo el modelo y recurso modulo y consultorio, además se creo el formulario y las tablas de modulo y consultorio
+* [33mc260fbc[m commit 19 de noviembre, se instalo el plugin shield y se creo el recurso de usuario con el formulario y las tablas, se crearon los roles , aun falta crear los permisos para acceder a cada panel
+* [33m9ab5992[m commit 19 de noviembre, se mejoro el diseño de la tabla y la pantalla de turno en pantallaTurnos.jsx
+* [33mab25519[m commit 19 de noviembre, se creo una tabla que muestra todos los turnos llamados, se creo en el componente PantallaTurnos.jsx
+* [33m5d84cd3[m commit 18 de noviembre,  se creo una función useEffect para que cierre la pagina actual por inactividad y vuelva a la pagina principal del formulario
+* [33m3a79299[m commit 18 de noviembre,  se creo el teclado numerico y alfabetico en el componente formularioRegistro
+* [33m03e78ee[m commit 18 de noviembre,  se creo un formulario para registrar un nuevo paciente
+* [33m1dab5b7[m commit 18 de noviembre,  se creo el teclado en el componente formulario.jsx
+* [33m28a8edf[m commit 18 de noviembre,  se creo el recurso de imágenes
+* [33mad11c77[m commit 14 de noviembre, se agrego el audio que suena una sola vez al cambiar el turno
+* [33m07107d9[m commit 14 de noviembre, se creo el controlador TurnoPantallaController el cual se encarga de consultar cada 2 segundos cual fue el ultimo turno llamado , también se creo el componente PantallaTurno , el cual se encarga de mostrar el turno, además se creo la api
+* [33mfad719b[m commit 11 de noviembre, se corrigio la generación del turno , el cual es un numero consecutivo que se genera y cada dia se reincia
+* [33mb4faf87[m commit 11 de noviembre, se creo en la tabla de consulta externa una columna llamada prioridad , la cual categoriza si es alta, media o baja de acuerdo a la condición , además se corrigio el error al guardar los datos del paciente y el motivo de consulta
+* [33mce73f18[m commit 11 de noviembre,  se creo un filtro para que solo muestre los registros con la fecha del dia de hoy, se creo una tarea programada para que cambie de estado cada dia si el dia anterior aun sigue en estado de espera, además se corrigio el error para que guarde el nombre del motivo y el fk_paciente
+* [33m18c955b[m commit 11 de noviembre,  se creo un filtro para que solo muestre los registros con la fecha del dia de hoy
+* [33m8d72e23[m commit 10 de noviembre, se instalo sweetalert2,se creo el recurso ConsultaExterna y Oncologia , se hicieron cambios en la parte visual de turno, en la tabla del recurso de consulta externa se agrego la columna prioridad , la cual muestra el nivel de prioridad de la condición
+* [33m0fab5c1[m commit 7 de noviembre , se creo el modelo Turno y el controlador TurnoController, se creo el controlador de la api para generar el turno , el cual se agrego la función que las dos primeras letras de cada motivo y las une con los números generados de forma aleatoria de 0

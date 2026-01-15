@@ -150,10 +150,6 @@ class ConsultaExternaResource extends Resource
                     ->label('Hora')
                     ->sortable()
                     ->time('g:i A'),
-                Tables\Columns\TextColumn::make('hora_llamado_medico')
-                    ->label('HM')
-                    ->sortable()
-                    ->time('g:i A'),
             ])
 
             /* ============================================

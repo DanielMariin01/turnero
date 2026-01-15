@@ -60,7 +60,7 @@ class ActualizarTurnosCommand extends Command
     }
 
     /**
-     * Actualiza turnos de llamado_medico a facturar después de 15 minutos
+     * Actualiza turnos de llamado_medico a facturar después de 30 minutos
      * Se ejecuta siempre (cada 5 minutos)
      */
     private function actualizarTurnosFacturar()
