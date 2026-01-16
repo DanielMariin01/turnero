@@ -21,25 +21,25 @@ use Filament\Notifications\Notification;
 class MedicoResource extends Resource
 {
     protected static ?string $model = Turno::class;
-  protected static ?string $label = 'Turnos medicos';
- protected static ?string $navigationIcon = 'heroicon-o-user-group';
-  protected static ?int $navigationSort = 3;
+    protected static ?string $label = 'Turnos medicos';
+    protected static ?string $navigationIcon = 'heroicon-o-user-group';
+    protected static ?int $navigationSort = 3;
 
 
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
             ->hoy()
-       ->where('estado', 'asignado');
-            //->where('motivo', 'consulta externa');
+            ->where('estado', 'asignado');
+        //->where('motivo', 'consulta externa');
     }
 
     //public static function getNavigationBadge(): ?string
-   // {
-       // return Cache::remember('llamado_medicobadge', 60, function () {
-           // return static::getEloquentQuery()->count();
-        //});
-   // }
+    // {
+    // return Cache::remember('llamado_medicobadge', 60, function () {
+    // return static::getEloquentQuery()->count();
+    //});
+    // }
 
     public static function canCreate(): bool
     {
@@ -65,13 +65,14 @@ class MedicoResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-        ->poll('5s')
+            ->poll('5s')
             ->columns([
-                           
+
 
                 TextColumn::make('paciente.nombre')
                     ->label('Paciente')
-                    ->formatStateUsing(fn ($state, $record) =>
+                    ->formatStateUsing(
+                        fn($state, $record) =>
                         $record->paciente
                             ? $record->paciente->nombre . ' ' . $record->paciente->apellido
                             : '-'
@@ -84,7 +85,7 @@ class MedicoResource extends Resource
                     ->sortable()
                     ->searchable(),
 
-               TextColumn::make('hora')
+                TextColumn::make('hora')
                     ->label('Hora')
                     //->sortable()
                     ->time('g:i A'),
@@ -94,10 +95,10 @@ class MedicoResource extends Resource
                     ->date()
                     ->sortable(),
 
-    
+
             ])
             ->defaultSort('hora', 'asc')
-            
+
             ->filters([
                 Tables\Filters\SelectFilter::make('fk_consultorio')
                     ->label('Consultorio')
@@ -106,114 +107,102 @@ class MedicoResource extends Resource
                     ->searchable(),
             ])
             ->actions([
-               Tables\Actions\Action::make('llamar')
-    ->label('Llamar')
-    ->button()
-    ->color('primary')
-    ->icon('heroicon-o-phone')
-    ->action(function (Turno $record) {
+                Tables\Actions\Action::make('llamar')
+                    ->label('Llamar')
+                    ->button()
+                    ->color('primary')
+                    ->icon('heroicon-o-phone')
+                    ->action(function (Turno $record) {
 
 
-        // ========================================
-        // PASO 2: Cambiar el turno ANTERIOR del mismo consultorio a "facturar"
-        // ========================================
-        Turno::where('fk_consultorio', $record->fk_consultorio)
-            ->where('estado', 'llamado_medico')
-            ->whereDate('fecha', today()) // Solo turnos de hoy
-            ->update([
-                'estado' => 'facturar',
-                'motivo' => 'pendiente para facturar', // Opcional: registrar cuándo se envió
-            ]);
+                        // ========================================
+                        // PASO 2: Cambiar el turno ANTERIOR del mismo consultorio a "facturar"
+                        // ========================================
+                        Turno::where('fk_consultorio', $record->fk_consultorio)
+                            ->where('estado', 'llamado_medico')
+                            ->whereDate('fecha', today()) // Solo turnos de hoy
+                            ->update([
+                                'estado' => 'facturar',
+                                'motivo' => 'pendiente para facturar', // Opcional: registrar cuándo se envió
+                            ]);
 
-        // ========================================
-        // PASO 3: Llamar al turno actual
-        // ========================================
-        $record->update([
-            'estado' => 'llamado_medico',
-            'hora_llamado_medico' => now()->format('H:i:s'),
-        ]);
+                        // ========================================
+                        // PASO 3: Llamar al turno actual
+                        // ========================================
+                        $record->update([
+                            'estado' => 'llamado_medico',
+                            'hora_llamado_medico' => now()->format('H:i:s'),
+                        ]);
 
-        // ========================================
-        // PASO 4: Notificar éxito
-        // ========================================
-        Notification::make()
-            ->title('Turno llamado')
-            ->body("Se llamó al turno {$record->numero_turno}")
-            ->success()
-            ->send();
-    })
-    ->visible(fn (Turno $record): bool => $record->estado === 'asignado'),
-
-
-
-        Tables\Actions\Action::make('Facturar')
-        ->label('Enviar a facturar')
-        ->button()
-        ->color('info')
-        //->icon('heroicon-o-phone')
-        //->requiresConfirmation()
-        //->modalHeading('¿Esta seguro de finalizar la consulta?')
-        //->modalDescription('El paciente se enviara para que facture')
-        //->modalSubmitActionLabel('Sí, Enviar a facturar')
-        ->action(function (Turno $record) {
-               $record->update([
-        'estado' => 'facturar',
-        'motivo' => 'pendiente para facturar',
-        'ventanilla' => null, // o '' si realmente lo necesitas vacío
-    ]);
-
-            Notification::make()
-                ->title('Paciente atendido')
-                ->success()
-                ->send();
-        })
-        ->visible(fn (Turno $record): bool => $record->estado === 'llamado_medico'),
-
-         Tables\Actions\Action::make('cancelar')
-        ->label('Cancelar')
-        ->color('danger')
-        ->icon('heroicon-o-x-circle')
-        ->requiresConfirmation(false)
-        ->modalHeading('Cancelar turno')
-        ->modalSubmitActionLabel('Guardar')
-        ->modalCancelActionLabel('Cancelar')
-        ->form([
-            Forms\Components\Textarea::make('observaciones')
-                ->label('Observaciones')
-                ->placeholder('Escribe el motivo de la cancelación...')
-                ->required()
-                ->columnSpanFull(),
-        ])
-     
-        ->action(function (Turno $record, array $data) {
-            $record->update([
-                'estado' => 'no_atendido',
-                'observaciones' => $data['observaciones'],
-                'hora' => now()->format('H:i:s'),
-            ]);
-
-            Notification::make()
-                ->title('Turno cancelado')
-                ->body("El turno {$record->numero_turno} fue marcado como no atendido.")
-                ->danger()
-                ->send();
-        })
-        ->visible(fn (Turno $record): bool => $record->estado === 'llamado_medico'),
+                        // ========================================
+                        // PASO 4: Notificar éxito
+                        // ========================================
+                        Notification::make()
+                            ->title('Turno llamado')
+                            ->body("Se llamó al turno {$record->numero_turno}")
+                            ->success()
+                            ->send();
+                    })
+                    ->visible(fn(Turno $record): bool => $record->estado === 'asignado'),
 
 
 
+                Tables\Actions\Action::make('Facturar')
+                    ->label('Enviar a facturar')
+                    ->button()
+                    ->color('info')
+                    //->icon('heroicon-o-phone')
+                    //->requiresConfirmation()
+                    //->modalHeading('¿Esta seguro de finalizar la consulta?')
+                    //->modalDescription('El paciente se enviara para que facture')
+                    //->modalSubmitActionLabel('Sí, Enviar a facturar')
+                    ->action(function (Turno $record) {
+                        $record->update([
+                            'estado' => 'facturar',
+                            'motivo' => 'pendiente para facturar',
+                            'ventanilla' => null, // o '' si realmente lo necesitas vacío
+                        ]);
 
+                        Notification::make()
+                            ->title('Paciente atendido')
+                            ->success()
+                            ->send();
+                    })
+                    ->visible(fn(Turno $record): bool => $record->estado === 'llamado_medico'),
 
+                Tables\Actions\Action::make('cancelar')
+                    ->label('Cancelar')
+                    ->color('danger')
+                    ->icon('heroicon-o-x-circle')
+                    ->requiresConfirmation(false)
+                    ->modalHeading('Cancelar turno')
+                    ->modalSubmitActionLabel('Guardar')
+                    ->modalCancelActionLabel('Cancelar')
+                    ->form([
+                        Forms\Components\Textarea::make('observaciones')
+                            ->label('Observaciones')
+                            ->placeholder('Escribe el motivo de la cancelación...')
+                            ->required()
+                            ->columnSpanFull(),
+                    ])
 
+                    ->action(function (Turno $record, array $data) {
+                        $record->update([
+                            'estado' => 'no_atendido',
+                            'observaciones' => $data['observaciones'],
+                            'hora' => now()->format('H:i:s'),
+                        ]);
 
+                        Notification::make()
+                            ->title('Turno cancelado')
+                            ->body("El turno {$record->numero_turno} fue marcado como no atendido.")
+                            ->danger()
+                            ->send();
+                    })
+                    ->visible(fn(Turno $record): bool => $record->estado === 'llamado_medico'),
 
-
-
-        
             ])
-            ->bulkActions([
-              
-            ]);
+            ->bulkActions([]);
     }
 
     public static function getRelations(): array

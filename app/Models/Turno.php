@@ -22,6 +22,7 @@ class Turno extends Model
        'fk_consultorio',
        'fk_modulo',
        'observaciones',
+       'paciente_urgencias',
        'llamado_en',
        'hora_llamado',
        'hora_atendido',

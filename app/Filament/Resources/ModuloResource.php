@@ -18,33 +18,33 @@ class ModuloResource extends Resource
     protected static ?string $model = Modulo::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-building-storefront';
-   //protected static ?int $navigationSort = 4;
-       protected static ?string $navigationGroup = 'Administración';
+    //protected static ?int $navigationSort = 4;
+    protected static ?string $label = 'Modulo ';
+    protected static ?string $navigationGroup = 'Administración';
 
-
-       public static function shouldRegisterNavigation(): bool
-{
-    return false;
-}
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-            Forms\Components\Section::make('Información del modulo')
+                Forms\Components\Section::make('Información del modulo')
 
-            ->schema([
-Forms\Components\TextInput::make('nombre')
-                        ->label('Nombre')
-                        ->required()
-                        ->maxLength(250),
-                    Forms\Components\TextInput::make('descripcion')
-                        ->label('Descripcion')
-                        ->maxLength(250),
-                
-            ])
-            ->columns(2),
-                   
+                    ->schema([
+                        Forms\Components\TextInput::make('nombre')
+                            ->label('Nombre')
+                            ->required()
+                            ->maxLength(250),
+                        Forms\Components\TextInput::make('descripcion')
+                            ->label('Descripcion')
+                            ->maxLength(250),
+
+                    ])
+                    ->columns(2),
+
             ]);
     }
 
@@ -53,14 +53,14 @@ Forms\Components\TextInput::make('nombre')
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('nombre')
-                ->label('Nombre')
-                ->sortable()
-                ->searchable(),
+                    ->label('Nombre')
+                    ->sortable()
+                    ->searchable(),
 
-            Tables\Columns\TextColumn::make('descripcion')
-                ->label('Descripcion')
-                ->sortable()
-                ->searchable(),
+                Tables\Columns\TextColumn::make('descripcion')
+                    ->label('Descripcion')
+                    ->sortable()
+                    ->searchable(),
             ])
             ->filters([
                 //
@@ -69,9 +69,7 @@ Forms\Components\TextInput::make('nombre')
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+              
             ]);
     }
 
