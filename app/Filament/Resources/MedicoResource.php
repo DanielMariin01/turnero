@@ -67,14 +67,7 @@ class MedicoResource extends Resource
         return $table
         ->poll('5s')
             ->columns([
-<<<<<<< HEAD
                            
-=======
-              
-
-
-            
->>>>>>> 73ce3fa8abf0a05a5203d3ba9cf35f17a3a7c944
 
                 TextColumn::make('paciente.nombre')
                     ->label('Paciente')
@@ -86,19 +79,11 @@ class MedicoResource extends Resource
                     ->sortable()
                     ->searchable(),
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 73ce3fa8abf0a05a5203d3ba9cf35f17a3a7c944
                 TextColumn::make('consultorio.nombre')
                     ->label('Consultorio')
                     ->sortable()
                     ->searchable(),
 
-<<<<<<< HEAD
-=======
-   
->>>>>>> 73ce3fa8abf0a05a5203d3ba9cf35f17a3a7c944
                TextColumn::make('hora')
                     ->label('Hora')
                     //->sortable()
@@ -110,10 +95,6 @@ class MedicoResource extends Resource
                     ->sortable(),
 
     
-<<<<<<< HEAD
-=======
-  
->>>>>>> 73ce3fa8abf0a05a5203d3ba9cf35f17a3a7c944
             ])
             ->defaultSort('hora', 'asc')
             
@@ -125,7 +106,6 @@ class MedicoResource extends Resource
                     ->searchable(),
             ])
             ->actions([
-<<<<<<< HEAD
                Tables\Actions\Action::make('llamar')
     ->label('Llamar')
     ->button()
@@ -163,23 +143,6 @@ class MedicoResource extends Resource
             ->send();
     })
     ->visible(fn (Turno $record): bool => $record->estado === 'asignado'),
-=======
-                Tables\Actions\Action::make('llamar')
-        ->label('Llamar')
-        ->button()
-        ->color('primary')
-        ->icon('heroicon-o-phone')
-        //->requiresConfirmation()
-        //->modalHeading('¿Llamar a este turno?')
-        //->modalDescription('Se marcará como llamado')
-        //->modalSubmitActionLabel('Sí, llamar')
-        ->action(function (Turno $record) {
-            $record->update([
-                'estado' => 'llamado_medico',
-                'hora_llamado_medico' => now()->format('H:i:s'),
-        
-        ]);
->>>>>>> 73ce3fa8abf0a05a5203d3ba9cf35f17a3a7c944
 
 
 
@@ -238,6 +201,15 @@ class MedicoResource extends Resource
         ->visible(fn (Turno $record): bool => $record->estado === 'llamado_medico'),
 
 
+
+
+
+
+
+
+
+
+        
             ])
             ->bulkActions([
               

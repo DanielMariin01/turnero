@@ -90,7 +90,8 @@ const datosPaciente = { ...paciente, motivo };
           imagen={consulta_externa}
           onClick={() => manejarClick("Consulta Externa")}
         />
-        {/*<Tarjeta
+        {
+        /*<Tarjeta
           titulo="Oncología"
           color="blue"
           imagen={oncologia}
@@ -115,7 +116,9 @@ const datosPaciente = { ...paciente, motivo };
           color="blue"
           imagen={cirugia}
           onClick={() => manejarClick("cirugia")}
-        />*/}
+        />*/
+      
+        }
        
       </div>
     </div>
