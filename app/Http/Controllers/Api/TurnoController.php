@@ -95,16 +95,16 @@ class TurnoController extends Controller
             // Obtener el turno de la base de datos
             $turno = Turno::findOrFail($id_turno);
 
- 
+
 
             // Datos para la vista
             $data = [
                 'turno' => $turno,
                 'numero_turno' => $turno->numero_turno,
                 'fecha' => now()->format('d/m/Y H:i:s'),
-               
+
             ];
-            $customPaper = [0, 0, 227, 1000];
+            $customPaper = [0, 0, 204, 200];
             // Generar PDF
             $pdf = Pdf::loadView('ticket', $data)
                 ->setPaper($customPaper, 'portrait');
