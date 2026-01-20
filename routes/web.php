@@ -9,8 +9,12 @@ Route::get('/', function () {
 });
 //api para consultar por numero de documento del paciente http://127.0.0.1:8000/pacientes/${paciente.numero_documento}
 
-Route::get('/pantalla', function() {
+Route::get('/pantalla', function () {
     return view('app'); // aquí se monta React
+});
+
+Route::get('/pantallaUrgencias', function () {
+    return view('pantallaUrgencias');
 });
 
 
