@@ -27,20 +27,23 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
-             ->topNavigation()
+            ->topNavigation()
+            ->favicon(asset('imagenes/logo.png'))
+            ->brandLogo(asset('imagenes/logo.png'))
+            ->brandLogoHeight('60px')
             ->colors([
-                 'primary' => [
-        '50'  => '#E0F7F7',
-        '100' => '#B3EAEA',
-        '200' => '#80DDDD',
-        '300' => '#4DCFCF',
-        '400' => '#26C2C2',
-        '500' => '#00B5B5',
-        '600' => '#009E9E',
-        '700' => '#008787',
-        '800' => '#006F6F',
-        '900' => '#005858',
-    ],
+                'primary' => [
+                    '50'  => '#E0F7F7',
+                    '100' => '#B3EAEA',
+                    '200' => '#80DDDD',
+                    '300' => '#4DCFCF',
+                    '400' => '#26C2C2',
+                    '500' => '#00B5B5',
+                    '600' => '#009E9E',
+                    '700' => '#008787',
+                    '800' => '#006F6F',
+                    '900' => '#005858',
+                ],
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')

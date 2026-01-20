@@ -85,6 +85,7 @@ class TurnoPantallaController extends Controller
             'numero_turno' => $turno?->numero_turno ?? null,
             'consultorio'  => $turno?->consultorio?->nombre ?? null,
             'llamado_en'   => $turno?->llamado_en,
+            'paciente_urgencias' => $turno?->paciente_urgencias
         ]);
     }
 

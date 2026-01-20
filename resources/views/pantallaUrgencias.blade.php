@@ -74,8 +74,22 @@
             margin-bottom: 20px;
         }
 
+        .turno-box-turno {
+            background-color: #117dacff;
+            color: #ffffff;
+            border-radius: 12px;
+            padding: 80px;
+            margin-bottom: 20px;
+            min-height: 50;
+        }
+
         .numero-turno {
             font-size: 52px;
+            font-weight: 900;
+        }
+
+        .numero-turno-urgencias {
+            font-size: 70px;
             font-weight: 900;
         }
 
@@ -141,15 +155,21 @@
 
             <div class="panel">
                 <h1 class="titulo">Turno</h1>
-                <div class="turno-box">
-                    <p id="numeroTurno" class="numero-turno">-</p>
+                <div class="turno-box-turno">
+                    <p id="numeroTurno" class="numero-turno-urgencias">-</p>
                 </div>
             </div>
 
             <div class="panel">
-                <h1 class="titulo">Médico</h1>
+                <h1 class="titulo">Consultorio</h1>
                 <div class="turno-box">
                     <p id="numeroTurnoConsultorio" class="numero-turno">-</p>
+                </div>
+                <div class="turno-box" style="background-color: #00B5B5;">
+                    <!-- <p id="nombreConsultorio" class="numero-turno">
+                        -
+                    </p>-->
+                    <p id="nombrePacienteConsultorio" class="numero-turno"> </p>
                 </div>
             </div>
 
@@ -255,6 +275,7 @@
 
                 if (!data || !data.numero_turno) {
                     document.getElementById('numeroTurnoConsultorio').textContent = '-';
+                    document.getElementById('nombrePacienteConsultorio').textContent = 'esta vacio';
                     return;
                 }
 
@@ -267,6 +288,9 @@
 
                 ultimoTurnoConsultorio = data.numero_turno;
                 document.getElementById('numeroTurnoConsultorio').textContent = data.numero_turno;
+                console.log('paciente_urgencias:', data.paciente_urgencias);
+                var nombrePaciente = data.paciente_urgencias || '-';
+                document.getElementById('nombrePacienteConsultorio').textContent = nombrePaciente;
             };
 
             xhr.send();
