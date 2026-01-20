@@ -299,7 +299,7 @@
                         <tr>
                             <th>Turno</th>
                             <th>Paciente</th>
-                            <th>Ubicacion</th>
+                            <th>ubicación</th>
                             <th>Hora</th>
                         </tr>
                     </thead>

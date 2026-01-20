@@ -163,7 +163,7 @@
                         <tr>
                             <th>Turno</th>
                             <th>Paciente</th>
-                            <th>Ubicacion</th>
+                            <th>Ubicación</th>
                             <th>Hora</th>
                         </tr>
                     </thead>
@@ -303,8 +303,7 @@
 
                             // Columna Paciente
                             var tdPaciente = document.createElement('td');
-                            tdPaciente.textContent = (t.paciente && t.paciente.nombre ?
-                                t.paciente.nombre + ' ' + (t.paciente.apellido || '') : '-');
+                            tdPaciente.textContent = t.paciente_urgencias || '-';
                             tr.appendChild(tdPaciente);
 
                             // Columna Ubicación (Módulo o Consultorio)
@@ -362,6 +361,7 @@
 
         setInterval(obtenerTurnoUrgencias, 5000);
         setInterval(obtenerTurnoMedicoUrgencias, 5000);
+        setInterval(turnosLlamadosUrgencias, 5000);
     </script>
 
 </body>
