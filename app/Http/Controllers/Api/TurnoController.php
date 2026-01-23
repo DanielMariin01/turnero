@@ -89,33 +89,41 @@ class TurnoController extends Controller
         ], 201);
     }
 
-    public function imprimir($id_turno)
-    {
-        try {
-            // Obtener el turno de la base de datos
-            $turno = Turno::findOrFail($id_turno);
-
-
-
-            // Datos para la vista
-            $data = [
-                'turno' => $turno,
-                'numero_turno' => $turno->numero_turno,
-                'fecha' => now()->format('d/m/Y H:i:s'),
-
-            ];
-            $customPaper = [0, 0, 204, 200];
-            // Generar PDF
-            $pdf = Pdf::loadView('ticket', $data)
-                ->setPaper($customPaper, 'portrait');
-
-            // Retornar PDF para visualizar en el navegador
-            return $pdf->stream("turno-{$id_turno}.pdf");
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Error al generar el PDF del turno',
-                'message' => $e->getMessage()
-            ], 500);
-        }
+public function imprimir($id_turno)
+{
+    try {
+        $turno = Turno::findOrFail($id_turno);
+        
+        // Comandos ESC/POS (los que ya funcionaban)
+        $esc  = "\x1B\x40";            // Reset
+        $esc .= "\x1B\x61\x01";        // Centrar
+        $esc .= "\x1B\x21\x30";        // Texto grande
+        $esc .= "URGENCIAS\n\n";
+        $esc .= "\x1B\x21\x20";        // Normal
+        $esc .= "Turno\n\n";
+        $esc .= "\x1B\x21\x38";        // MUY grande
+        $esc .= $turno->numero_turno . "\n\n";
+        $esc .= "\x1B\x21\x00";        // Normal
+        $esc .= Carbon::parse($turno->fecha . ' ' . $turno->hora)->format('d/m/Y H:i:s') . "\n\n";
+        $esc .= "Espere su llamado\n\n\n";
+        $esc .= "\x1D\x56\x00";        // Corte completo
+        
+        // Convertir a base64 para enviar por JSON
+        return response()->json([
+            'ok' => true,
+            'comandos' => base64_encode($esc)
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json(['error' => 'Turno no encontrado'], 404);
     }
+}
+
+
+
+
+///////////////////////////////7
+
+
+
 }

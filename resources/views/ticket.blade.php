@@ -16,7 +16,8 @@
             box-sizing: border-box;
         }
 
-        html, body {
+        html,
+        body {
             width: 204pt;
             height: 200pt;
             margin: 0;
@@ -70,12 +71,24 @@
         <div class="numero-turno">
             {{ $numero_turno }}
         </div>
-        
+
         <div class="info-row">
             <span class="info-label">Fecha y hora:</span>
             <span class="info-value">{{ $fecha }}</span>
         </div>
     </div>
+
+    <script>
+        // Auto-imprimir cuando carga la página
+        window.onload = function() {
+            window.print();
+
+            // Cerrar ventana después de imprimir o cancelar
+            window.onafterprint = function() {
+                window.close();
+            };
+        };
+    </script>
 
 </body>
 
