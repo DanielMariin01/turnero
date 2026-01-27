@@ -15,7 +15,7 @@
     <div id="root"></div>
 
     <!-- JS compilado -->
-    <script type="module" src="/build/assets/app-BW09zFs1.js"></script>
+    <script type="module" src="/build/assets/app-SzO7SHRl.js"></script>
   
 </body>
 

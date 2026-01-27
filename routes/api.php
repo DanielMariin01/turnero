@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\TurnoController;
 use App\Http\Controllers\Api\TurnoPantallaController;
 use App\Filament\Resources\ConsultaExternaResource;
 use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\QZTrayController;
 
 
 Route::get('/user', function (Request $request) {
@@ -31,3 +32,8 @@ Route::get('/turnoUltimoUrgencias', [TurnoPantallaController::class, 'turnoUltim
 Route::get('/turnoMedicoUrgencias', [TurnoPantallaController::class, 'turnoMedicoUrgencias']);
 //api para consultar una lista de los turnos que han sido llamaodis en el area de urgencias
 Route::get('/turnosLlamadosUrgencias', [TurnoPantallaController::class, 'turnosLlamadosUrgencias']);
+
+Route::get('/qz/certificate', [QZTrayController::class, 'getCertificate']);
+Route::post('/qz/sign', [QZTrayController::class, 'signMessage']);
+
+Route::get('/qz/test', [QZTrayController::class, 'test']);

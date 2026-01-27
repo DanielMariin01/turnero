@@ -1,13 +1,16 @@
-import React from "react";
+import React, { useEffect } from "react"; // ← CAMBIO 1
 import Tarjeta from "../components/Tarjeta";
 import { useNavigate } from "react-router-dom";
 import urgencias from "../../imagenes/urgencias.png";
-
-
+import { connectQZ, isQZConnected } from "../qzConfig"; // ← CAMBIO 2
 import Swal from "sweetalert2";
 
 export default function UrgenciasPage() {
     const navigate = useNavigate();
+
+    useEffect(() => {
+        connectQZ(); // Ya estaba bien
+    }, []);
 
     const pedirTurno = async () => {
         try {
@@ -31,8 +34,8 @@ export default function UrgenciasPage() {
 
                 if (printData.ok && printData.comandos) {
                     // Conectar a QZ Tray e imprimir
-                    if (!window.qz.websocket.isActive()) {
-                        await window.qz.websocket.connect();
+                    if (!isQZConnected()) { // ← CAMBIO 3
+                        await connectQZ();    // ← CAMBIO 3
                     }
 
                     const config = window.qz.configs.create("TurneroPrinter");
@@ -67,9 +70,8 @@ export default function UrgenciasPage() {
                 confirmButtonColor: "#d33",
             });
         }
-    }; // ← Cierra la función pedirTurno aquí
+    };
 
-    // ← El return debe estar AQUÍ, fuera de pedirTurno
     return (
         <div>
             <Tarjeta

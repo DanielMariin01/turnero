@@ -122,8 +122,6 @@ public function imprimir($id_turno)
 
 
 
-///////////////////////////////7
-
 
 
 }
