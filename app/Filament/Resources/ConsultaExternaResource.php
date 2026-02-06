@@ -24,7 +24,7 @@ class ConsultaExternaResource extends Resource
      ============================================ */
 
     protected static ?string $model = Turno::class;
-    protected static ?string $navigationIcon = 'heroicon-o-user';      
+    protected static ?string $navigationIcon = 'heroicon-o-user';
     protected static ?int $navigationSort = 3;
     protected static ?string $label = 'Consulta externa ';
 
@@ -96,7 +96,8 @@ class ConsultaExternaResource extends Resource
                 // PACIENTE
                 Tables\Columns\TextColumn::make('paciente.nombre')
                     ->label('Paciente')
-                    ->formatStateUsing(fn ($state, $record) =>
+                    ->formatStateUsing(
+                        fn($state, $record) =>
                         $record->paciente
                             ? $record->paciente->nombre . ' ' . $record->paciente->apellido
                             : '-'
@@ -106,15 +107,15 @@ class ConsultaExternaResource extends Resource
 
                 // CONDICIÓN
                 //Tables\Columns\TextColumn::make('condicion')
-                    //->label('Condición')
-                    //->sortable()
-                    //->searchable(),
+                //->label('Condición')
+                //->sortable()
+                //->searchable(),
 
                 // MOTIVO
                 //Tables\Columns\TextColumn::make('motivo')
-                    //->label('Motivo')
-                    //->sortable()
-                    //->searchable(),
+                //->label('Motivo')
+                //->sortable()
+                //->searchable(),
 
                 // MÓDULO
                 Tables\Columns\TextColumn::make('modulo.nombre')
@@ -126,7 +127,7 @@ class ConsultaExternaResource extends Resource
                 Tables\Columns\TextColumn::make('prioridad_texto')
                     ->label('Prioridad')
                     ->badge()
-                    ->color(fn ($state) => match ($state) {
+                    ->color(fn($state) => match ($state) {
                         'Alta' => 'danger',
                         'Media' => 'warning',
                         'Baja' => 'success',
@@ -136,7 +137,7 @@ class ConsultaExternaResource extends Resource
                 Tables\Columns\TextColumn::make('estado')
                     ->label('Estado')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'llamado' => 'success',
                         'en_espera' => 'warning',
                         'asignado' => 'success',
@@ -162,7 +163,7 @@ class ConsultaExternaResource extends Resource
                  ================================= */
                 Tables\Actions\Action::make('llamar_enespera')
                     ->label('Llamar')
-                        ->iconButton()
+                    ->iconButton()
                     ->color('primary')
                     ->icon('heroicon-o-phone')
                     ->requiresConfirmation(false)
@@ -171,8 +172,11 @@ class ConsultaExternaResource extends Resource
                     ->form([
                         Forms\Components\Select::make('fk_modulo')
                             ->label('Módulo')
-                            ->options(fn () => Cache::remember('modulos_select', 300,
-                                fn () => Modulo::pluck('nombre', 'id_modulo')))
+                            ->options(fn() => Cache::remember(
+                                'modulos_select',
+                                300,
+                                fn() => Modulo::pluck('nombre', 'id_modulo')
+                            ))
                             ->required()
                             ->placeholder('Seleccione un módulo'),
                     ])
@@ -180,7 +184,7 @@ class ConsultaExternaResource extends Resource
                         $record->update([
                             'estado' => 'llamado',
                             'hora_llamado' => now()->format('H:i:s'),
-                    ]);
+                        ]);
                         Notification::make()->title('Turno llamado')->success()->send();
                     })
                     ->action(function (Turno $record, array $data) {
@@ -191,7 +195,7 @@ class ConsultaExternaResource extends Resource
                             ->success()
                             ->send();
                     })
-                    ->visible(fn (Turno $record): bool => $record->estado === 'en_espera'),
+                    ->visible(fn(Turno $record): bool => $record->estado === 'en_espera'),
 
                 /* ================================
                  | LLAMAR PARA FACTURAR
@@ -207,15 +211,18 @@ class ConsultaExternaResource extends Resource
                     ->form([
                         Forms\Components\Select::make('fk_modulo')
                             ->label('Módulo')
-                            ->options(fn () => Cache::remember('modulos_select', 300,
-                                fn () => Modulo::pluck('nombre', 'id_modulo')))
+                            ->options(fn() => Cache::remember(
+                                'modulos_select',
+                                300,
+                                fn() => Modulo::pluck('nombre', 'id_modulo')
+                            ))
                             ->required(),
                     ])
                     ->before(function (Turno $record) {
                         $record->update([
                             'estado' => 'llamado_facturar',
                             'hora_llamado_facturar' => now()->format('H:i:s'),
-                    ]);
+                        ]);
                         Notification::make()->title('Turno llamado')->success()->send();
                     })
                     ->action(function (Turno $record, array $data) {
@@ -226,7 +233,7 @@ class ConsultaExternaResource extends Resource
                             ->success()
                             ->send();
                     })
-                    ->visible(fn (Turno $record): bool => $record->estado === 'facturar'),
+                    ->visible(fn(Turno $record): bool => $record->estado === 'facturar'),
 
                 /* ================================
                  | ASIGNAR CONSULTORIO
@@ -242,8 +249,11 @@ class ConsultaExternaResource extends Resource
                     ->form([
                         Forms\Components\Select::make('fk_consultorio')
                             ->label('Consultorio')
-                            ->options(fn () => Cache::remember('consultorio_select', 300,
-                                fn () => Consultorio::pluck('nombre', 'id_consultorio')))
+                            ->options(fn() => Cache::remember(
+                                'consultorio_select',
+                                300,
+                                fn() => Consultorio::pluck('nombre', 'id_consultorio')
+                            ))
                             ->required(),
                     ])
                     ->action(function (Turno $record, array $data) {
@@ -260,33 +270,34 @@ class ConsultaExternaResource extends Resource
                             ->success()
                             ->send();
                     })
-                    ->visible(fn (Turno $record): bool => $record->estado === 'llamado'),
+                    ->visible(fn(Turno $record): bool => $record->estado === 'llamado'),
 
 
-   /* ================================
+                /* ================================
                  | ACCION RELLAMAR
                  ================================= */
-                    Tables\Actions\Action::make('rellamar')
-     ->label('Volver a llamar')
-    ->icon('heroicon-o-speaker-wave')
-    ->iconButton()
-    ->color('warning')
-      ->visible(fn (Turno $record): bool =>
+                Tables\Actions\Action::make('rellamar')
+                    ->label('Volver a llamar')
+                    ->icon('heroicon-o-speaker-wave')
+                    ->iconButton()
+                    ->color('warning')
+                    ->visible(
+                        fn(Turno $record): bool =>
                         in_array($record->estado, ['llamado', 'llamado_facturar'])
                     )
 
-    //->requiresConfirmation()
-    ->action(function (Turno $record) {
-        $record->update([
-            'llamado_en' => now(),
-        ]);
-    }),
+                    //->requiresConfirmation()
+                    ->action(function (Turno $record) {
+                        $record->update([
+                            'llamado_en' => now(),
+                        ]);
+                    }),
 
 
                 /* ================================
                  | CANCELAR TURNO
                  ================================= */
-               Tables\Actions\Action::make('cancelar')
+                Tables\Actions\Action::make('cancelar')
                     ->label('Cancelar')
                     ->color('danger')
                     ->icon('heroicon-o-x-circle')
@@ -295,32 +306,32 @@ class ConsultaExternaResource extends Resource
                     ->modalHeading('Cancelar turno')
                     ->modalSubmitActionLabel('Guardar')
                     ->form([
-    Forms\Components\Select::make('observaciones')
-        ->label('Motivo de cancelación')
-      ->placeholder('Selecciona una opción')
-    ->searchPrompt('Escribe para buscar...')
-    ->noSearchResultsMessage('No se encontraron resultados.')
-        ->required()
-        ->searchable()
-        ->options([
-            'laboratorios' => 'Laboratorios',
-            'imagenes' => 'Imagenes',
-            'oncologia' => 'Oncología',
-            'no_atiende_llamado_facturar' => 'No atiende llamado para facturar',
-            'no_atiende_llamado_historia' => 'No atiende llamado para historia clínica',
-            'con_cita_posterior' => 'Con cita posterior',
-            'error_de_agendamiento' => 'Error de agendamiento',
-            'turno_doble' => 'Turno doble',
-            'perdio_cita' => 'Perdió cita',
-            'sin_autorizacion ' => 'Sin autorizacion',
-            'procedimiento_no_QX' => 'Procedimiento no QX',
-            'paciente_erroneo' => 'Paciente erróneo',
-            'Cirugia' => 'Cirugía',
-            'Informacion' => 'Información',
-            'otro' => 'Otro motivo',
-        ])
-        ->columnSpanFull(),
-])
+                        Forms\Components\Select::make('observaciones')
+                            ->label('Motivo de cancelación')
+                            ->placeholder('Selecciona una opción')
+                            ->searchPrompt('Escribe para buscar...')
+                            ->noSearchResultsMessage('No se encontraron resultados.')
+                            ->required()
+                            ->searchable()
+                            ->options([
+                                'laboratorios' => 'Laboratorios',
+                                'imagenes' => 'Imagenes',
+                                'oncologia' => 'Oncología',
+                                'no_atiende_llamado_facturar' => 'No atiende llamado para facturar',
+                                'no_atiende_llamado_historia' => 'No atiende llamado para historia clínica',
+                                'con_cita_posterior' => 'Con cita posterior',
+                                'error_de_agendamiento' => 'Error de agendamiento',
+                                'turno_doble' => 'Turno doble',
+                                'perdio_cita' => 'Perdió cita',
+                                'sin_autorizacion ' => 'Sin autorizacion',
+                                'procedimiento_no_QX' => 'Procedimiento no QX',
+                                'paciente_erroneo' => 'Paciente erróneo',
+                                'Cirugia' => 'Cirugía',
+                                'Informacion' => 'Información',
+                                'otro' => 'Otro motivo',
+                            ])
+                            ->columnSpanFull(),
+                    ])
                     ->action(function (Turno $record, array $data) {
                         $record->update([
                             'estado' => 'no_atendido',
@@ -334,7 +345,8 @@ class ConsultaExternaResource extends Resource
                             ->danger()
                             ->send();
                     })
-                    ->visible(fn (Turno $record): bool =>
+                    ->visible(
+                        fn(Turno $record): bool =>
                         in_array($record->estado, ['llamado', 'llamado_facturar'])
                     ),
 
@@ -362,7 +374,7 @@ class ConsultaExternaResource extends Resource
                             ->success()
                             ->send();
                     })
-                    ->visible(fn (Turno $record): bool => $record->estado === 'llamado_facturar'),
+                    ->visible(fn(Turno $record): bool => $record->estado === 'llamado_facturar'),
             ])
             ->bulkActions([]);
     }
