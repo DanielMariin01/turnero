@@ -21,10 +21,14 @@ class HistorialResource extends Resource
 
     protected static ?string $label = 'Historial de Turnos';
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
-     protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 2;
 
-
-        public static function canCreate(): bool
+    //permisos para ver recursos 
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->hasAnyRole(['admin', 'admisiones_consultaExterna']) ?? false;
+    }
+    public static function canCreate(): bool
     {
         return false;
     }
@@ -34,54 +38,54 @@ class HistorialResource extends Resource
     {
         return $form
             ->schema([
-               
-         
 
-      
 
-            Forms\Components\Section::make('Detalles de Atención')
-                ->schema([
-                    Forms\Components\Grid::make(2)
-                        ->schema([
-            
 
-                            Forms\Components\Select::make('fk_modulo')
-                                ->label('Modulo')
-                                ->relationship('modulo', 'nombre')
-                                ->searchable()
-                                ->preload(),
-                         
 
-                            Forms\Components\Select::make('consultorio.nombre')
-                                ->label('Consultorio')
-                                ->relationship('consultorio', 'nombre')
-                                 ->placeholder('Seleccione el consultorio')
-                                //->searchable()
-                                ->preload(),
-                                
 
-                
+                Forms\Components\Section::make('Detalles de Atención')
+                    ->schema([
+                        Forms\Components\Grid::make(2)
+                            ->schema([
 
-                            Forms\Components\Select::make('estado')
-                                ->label('Estado')
-                                ->options([
-                                    'en_espera' => 'En Espera',
-                                    'llamado' => 'Llamado',
-                                    'asignado' => 'Asignado',
-                                    'facturar' => 'Facturar',
-                                    //'llamado_medico' => 'Llamado por el Médico',
-                                    'llamado_facturar' => 'Llamado Facturar',
-                                ])
-                             
-                           ->preload()
-                                ->native(false),
-                        ]),
 
-                    Forms\Components\Textarea::make('observaciones')
-                        ->label('Observaciones')
-                        ->rows(3)
-                        ->columnSpanFull(),
-                ]),
+                                Forms\Components\Select::make('fk_modulo')
+                                    ->label('Modulo')
+                                    ->relationship('modulo', 'nombre')
+                                    ->searchable()
+                                    ->preload(),
+
+
+                                Forms\Components\Select::make('consultorio.nombre')
+                                    ->label('Consultorio')
+                                    ->relationship('consultorio', 'nombre')
+                                    ->placeholder('Seleccione el consultorio')
+                                    //->searchable()
+                                    ->preload(),
+
+
+
+
+                                Forms\Components\Select::make('estado')
+                                    ->label('Estado')
+                                    ->options([
+                                        'en_espera' => 'En Espera',
+                                        'llamado' => 'Llamado',
+                                        'asignado' => 'Asignado',
+                                        'facturar' => 'Facturar',
+                                        //'llamado_medico' => 'Llamado por el Médico',
+                                        'llamado_facturar' => 'Llamado Facturar',
+                                    ])
+
+                                    ->preload()
+                                    ->native(false),
+                            ]),
+
+                        Forms\Components\Textarea::make('observaciones')
+                            ->label('Observaciones')
+                            ->rows(3)
+                            ->columnSpanFull(),
+                    ]),
             ]);
     }
 
@@ -89,7 +93,7 @@ class HistorialResource extends Resource
     {
         return $table
             ->columns([
-                       
+
                 TextColumn::make('fecha')
                     ->label('Fecha')
                     ->date()
@@ -101,7 +105,8 @@ class HistorialResource extends Resource
 
                 TextColumn::make('paciente.nombre')
                     ->label('Paciente')
-                    ->formatStateUsing(fn ($state, $record) =>
+                    ->formatStateUsing(
+                        fn($state, $record) =>
                         $record->paciente
                             ? $record->paciente->nombre . ' ' . $record->paciente->apellido
                             : '-'
@@ -109,23 +114,23 @@ class HistorialResource extends Resource
                     ->sortable()
                     ->searchable(),
 
-           TextColumn::make('paciente.numero_documento')
+                TextColumn::make('paciente.numero_documento')
                     ->label('Numero de Documento')
                     ->sortable()
                     ->searchable(),
 
-          
+
                 TextColumn::make('condicion')
                     ->label('Condicion')
                     ->sortable()
                     ->searchable(),
 
-           
-TextColumn::make('motivo')
+
+                TextColumn::make('motivo')
                     ->label('Motivo')
                     ->sortable()
                     ->searchable(),
-    
+
                 TextColumn::make('modulo.nombre')
                     ->label('Ventanilla')
                     ->sortable()
@@ -137,38 +142,38 @@ TextColumn::make('motivo')
                 TextColumn::make('observaciones')
                     ->label('Observacion')
                     ->sortable(),
-                    
-                                
-         TextColumn::make('prioridad_texto')
-    ->label('Prioridad')
-    ->badge()
-    ->color(fn ($state) => match ($state) {
-        'Alta' => 'danger',
-        'Media' => 'warning',
-        'Baja' => 'success',
-    }),
 
 
-              TextColumn::make('estado')
-    ->label('Estado')
-    ->badge()
-    ->color(fn (string $state): string => match ($state) {
-        'llamado' => 'success',        // Azul
-        'en_espera' => 'warning',   // Naranja
-        'asignado' => 'success', 
-        'facturar' => 'info', 
-         'llamado_facturar' => 'success',
-           // Verde
-        default => 'gray',
-    }),
-           
-           TextColumn::make('hora')
+                TextColumn::make('prioridad_texto')
+                    ->label('Prioridad')
+                    ->badge()
+                    ->color(fn($state) => match ($state) {
+                        'Alta' => 'danger',
+                        'Media' => 'warning',
+                        'Baja' => 'success',
+                    }),
+
+
+                TextColumn::make('estado')
+                    ->label('Estado')
+                    ->badge()
+                    ->color(fn(string $state): string => match ($state) {
+                        'llamado' => 'success',        // Azul
+                        'en_espera' => 'warning',   // Naranja
+                        'asignado' => 'success',
+                        'facturar' => 'info',
+                        'llamado_facturar' => 'success',
+                        // Verde
+                        default => 'gray',
+                    }),
+
+                TextColumn::make('hora')
                     ->label('Hora')
                     ->sortable()
-                    ->time('g:i A'),     
+                    ->time('g:i A'),
             ])
-             ->paginationPageOptions([5, 10, 20])
-             ->defaultSort('hora', 'asc')
+            ->paginationPageOptions([5, 10, 20])
+            ->defaultSort('hora', 'asc')
 
 
 
@@ -177,11 +182,9 @@ TextColumn::make('motivo')
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
-                ->label('Editar'),
+                    ->label('Editar'),
             ])
-            ->bulkActions([
-             
-            ]);
+            ->bulkActions([]);
     }
 
     public static function getRelations(): array

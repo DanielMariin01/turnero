@@ -17,6 +17,7 @@ use Filament\Notifications\Notification;
 use App\Models\Consultorio;
 use App\Models\Modulo;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class UrgenciasResource extends Resource
@@ -40,6 +41,13 @@ class UrgenciasResource extends Resource
     /* ============================================
      |  PERMISOS DEL RESOURCE
      ============================================ */
+    //se agrega el permiso de spatie 
+    // app/Filament/Resources/TurnoResource.php
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->hasAnyRole(['admin', 'admisiones_urgencias']) ?? false;
+    }
+
     public static function canCreate(): bool
     {
         return false; // No se pueden crear turnos manualmente

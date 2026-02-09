@@ -52,10 +52,15 @@ class ConsultaExternaResource extends Resource
             return static::getEloquentQuery()->count();
         });
     }
-
+    //permisos para ver recursos 
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->hasAnyRole(['admin', 'admisiones_consultaExterna']) ?? false;
+    }
     /* ============================================
      |  PERMISOS DEL RESOURCE
      ============================================ */
+
     public static function canCreate(): bool
     {
         return false; // No se pueden crear turnos manualmente

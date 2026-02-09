@@ -46,6 +46,12 @@ class ConsultorioUrgenciasResource extends Resource
     }
 
 
+        //permisos para ver recursos 
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->hasAnyRole(['admin', 'medico_urgencias']) ?? false;
+    }
+
     public static function form(Form $form): Form
     {
         return $form

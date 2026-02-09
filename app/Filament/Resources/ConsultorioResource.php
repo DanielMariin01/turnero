@@ -22,10 +22,11 @@ class ConsultorioResource extends Resource
 
 
 
-public static function shouldRegisterNavigation(): bool
-{
-    return false;
-}
+    //permisos para ver recursos 
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->hasAnyRole(['admin']) ?? false;
+    }
 
 
 

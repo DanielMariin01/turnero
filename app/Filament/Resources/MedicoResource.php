@@ -40,7 +40,11 @@ class MedicoResource extends Resource
     // return static::getEloquentQuery()->count();
     //});
     // }
-
+    //permisos para ver recursos 
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->hasAnyRole(['admin', 'medico','admisiones_consultaExterna']) ?? false;
+    }
     public static function canCreate(): bool
     {
         return false;

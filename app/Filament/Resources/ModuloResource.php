@@ -22,11 +22,10 @@ class ModuloResource extends Resource
     protected static ?string $label = 'Modulo ';
     protected static ?string $navigationGroup = 'Administración';
 
-    public static function shouldRegisterNavigation(): bool
+       public static function canViewAny(): bool
     {
-        return false;
+        return auth()->user()?->hasAnyRole(['admin']) ?? false;
     }
-
     public static function form(Form $form): Form
     {
         return $form

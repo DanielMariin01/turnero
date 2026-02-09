@@ -24,7 +24,11 @@ class UsuarioResource extends Resource
 
 
     
-
+    //permisos para ver recursos 
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->hasAnyRole(['admin']) ?? false;
+    }
 
 public static function form(Form $form): Form
 {
