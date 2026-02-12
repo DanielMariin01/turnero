@@ -6,35 +6,31 @@ export default function FormularioRegistro() {
   const navigate = useNavigate();
   const location = useLocation();
 
-
-  useEffect(
-()=>{
-
-     let timer = setTimeout(() => {
-    navigate("/"); // ⬅ Ajusta la ruta si tu menú principal es diferente
-  }, 20000); // 20 segundos
-
-  const resetTimer = () => {
-    clearTimeout(timer);
-    timer = setTimeout(() => {
+  useEffect(() => {
+    let timer = setTimeout(() => {
       navigate("/");
     }, 20000);
-  };
 
-  window.addEventListener("mousemove", resetTimer);
-  window.addEventListener("keydown", resetTimer);
-  window.addEventListener("click", resetTimer);
-  window.addEventListener("touchstart", resetTimer);
+    const resetTimer = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        navigate("/");
+      }, 20000);
+    };
 
-  return () => {
-    clearTimeout(timer);
-    window.removeEventListener("mousemove", resetTimer);
-    window.removeEventListener("keydown", resetTimer);
-    window.removeEventListener("click", resetTimer);
-    window.removeEventListener("touchstart", resetTimer);
-  };
-}, [navigate])
+    window.addEventListener("mousemove", resetTimer);
+    window.addEventListener("keydown", resetTimer);
+    window.addEventListener("click", resetTimer);
+    window.addEventListener("touchstart", resetTimer);
 
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("mousemove", resetTimer);
+      window.removeEventListener("keydown", resetTimer);
+      window.removeEventListener("click", resetTimer);
+      window.removeEventListener("touchstart", resetTimer);
+    };
+  }, [navigate]);
 
   const [paciente, setPaciente] = useState({
     nombre: "",
@@ -43,7 +39,6 @@ export default function FormularioRegistro() {
     numero_documento: "",
   });
 
-  // Para saber en cuál input estamos escribiendo
   const inputActivo = useRef(null);
 
   const handleChange = (campo, valor) => {
@@ -55,23 +50,22 @@ export default function FormularioRegistro() {
 
   const handleGuardar = async () => {
     try {
-    Swal.fire({
-      title: "Creando registro...",
-      text: "Por favor espere",
-      allowOutsideClick: false,
-      allowEscapeKey: false,
-      didOpen: () => {
-        Swal.showLoading();
-      },
-    });
+      Swal.fire({
+        title: "Creando registro...",
+        text: "Por favor espere",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
 
-  const datosMayus = {
-      nombre: paciente.nombre.toUpperCase(),
-      apellido: paciente.apellido.toUpperCase(),
-      tipo_documento: paciente.tipo_documento,       // sin cambios
-      numero_documento: paciente.numero_documento,   // sin cambios
-    };
-
+      const datosMayus = {
+        nombre: paciente.nombre.toUpperCase(),
+        apellido: paciente.apellido.toUpperCase(),
+        tipo_documento: paciente.tipo_documento,
+        numero_documento: paciente.numero_documento,
+      };
 
       const response = await fetch("/api/pacientes", {
         method: "POST",
@@ -100,155 +94,187 @@ export default function FormularioRegistro() {
   };
 
   // --------------------------
-  // TECLADO COMPLETO
+  // TECLADO OPTIMIZADO PARA 24"
   // --------------------------
-  const TecladoCompleto = ({ onClickTecla, onBorrar }) => {
-    const letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+  const TecladoMovil = ({ onClickTecla, onBorrar }) => {
+    const fila1 = "QWERTYUIOP".split("");
+    const fila2 = "ASDFGHJKL".split("");
+    const fila3 = "ZXCVBNM".split("");
     const numeros = "1234567890".split("");
 
     return (
-      <div className="grid grid-cols-6 gap-3 p-5 bg-gray-100 rounded-xl shadow-lg w-[350px] h-fit">
+      <div className="w-full bg-gray-800 p-3 rounded-t-2xl shadow-2xl">
+        {/* Fila de números */}
+        <div className="flex justify-center gap-1.5 mb-2">
+          {numeros.map((num) => (
+            <button
+              key={num}
+              onClick={() => onClickTecla(num)}
+              className="bg-gray-700 text-white p-2 rounded-lg text-lg font-bold hover:bg-gray-600 w-16 h-12 transition-all active:scale-95"
+            >
+              {num}
+            </button>
+          ))}
+        </div>
 
-        {/* Números */}
-        {numeros.map((num) => (
+        {/* Primera fila - QWERTY */}
+        <div className="flex justify-center gap-1.5 mb-2">
+          {fila1.map((letra) => (
+            <button
+              key={letra}
+              onClick={() => onClickTecla(letra)}
+              className="bg-white text-gray-800 p-2 rounded-lg text-lg font-bold hover:bg-gray-100 w-16 h-12 transition-all active:scale-95"
+            >
+              {letra}
+            </button>
+          ))}
+        </div>
+
+        {/* Segunda fila - ASDF */}
+        <div className="flex justify-center gap-1.5 mb-2">
+          {fila2.map((letra) => (
+            <button
+              key={letra}
+              onClick={() => onClickTecla(letra)}
+              className="bg-white text-gray-800 p-2 rounded-lg text-lg font-bold hover:bg-gray-100 w-16 h-12 transition-all active:scale-95"
+            >
+              {letra}
+            </button>
+          ))}
+        </div>
+
+        {/* Tercera fila - ZXCV + Borrar */}
+        <div className="flex justify-center gap-1.5 mb-2">
           <button
-            key={num}
-            onClick={() => onClickTecla(num)}
-            className="bg-gray-300 p-4 rounded-xl text-xl font-bold hover:bg-gray-400"
+            onClick={onBorrar}
+            className="bg-red-600 text-white p-2 rounded-lg font-bold hover:bg-red-700 w-20 h-12 text-sm transition-all active:scale-95"
           >
-            {num}
+            ← DEL
           </button>
-        ))}
 
-        {/* Letras */}
-        {letras.map((letra) => (
+          {fila3.map((letra) => (
+            <button
+              key={letra}
+              onClick={() => onClickTecla(letra)}
+              className="bg-white text-gray-800 p-2 rounded-lg text-lg font-bold hover:bg-gray-100 w-16 h-12 transition-all active:scale-95"
+            >
+              {letra}
+            </button>
+          ))}
+
           <button
-            key={letra}
-            onClick={() => onClickTecla(letra)}
-            className="bg-gray-200 p-4 rounded-xl text-lg font-semibold hover:bg-gray-300"
+            onClick={onBorrar}
+            className="bg-red-600 text-white p-2 rounded-lg font-bold hover:bg-red-700 w-20 h-12 text-sm transition-all active:scale-95"
           >
-            {letra}
+            DEL →
           </button>
-        ))}
+        </div>
 
-        {/* Espacio */}
-        <button
-          onClick={() => onClickTecla(" ")}
-          className="col-span-3 bg-blue-400 text-white p-4 rounded-xl font-bold hover:bg-blue-500"
-        >
-          Espacio
-        </button>
-
-        {/* Borrar */}
-        <button
-          onClick={onBorrar}
-          className="col-span-3 bg-red-500 text-white p-4 rounded-xl font-bold hover:bg-red-600"
-        >
-          Borrar
-        </button>
+        {/* Barra espaciadora */}
+        <div className="flex justify-center gap-1.5">
+          <button
+            onClick={() => onClickTecla(" ")}
+            className="bg-blue-500 text-white p-2 rounded-lg font-bold hover:bg-blue-600 flex-1 h-12 text-base transition-all active:scale-95"
+          >
+            ESPACIO
+          </button>
+        </div>
       </div>
     );
   };
 
-  // Función cuando se presiona una tecla del teclado virtual
   const escribirTecla = (tecla) => {
     if (!inputActivo.current) return;
-
     const campo = inputActivo.current;
-
-    handleChange(
-      campo.name,
-      paciente[campo.name] + tecla
-    );
+    handleChange(campo.name, paciente[campo.name] + tecla);
   };
 
   const borrarTecla = () => {
     if (!inputActivo.current) return;
     const campo = inputActivo.current;
-
-    handleChange(
-      campo.name,
-      paciente[campo.name].slice(0, -1)
-    );
+    handleChange(campo.name, paciente[campo.name].slice(0, -1));
   };
 
   return (
-    <div className="flex justify-center gap-10 mt-10">
+    <div className="flex flex-col h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* FORMULARIO - PARTE SUPERIOR */}
+      <div className="flex-1 flex items-center justify-center p-4 overflow-auto">
+        <div className="w-full max-w-5xl bg-white shadow-2xl rounded-2xl p-6">
+          <h2 className="text-3xl font-bold mb-6 text-center text-indigo-700">
+            Registro de Paciente
+          </h2>
 
-      {/* IZQUIERDA → TECLADO */}
-      <TecladoCompleto onClickTecla={escribirTecla} onBorrar={borrarTecla} />
+          {/* CAMPOS EN HORIZONTAL */}
+          <div className="grid grid-cols-2 gap-4 mb-5">
+            <input
+              type="text"
+              name="nombre"
+              placeholder="Nombre"
+              className="border-2 border-gray-300 p-3 rounded-lg w-full text-base focus:border-indigo-500 focus:outline-none transition-all"
+              value={paciente.nombre}
+              onFocus={(e) => (inputActivo.current = e.target)}
+              onChange={(e) => handleChange("nombre", e.target.value)}
+            />
 
-      {/* DERECHA → FORMULARIO */}
-      <div className="w-[500px] bg-white shadow-lg rounded-2xl p-10">
-        <h2 className="text-3xl font-bold mb-8 text-center text-color-700">
-          Registro de Paciente
-        </h2>
+            <input
+              type="text"
+              name="apellido"
+              placeholder="Apellido"
+              className="border-2 border-gray-300 p-3 rounded-lg w-full text-base focus:border-indigo-500 focus:outline-none transition-all"
+              value={paciente.apellido}
+              onFocus={(e) => (inputActivo.current = e.target)}
+              onChange={(e) => handleChange("apellido", e.target.value)}
+            />
 
-        <input
-          type="text"
-          name="nombre"
-          placeholder="Nombre"
-          className="border p-4 rounded-xl w-full mb-4"
-          value={paciente.nombre}
-          onFocus={(e) => (inputActivo.current = e.target)}
-          onChange={(e) => handleChange("nombre", e.target.value)}
-        />
+            <select
+              name="tipo_documento"
+              className="border-2 border-gray-300 p-3 rounded-lg w-full text-base focus:border-indigo-500 focus:outline-none transition-all"
+              value={paciente.tipo_documento}
+              onFocus={(e) => (inputActivo.current = null)}
+              onChange={(e) => handleChange("tipo_documento", e.target.value)}
+            >
+              <option value="">Tipo de documento</option>
+              <option value="CC">Cédula de ciudadanía</option>
+              <option value="TI">Tarjeta de identidad</option>
+              <option value="CE">Cédula de extranjería</option>
+              <option value="PA">Pasaporte</option>
+              <option value="RC">Registro Civil</option>
+            </select>
 
-        <input
-          type="text"
-          name="apellido"
-          placeholder="Apellido"
-          className="border p-4 rounded-xl w-full mb-4"
-          value={paciente.apellido}
-          onFocus={(e) => (inputActivo.current = e.target)}
-          onChange={(e) => handleChange("apellido", e.target.value)}
-        />
+            <input
+              type="text"
+              name="numero_documento"
+              placeholder="Número de documento"
+              className="border-2 border-gray-300 p-3 rounded-lg w-full text-base focus:border-indigo-500 focus:outline-none transition-all"
+              value={paciente.numero_documento}
+              onFocus={(e) => (inputActivo.current = e.target)}
+              onChange={(e) =>
+                handleChange("numero_documento", e.target.value.replace(/\D/g, ""))
+              }
+            />
+          </div>
 
-        <select
-          name="tipo_documento"
-          className="border p-4 rounded-xl w-full mb-4"
-          value={paciente.tipo_documento}
-          onFocus={(e) => (inputActivo.current = null)} // No se llena con teclado
-          onChange={(e) => handleChange("tipo_documento", e.target.value)}
-        >
-          <option value="">Tipo de documento</option>
-          <option value="CC">Cédula de ciudadanía</option>
-          <option value="TI">Tarjeta de identidad</option>
-          <option value="CE">Cédula de extranjería</option>
-          <option value="PA">Pasaporte</option>
-        </select>
+          {/* BOTONES DE ACCIÓN */}
+          <div className="flex gap-4 mt-5">
+            <button
+              className="bg-green-600 text-white px-6 py-3 rounded-lg w-full text-lg font-bold hover:bg-green-700 transition-all active:scale-95 shadow-lg"
+              onClick={handleGuardar}
+            >
+              Guardar Registro
+            </button>
 
-        <input
-          type="text"
-          name="numero_documento"
-          placeholder="Número de documento"
-          className="border p-4 rounded-xl w-full mb-4"
-          value={paciente.numero_documento}
-          onFocus={(e) => (inputActivo.current = e.target)}
-          onChange={(e) =>
-            handleChange(
-              "numero_documento",
-              e.target.value.replace(/\D/g, "")
-            )
-          }
-        />
-
-        <div className="flex gap-4">
-          <button
-            className="bg-green-600 text-white px-8 py-4 rounded-xl w-full"
-            onClick={handleGuardar}
-          >
-            Guardar Registro
-          </button>
-
-          <button
-            className="bg-red-600 text-white px-8 py-4 rounded-xl w-full"
-            onClick={() => navigate(-1)}
-          >
-            Cancelar
-          </button>
+            <button
+              className="bg-red-600 text-white px-6 py-3 rounded-lg w-full text-lg font-bold hover:bg-red-700 transition-all active:scale-95 shadow-lg"
+              onClick={() => navigate(-1)}
+            >
+              Cancelar
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* TECLADO - PARTE INFERIOR */}
+      <TecladoMovil onClickTecla={escribirTecla} onBorrar={borrarTecla} />
     </div>
   );
 }
