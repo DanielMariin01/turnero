@@ -66,24 +66,48 @@ export default function FormularioRegistro() {
       }
 
       // Detectar Enter (fin de escaneo)
-      if (e.key === 'Enter' && scanBuffer.length > 5) {
-        e.preventDefault();
-        procesarCedulaColombia(scanBuffer);
-        setScanBuffer('');
+      // Detectar Enter (fin de escaneo)
+      if (e.key === 'Enter') {
+        if (scanBuffer.length > 5) {
+          e.preventDefault();
+          console.log('🔍 ENTER detectado - Procesando buffer:', scanBuffer);
+          procesarCedulaColombia(scanBuffer);
+          setScanBuffer('');
+        }
         return;
       }
 
-      // Acumular caracteres del escaneo
-      // El escáner es MUY rápido (< 50ms entre caracteres)
-      if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
-        e.preventDefault();
-        setScanBuffer(prev => prev + e.key);
+      // ⭐ IGNORAR teclas modificadoras
+      if (e.key === 'Shift' || e.key === 'Control' || e.key === 'Alt' || e.key === 'Meta') {
+        return; // NO capturar Shift, Control, Alt, Meta
+      }
 
-        // Limpiar buffer después de 100ms de inactividad
+      // Acumular TODOS los caracteres del escaneo (incluyendo espacios, tabs, etc)
+      if (!e.ctrlKey && !e.altKey && !e.metaKey) {
+        let char = e.key;
+
+        // Casos especiales
+        if (e.key === 'Tab') {
+          char = '\t';
+          e.preventDefault();
+        } else if (e.key === ' ') {
+          char = ' ';
+          e.preventDefault();
+        } else if (e.key.length === 1) {
+          e.preventDefault();
+        }
+
+        console.log(`📝 Capturando: "${char}" (código: ${char.charCodeAt(0)})`);
+        setScanBuffer(prev => prev + char);
+
+        // Limpiar buffer después de 200ms de inactividad (aumentado para dar más tiempo)
         clearTimeout(scanTimeoutRef.current);
         scanTimeoutRef.current = setTimeout(() => {
+          if (scanBuffer.length > 0 && scanBuffer.length < 10) {
+            console.log('⏱️ Timeout - Buffer limpiado:', scanBuffer);
+          }
           setScanBuffer('');
-        }, 100);
+        }, 200);
       }
     };
 
@@ -98,55 +122,154 @@ export default function FormularioRegistro() {
   // PROCESAR CÉDULA COLOMBIANA
   // ============================================
   const procesarCedulaColombia = (codigoCompleto) => {
-    console.log('Código escaneado:', codigoCompleto);
+    console.log('========== INICIO ESCANEO ==========');
+    console.log('Código escaneado (raw):', codigoCompleto);
+    console.log('Longitud:', codigoCompleto.length);
+    console.log('Contiene TAB (\\t):', codigoCompleto.includes('\t'));
+    console.log('Contiene $:', codigoCompleto.includes('$'));
+    console.log('Contiene espacio:', codigoCompleto.includes(' '));
+    console.log('Contiene espacios múltiples:', codigoCompleto.includes('  '));
+    console.log('Contiene |:', codigoCompleto.includes('|'));
+    console.log('Contiene ^:', codigoCompleto.includes('^'));
+
+    // Mostrar cada carácter y su código
+    console.log('Caracteres detallados:');
+    for (let i = 0; i < Math.min(codigoCompleto.length, 150); i++) {
+      const char = codigoCompleto[i];
+      const code = codigoCompleto.charCodeAt(i);
+      const desc = code === 9 ? '(TAB)' : code === 32 ? '(SPACE)' : '';
+      console.log(`  [${i}] "${char}" = ${code} ${desc}`);
+    }
+    console.log('====================================');
 
     try {
-      // Formato cédula colombiana: 0$DOCUMENTO$APELLIDO1$APELLIDO2$NOMBRE1$NOMBRE2$SEXO$FECHA$...
-      const partes = codigoCompleto.split('$');
+      let partes = [];
+      let formatoDetectado = '';
+      let separador = '';
 
-      if (partes.length < 6) {
-        mostrarMensaje('⚠️ Código de cédula incompleto. Intente nuevamente.', 'warning');
+      // Detectar el separador usado
+      if (codigoCompleto.includes('\t')) {
+        separador = '\t';
+        formatoDetectado = 'TAB';
+        partes = codigoCompleto.split('\t');
+      } else if (codigoCompleto.includes('  ')) {
+        // Espacios múltiples (2 o más espacios seguidos)
+        separador = /\s{2,}/; // Regex: 2 o más espacios
+        formatoDetectado = 'ESPACIOS MÚLTIPLES';
+        partes = codigoCompleto.split(/\s{2,}/).map(p => p.trim()).filter(Boolean);
+      } else if (codigoCompleto.includes('$')) {
+        separador = '$';
+        formatoDetectado = '$';
+        partes = codigoCompleto.split('$');
+      } else if (codigoCompleto.includes('|')) {
+        separador = '|';
+        formatoDetectado = '|';
+        partes = codigoCompleto.split('|');
+      } else if (codigoCompleto.includes('^')) {
+        separador = '^';
+        formatoDetectado = '^';
+        partes = codigoCompleto.split('^');
+      } else if (codigoCompleto.includes(' ')) {
+        // Espacios simples como último recurso
+        separador = ' ';
+        formatoDetectado = 'ESPACIO SIMPLE';
+        partes = codigoCompleto.split(' ').filter(Boolean);
+      } else {
+        // Sin separador detectado - mostrar info de debug
+        console.error('❌ NO SE DETECTÓ NINGÚN SEPARADOR');
+        console.error('Esto puede pasar si:');
+        console.error('1. El escáner no está enviando separadores');
+        console.error('2. Los separadores se están perdiendo en el camino');
+        console.error('3. El formato es completamente diferente');
+        mostrarMensaje('⚠️ Formato de cédula no reconocido. Por favor use entrada manual.', 'warning');
         return;
       }
 
-      // Extraer datos
-      const tipoInicial = partes[0]?.trim() || '';
-      const numeroDocumento = partes[1]?.trim() || '';
-      const apellido1 = partes[2]?.trim() || '';
-      const apellido2 = partes[3]?.trim() || '';
-      const nombre1 = partes[4]?.trim() || '';
-      const nombre2 = partes[5]?.trim() || '';
-      const sexoCodigo = partes[6]?.trim() || ''; // 0M o 0F
-      const fechaCodigo = partes[7]?.trim() || ''; // YYMMDD
+      console.log(`✓ Separador detectado: "${formatoDetectado}"`);
+      console.log('✓ Número de partes:', partes.length);
+      console.log('✓ Partes:', partes);
 
-      // Combinar nombres y apellidos
-      const apellidos = [apellido1, apellido2].filter(Boolean).join(' ');
-      const nombres = [nombre1, nombre2].filter(Boolean).join(' ');
+      // Procesar según el formato
+      if (formatoDetectado === '$') {
+        // FORMATO CARNET INSTITUCIONAL: 0$DOC$AP1$AP2$NOM1$NOM2$...
+        if (partes.length < 6) {
+          console.warn('Partes insuficientes para formato $');
+          mostrarMensaje('⚠️ Código incompleto. Intente nuevamente.', 'warning');
+          return;
+        }
 
-      // Validaciones
-      if (!numeroDocumento || numeroDocumento.length < 5) {
-        mostrarMensaje('⚠️ No se pudo leer el número de documento.', 'warning');
-        return;
+        const tipoInicial = partes[0]?.trim() || '';
+        const numeroDocumento = partes[1]?.trim() || '';
+        const apellido1 = partes[2]?.trim() || '';
+        const apellido2 = partes[3]?.trim() || '';
+        const nombre1 = partes[4]?.trim() || '';
+        const nombre2 = partes[5]?.trim() || '';
+
+        const apellidos = [apellido1, apellido2].filter(Boolean).join(' ');
+        const nombres = [nombre1, nombre2].filter(Boolean).join(' ');
+
+        console.log('✓ Datos extraídos (formato $):', { numeroDocumento, apellidos, nombres });
+
+        if (!numeroDocumento || !nombres || !apellidos) {
+          mostrarMensaje('⚠️ Datos incompletos.', 'warning');
+          return;
+        }
+
+        setPaciente({
+          nombre: nombres,
+          apellido: apellidos,
+          tipo_documento: 'CC',
+          numero_documento: numeroDocumento,
+        });
+
+        mostrarMensaje(`✅ Carnet escaneado correctamente`, 'success');
+        playSuccessSound();
+
+      } else {
+        // FORMATO CÉDULA COLOMBIANA: DOC[SEP]AP1[SEP]AP2[SEP]NOM1[SEP]NOM2[SEP]...
+        // Formato esperado: DOCUMENTO APELLIDO1 APELLIDO2 NOMBRE1 NOMBRE2 SEXO? FECHA? TIPOSANGRE?
+        if (partes.length < 5) {
+          console.warn('Partes insuficientes para formato cédula');
+          console.warn('Se esperaban al menos 5 partes, se recibieron:', partes.length);
+          mostrarMensaje('⚠️ Código de cédula incompleto. Intente nuevamente.', 'warning');
+          return;
+        }
+
+        const numeroDocumento = partes[0]?.trim() || '';
+        const apellido1 = partes[1]?.trim() || '';
+        const apellido2 = partes[2]?.trim() || '';
+        const nombre1 = partes[3]?.trim() || '';
+        const nombre2 = partes[4]?.trim() || '';
+        // partes[5] = sexo o fecha
+        // partes[6] = fecha o tipo sangre
+        // partes[7] = tipo sangre
+
+        const apellidos = [apellido1, apellido2].filter(Boolean).join(' ');
+        const nombres = [nombre1, nombre2].filter(Boolean).join(' ');
+
+        console.log('✓ Datos extraídos (cédula):', { numeroDocumento, apellidos, nombres });
+
+        if (!numeroDocumento || !nombres || !apellidos) {
+          console.warn('Validación fallida:', { numeroDocumento, apellidos, nombres });
+          mostrarMensaje('⚠️ Datos incompletos en la cédula.', 'warning');
+          return;
+        }
+
+        setPaciente({
+          nombre: nombres,
+          apellido: apellidos,
+          tipo_documento: 'CC',
+          numero_documento: numeroDocumento,
+        });
+
+        console.log('✅ Formulario actualizado exitosamente');
+        mostrarMensaje(`✅ Cédula escaneada correctamente`, 'success');
+        playSuccessSound();
       }
-
-      if (!nombres || !apellidos) {
-        mostrarMensaje('⚠️ Datos incompletos en la cédula.', 'warning');
-        return;
-      }
-
-      // Actualizar formulario automáticamente
-      setPaciente({
-        nombre: nombres,
-        apellido: apellidos,
-        tipo_documento: 'CC', // Cédula de Ciudadanía
-        numero_documento: numeroDocumento,
-      });
-
-      mostrarMensaje(`✅ Cédula escaneada correctamente`, 'success');
-      playSuccessSound();
 
     } catch (error) {
-      console.error('Error procesando cédula:', error);
+      console.error('❌ Error procesando cédula:', error);
+      console.error('Stack:', error.stack);
       mostrarMensaje('❌ Error al procesar la cédula. Intente nuevamente.', 'error');
     }
   };
@@ -249,14 +372,11 @@ export default function FormularioRegistro() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Accept": "application/json",
-
         },
         body: JSON.stringify(datosMayus),
       });
 
-      const texto = await response.text();
-      console.log("RESPUESTA REAL DEL BACKEND:", texto);
+      const data = await response.json();
 
       if (!response.ok) {
         // Manejar error de documento duplicado
@@ -428,10 +548,10 @@ export default function FormularioRegistro() {
           {/* MENSAJE DE ESTADO DE ESCANEO */}
           {mensajeEscaneo && (
             <div className={`mb-4 p-3 rounded-lg border-l-4 transition-all ${mensajeEscaneo.tipo === 'success'
-                ? 'bg-green-50 border-green-500 text-green-800'
-                : mensajeEscaneo.tipo === 'warning'
-                  ? 'bg-yellow-50 border-yellow-500 text-yellow-800'
-                  : 'bg-red-50 border-red-500 text-red-800'
+              ? 'bg-green-50 border-green-500 text-green-800'
+              : mensajeEscaneo.tipo === 'warning'
+                ? 'bg-yellow-50 border-yellow-500 text-yellow-800'
+                : 'bg-red-50 border-red-500 text-red-800'
               }`}>
               <p className="font-semibold flex items-center gap-2">
                 {mensajeEscaneo.tipo === 'success' && '✅'}
@@ -532,3 +652,4 @@ export default function FormularioRegistro() {
     </div>
   );
 }
+

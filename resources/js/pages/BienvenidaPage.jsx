@@ -91,6 +91,7 @@ const datosPaciente = { ...paciente, motivo };
           onClick={() => manejarClick("Consulta Externa")}
         />
         {
+          
         /*<Tarjeta
           titulo="Oncología"
           color="blue"
