@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Turnero</title>
     <!-- CSS compilado -->
-    <link rel="stylesheet" href="/build/assets/app-Dl96sNvs.css">
+    <link rel="stylesheet" href="/build/assets/app-BhyE5HKG.css">
     <script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2/qz-tray.js"></script>
 </head>
 
@@ -15,7 +15,7 @@
     <div id="root"></div>
 
     <!-- JS compilado -->
-    <script type="module" src="/build/assets/app-BTy4RaQa.js"></script>
+    <script type="module" src="/build/assets/app-utxasC-u.js"></script>
   
 </body>
 
