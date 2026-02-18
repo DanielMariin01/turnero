@@ -33,6 +33,12 @@ Route::get('/turnoMedicoUrgencias', [TurnoPantallaController::class, 'turnoMedic
 //api para consultar una lista de los turnos que han sido llamaodis en el area de urgencias
 Route::get('/turnosLlamadosUrgencias', [TurnoPantallaController::class, 'turnosLlamadosUrgencias']);
 
+//API DE LLAMADO DE TURNOS AREA QUIMIOTERAPIA
+Route::get('/turnoUltimoQuimioterapia', [TurnoPantallaController::class, 'turnoUltimoQuimioterapia']);
+//API PARA CONSULTAR LOS ULTIMOS TURNOS QUE SE HAN LLAMADO EN QUIMIOTERAPIA
+Route::get('turnosLlamadosQuimioterapia', [TurnoPantallaController::class, 'turnosLlamadosQuimioterapia']);
+
+//API PARA EL LLAMADO DE CERTIFICADOS DE LA IMPRESORA Y EL PROGRAMA QZ TRAY
 Route::get('/qz/certificate', [QZTrayController::class, 'getCertificate']);
 Route::post('/qz/sign', [QZTrayController::class, 'signMessage']);
 

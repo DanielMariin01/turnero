@@ -23,12 +23,12 @@ class ReporteResource extends Resource
 {
     protected static ?string $model = Turno::class;
 
-protected static ?string $navigationIcon = 'heroicon-o-document-chart-bar';
+    protected static ?string $navigationIcon = 'heroicon-o-document-chart-bar';
+    protected static ?string $navigationGroup = 'Modulos';
+    protected static ?string $label = 'Reporte  ';
+    protected static ?int $navigationSort = 1;
 
-     protected static ?string $label = 'Reporte  ';
-      protected static ?int $navigationSort = 1;
-
-     public static function canCreate(): bool
+    public static function canCreate(): bool
     {
         return false; // No se pueden crear turnos manualmente
     }
@@ -37,7 +37,7 @@ protected static ?string $navigationIcon = 'heroicon-o-document-chart-bar';
     {
         return false; // No se editan turnos aquí
     }
-        //permisos para ver recursos 
+    //permisos para ver recursos 
     public static function canViewAny(): bool
     {
         return auth()->user()?->hasAnyRole(['admin']) ?? false;
@@ -54,8 +54,8 @@ protected static ?string $navigationIcon = 'heroicon-o-document-chart-bar';
     public static function table(Table $table): Table
     {
         return $table
-           ->defaultSort('fecha', 'desc')
-       
+            ->defaultSort('fecha', 'desc')
+
             ->columns([
                 // FECHA
                 Tables\Columns\TextColumn::make('fecha')
@@ -71,7 +71,8 @@ protected static ?string $navigationIcon = 'heroicon-o-document-chart-bar';
                 // PACIENTE
                 Tables\Columns\TextColumn::make('paciente.nombre')
                     ->label('Paciente')
-                    ->formatStateUsing(fn ($state, $record) =>
+                    ->formatStateUsing(
+                        fn($state, $record) =>
                         $record->paciente
                             ? $record->paciente->nombre . ' ' . $record->paciente->apellido
                             : '-'
@@ -93,9 +94,9 @@ protected static ?string $navigationIcon = 'heroicon-o-document-chart-bar';
 
                 // MOTIVO
                 //Tables\Columns\TextColumn::make('motivo')
-                    //->label('Motivo')
-                    //->sortable()
-                    //->searchable(),
+                //->label('Motivo')
+                //->sortable()
+                //->searchable(),
 
                 // MÓDULO
                 Tables\Columns\TextColumn::make('modulo.nombre')
@@ -107,7 +108,7 @@ protected static ?string $navigationIcon = 'heroicon-o-document-chart-bar';
                 Tables\Columns\TextColumn::make('prioridad_texto')
                     ->label('Prioridad')
                     ->badge()
-                    ->color(fn ($state) => match ($state) {
+                    ->color(fn($state) => match ($state) {
                         'Alta' => 'danger',
                         'Media' => 'warning',
                         'Baja' => 'success',
@@ -117,7 +118,7 @@ protected static ?string $navigationIcon = 'heroicon-o-document-chart-bar';
                 Tables\Columns\TextColumn::make('estado')
                     ->label('Estado')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'llamado' => 'success',
                         'en_espera' => 'warning',
                         'asignado' => 'success',
@@ -131,7 +132,7 @@ protected static ?string $navigationIcon = 'heroicon-o-document-chart-bar';
                     ->label('Hora')
                     ->sortable()
                     ->time('g:i A'),
-                
+
                 Tables\Columns\TextColumn::make('hora_llamado')
                     ->label('Llamado')
                     ->sortable()
@@ -152,9 +153,9 @@ protected static ?string $navigationIcon = 'heroicon-o-document-chart-bar';
                     ->label('Hora finalizado')
                     ->sortable()
                     ->time('g:i A'),
-                
+
             ])
-             ->paginationPageOptions([5, 10, 20])
+            ->paginationPageOptions([5, 10, 20])
 
             ->filters([
                 //
