@@ -26,11 +26,7 @@ class PedirCitaResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-user';
     protected static ?string $label = 'Admisiones Oncologia ';
-<<<<<<< HEAD
- 
-=======
 
->>>>>>> 2b0f0d513a7640042c0129fb98839b687eb06177
 
     public static function getEloquentQuery(): Builder
     {
@@ -228,6 +224,7 @@ class PedirCitaResource extends Resource
                                 'Consulta_Externa' => 'Consulta Externa',
                                 'no_atiende_llamado_facturar' => 'No atiende llamado para facturar',
                                 'no_atiende_llamado_historia' => 'No atiende llamado para historia clínica',
+                                'no_atiende_llamado' => 'No Atiende Al Llamado',
                                 'con_cita_posterior' => 'Con cita posterior',
                                 'error_de_agendamiento' => 'Error de agendamiento',
                                 'turno_doble' => 'Turno doble',
@@ -258,8 +255,6 @@ class PedirCitaResource extends Resource
                         fn(Turno $record): bool =>
                         in_array($record->estado, ['llamado', 'llamado_facturar'])
                     ),
-<<<<<<< HEAD
-=======
                 //FINALIZAR ATENCIÓN
                 Tables\Actions\Action::make('Finalizar')
                     ->label('Finalizar Atención')
@@ -285,7 +280,6 @@ class PedirCitaResource extends Resource
                     ->visible(fn(Turno $record): bool => $record->estado === 'llamado'),
 
                
->>>>>>> 2b0f0d513a7640042c0129fb98839b687eb06177
 
             ])
             ->bulkActions([]);
