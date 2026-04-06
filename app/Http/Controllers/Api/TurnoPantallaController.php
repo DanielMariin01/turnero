@@ -14,7 +14,11 @@ class TurnoPantallaController extends Controller
     {
         $ultimoTurno = Turno::with(['paciente', 'modulo']) // Agregar relación con modulo
             ->whereIn('estado', ['llamado', 'llamado_facturar'])
+<<<<<<< HEAD
             ->whereIn('motivo', ['Consulta Externa','Oncologia','Pedir Cita'])
+=======
+            //->whereIn('motivo', ['Consulta Externa','Oncologia','Pedir Cita'])
+>>>>>>> 2b0f0d513a7640042c0129fb98839b687eb06177
             ->orderBy('updated_at', 'desc')
             ->first();
 

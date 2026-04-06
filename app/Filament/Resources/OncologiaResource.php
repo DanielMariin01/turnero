@@ -31,7 +31,11 @@ class OncologiaResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-user';
     //protected static ?int $navigationSort = 3;
     protected static ?string $label = 'Quimioterapia ';
+<<<<<<< HEAD
      
+=======
+
+>>>>>>> 2b0f0d513a7640042c0129fb98839b687eb06177
 
     public static function canViewAny(): bool
     {
@@ -42,7 +46,11 @@ class OncologiaResource extends Resource
         // Combina ambos: solo turnos de hoy y estado 'en_espera'
         return parent::getEloquentQuery()
             ->hoy() // tu scope para turnos de hoy
+<<<<<<< HEAD
             ->whereIn('estado', ['en_espera'])
+=======
+            ->whereIn('estado', ['en_espera', 'llamado'])
+>>>>>>> 2b0f0d513a7640042c0129fb98839b687eb06177
             ->where('motivo', 'oncologia')
             ->with(['paciente', 'modulo', 'consultorio']);
     }
@@ -115,7 +123,11 @@ class OncologiaResource extends Resource
             ->filters([
                 //
             ])
+<<<<<<< HEAD
            ->actions([
+=======
+            ->actions([
+>>>>>>> 2b0f0d513a7640042c0129fb98839b687eb06177
 
                 /* ================================
                  | LLAMAR DESDE EN ESPERA
@@ -177,7 +189,37 @@ class OncologiaResource extends Resource
                         ]);
                     }),
 
+<<<<<<< HEAD
 
+=======
+                /* ================================
+                 | FINALIZAR ATENCIÓN
+                 ================================= */
+                Tables\Actions\Action::make('Finalizar')
+                    ->label('Finalizar Atención')
+                    ->iconButton()
+                    ->color('gray')
+                    ->icon('heroicon-o-check-badge')
+                    ->requiresConfirmation()
+                    ->modalHeading('Finalizar atención')
+                    ->modalDescription('¿Está seguro de finalizar la atención?')
+                    ->modalSubmitActionLabel('Guardar')
+                    ->action(function (Turno $record) {
+                        $record->update([
+                            'estado' => 'atendido',
+                            //'hora' => now()->format('H:i:s'),
+                            'hora_finalizacion' => now()->format('H:i:s'),
+                        ]);
+
+                        Notification::make()
+                            ->title('Turno atendido')
+                            ->success()
+                            ->send();
+                    })
+                    ->visible(fn(Turno $record): bool => $record->estado === 'llamado'),
+
+
+>>>>>>> 2b0f0d513a7640042c0129fb98839b687eb06177
             ])
             ->bulkActions([]);
     }
