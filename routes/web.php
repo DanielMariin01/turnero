@@ -17,6 +17,10 @@ Route::get('/pantallaUrgencias', function () {
     return view('pantallaUrgencias');
 });
 
+Route::get('/pantallaQuimioterapia', function () {
+    return view('pantallaQuimioterapia');
+});
+
 
 Route::get('/{any}', function () {
     return view('welcome');

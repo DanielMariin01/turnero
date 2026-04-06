@@ -18,45 +18,45 @@ export default function CondicionPage() {
   const motivo = location.state?.motivo || null;
 
   const [condicion, setCondicion] = useState("ninguna");
-  const [cargando , setCargando] = useState(false);
+  const [cargando, setCargando] = useState(false);
 
 
   useEffect(() => {
-  let timer = setTimeout(() => {
-    navigate("/"); // ⬅ Ajusta la ruta si tu menú principal es diferente
-  }, 20000); // 20 segundos
+    let timer = setTimeout(() => {
+      navigate("/"); // ⬅ Ajusta la ruta si tu menú principal es diferente
+    }, 20000); // 20 segundos
 
-  const resetTimer = () => {
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      navigate("/");
-    }, 20000);
-  };
+    const resetTimer = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        navigate("/");
+      }, 20000);
+    };
 
-  window.addEventListener("mousemove", resetTimer);
-  window.addEventListener("keydown", resetTimer);
-  window.addEventListener("click", resetTimer);
-  window.addEventListener("touchstart", resetTimer);
+    window.addEventListener("mousemove", resetTimer);
+    window.addEventListener("keydown", resetTimer);
+    window.addEventListener("click", resetTimer);
+    window.addEventListener("touchstart", resetTimer);
 
-  return () => {
-    clearTimeout(timer);
-    window.removeEventListener("mousemove", resetTimer);
-    window.removeEventListener("keydown", resetTimer);
-    window.removeEventListener("click", resetTimer);
-    window.removeEventListener("touchstart", resetTimer);
-  };
-}, [navigate]);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("mousemove", resetTimer);
+      window.removeEventListener("keydown", resetTimer);
+      window.removeEventListener("click", resetTimer);
+      window.removeEventListener("touchstart", resetTimer);
+    };
+  }, [navigate]);
 
 
 
 
   const generarYGuardarTurno = async (condicion) => {
- 
-    if(!paciente){
-      return  alert("no se encontraron datos del paciente")
+
+    if (!paciente) {
+      return alert("no se encontraron datos del paciente")
     }
-Swal.fire({
-  html: `
+    Swal.fire({
+      html: `
     <div style="display: flex; flex-direction: column; align-items: center;">
       
       <div class="loader-hospital"></div>
@@ -70,19 +70,19 @@ Swal.fire({
       </p>
     </div>
   `,
-  width: "40rem",
-  background: "#ffffff",
-  showConfirmButton: false,
-  allowOutsideClick: false,
-  allowEscapeKey: false,
-   didOpen: () => {
-    Swal.showLoading();
-  }
-});
+      width: "40rem",
+      background: "#ffffff",
+      showConfirmButton: false,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
 
 
 
-   try{
+    try {
 
       const payload = {
         fk_paciente: paciente.id_paciente ?? null,           // si usas id en BD local
@@ -91,33 +91,33 @@ Swal.fire({
 
       };
 
-      const res = await fetch("/api/turno",{
+      const res = await fetch("/api/turno", {
 
 
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(payload),
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
 
 
       });
       const data = await res.json();
 
-      if(!res.ok){
-          Swal.close();
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: data.message || "Error al generar el turno",
-      });
-      return;
+      if (!res.ok) {
+        Swal.close();
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: data.message || "Error al generar el turno",
+        });
+        return;
 
       }
 
-  Swal.close();
+      Swal.close();
 
-     navigate("/turno", { state: { turno: data.turno } });
+      navigate("/turno", { state: { turno: data.turno } });
 
-   }catch (error) {
+    } catch (error) {
       console.error(error);
       alert("Error de conexión con el servidor");
       setCargando(false);
@@ -162,7 +162,7 @@ Swal.fire({
           color="green"
           imagen={adulto_mayor}
           descripcion="Toque aquí para generar su turno"
-       onClick={() => generarYGuardarTurno("adulto_mayor")}
+          onClick={() => generarYGuardarTurno("adulto_mayor")}
         />
 
         <Tarjeta
@@ -170,14 +170,14 @@ Swal.fire({
           color="green"
           imagen={adulto_niño}
           descripcion="Toque aquí para generar su turno"
-     onClick={() => generarYGuardarTurno("acompañado_con_un_menor")}
+          onClick={() => generarYGuardarTurno("acompañado_con_un_menor")}
         />
 
-           <Tarjeta
+        <Tarjeta
           titulo="No tengo"
           color="green"
           descripcion="Toque aquí para generar su turno"
-            onClick={() => generarYGuardarTurno("ninguna")}
+          onClick={() => generarYGuardarTurno("ninguna")}
         />
 
 

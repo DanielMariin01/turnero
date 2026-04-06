@@ -25,7 +25,6 @@ class ConsultaExternaResource extends Resource
 
     protected static ?string $model = Turno::class;
     protected static ?string $navigationIcon = 'heroicon-o-user';
-    protected static ?int $navigationSort = 3;
     protected static ?string $label = 'Consulta externa ';
 
     /* ============================================

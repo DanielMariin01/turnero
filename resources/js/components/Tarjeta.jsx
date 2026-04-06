@@ -153,14 +153,7 @@ export default function Tarjeta({ titulo, color, onClick, imagen, descripcion })
           style={{
             color: "#006F6F",
           }}
-          animate={{
-            scale: [1, 1.05, 1],
-          }}
-          transition={{
-            duration: 1.2,
-            ease: "easeInOut",
-            repeat: Infinity,
-          }}
+      
         >
           {titulo}
         </motion.h2>
@@ -169,7 +162,7 @@ export default function Tarjeta({ titulo, color, onClick, imagen, descripcion })
           {descripcion}
         </p>
 
-        {/* Texto pulsante "TOCA AQUÍ" */}
+        {/* Texto pulsante "TOCA AQUÍ" 
         <motion.div
           className="absolute bottom-6 left-1/2 transform -translate-x-1/2 
                      text-white font-bold px-6 py-2 rounded-full shadow-lg"
@@ -187,7 +180,7 @@ export default function Tarjeta({ titulo, color, onClick, imagen, descripcion })
           }}
         >
           👆 ¡TOCA AQUÍ!
-        </motion.div>
+        </motion.div>*/}
       </motion.button>
     </div>
   );
