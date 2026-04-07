@@ -24,14 +24,14 @@ class ListUrgencias extends ListRecords
     public function verificarAlertaTriage(): void
     {
         // Evita enviar correo repetido: solo 1 vez cada 15 minutos
-        if (Cache::has('alerta_triage_enviada')) {
-            return;
-        }
+        //if (Cache::has('alerta_triage_enviada')) {
+           // return;
+       //}
 
         $pacientesEnEspera = Turno::hoy()
             ->where('motivo', 'urgencias')
             ->where('estado', 'en_espera')
-            ->whereNull('hora_llamado')
+            ->whereNull('hora')
             ->get();
 
         $cantidad = $pacientesEnEspera->count();
@@ -56,7 +56,7 @@ class ListUrgencias extends ListRecords
 
         if ($maxEspera >= 10) {
             $motivos[]  = 'Tiempo excedido';
-            $detalles[] = "Un paciente lleva {$maxEspera} min sin clasificar (límite: 10 min).";
+            $detalles[] = "Un paciente lleva {$maxEspera} min sin ser atendido (límite: 10 min).";
         }
 
         // Enviar correo a los 3 destinatarios
@@ -76,7 +76,7 @@ class ListUrgencias extends ListRecords
         }
 
         // Bloquear 15 minutos para no repetir el envío
-        Cache::put('alerta_triage_enviada', true, now()->addMinutes(15));
+        //Cache::put('alerta_triage_enviada', true, now()->addMinutes(15));
 
         // Aviso visual en pantalla también
         Notification::make()

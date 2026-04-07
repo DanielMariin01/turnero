@@ -32,14 +32,20 @@ class AlertaTriageMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: '🚨 Alerta Triage Urgencias — ' . $this->motivo,
+            subject: 'Alerta Triage Urgencias - ' . $this->motivo,
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            view: 'emails.alerta-triage',
+            htmlString: '<h2>Alerta Triage Urgencias</h2>' .
+                '<p><strong>Motivo:</strong> ' . $this->motivo . '</p>' .
+                '<p><strong>Detalle:</strong> ' . $this->detalle . '</p>' .
+                '<p><strong>Pacientes en espera:</strong> ' . $this->cantidadEspera . '</p>' .
+                '<p><strong>Tiempo maximo de espera:</strong> ' . $this->maxEspera . ' minutos</p>' .
+                '<p><strong>Fecha y hora:</strong> ' . now()->format('d/m/Y H:i:s') . '</p>' .
+                '<hr><small>Mensaje automatico - Sistema Digiturno Urgencias</small>',
         );
     }
 }
