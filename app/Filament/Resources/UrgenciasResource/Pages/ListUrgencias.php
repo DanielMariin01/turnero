@@ -10,28 +10,42 @@ use Filament\Resources\Pages\ListRecords;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class ListUrgencias extends ListRecords
 {
     protected static string $resource = UrgenciasResource::class;
 
-    protected function getTablePollingInterval(): ?string
+    public function mount(): void
+    {
+        parent::mount();
+        $this->verificarAlertaTriage();
+    }
+
+    public function getPollingInterval(): ?string
+    {
+        return '60s';
+    }
+
+    public function poll(): void
     {
         $this->verificarAlertaTriage();
-        return '60s';
     }
 
     public function verificarAlertaTriage(): void
     {
+        Log::info('Verificando alerta triage...');
+
         // Evita enviar correo repetido: solo 1 vez cada 15 minutos
-        //if (Cache::has('alerta_triage_enviada')) {
-           // return;
-       //}
+        if (Cache::has('alerta_triage_enviada')) {
+            Log::info('Alerta ya enviada recientemente, omitiendo...');
+            return;
+        }
 
         $pacientesEnEspera = Turno::hoy()
             ->where('motivo', 'urgencias')
             ->where('estado', 'en_espera')
-            ->whereNull('hora')
+            ->whereNull('hora_llamado')
             ->get();
 
         $cantidad = $pacientesEnEspera->count();
@@ -40,9 +54,12 @@ class ListUrgencias extends ListRecords
             fn($t) => Carbon::parse($t->hora)->diffInMinutes(now())
         ) ?? 0;
 
+        Log::info("Pacientes en espera: {$cantidad}, Tiempo máximo: {$maxEspera} min");
+
         // ¿Se cumple alguna condición?
         if ($cantidad < 3 && $maxEspera < 10) {
-            return; // Todo normal, no hace nada
+            Log::info('No se cumple ninguna condición de alerta.');
+            return;
         }
 
         // Armar mensaje del correo
@@ -56,8 +73,11 @@ class ListUrgencias extends ListRecords
 
         if ($maxEspera >= 10) {
             $motivos[]  = 'Tiempo excedido';
-            $detalles[] = "Un paciente lleva {$maxEspera} min sin ser atendido (límite: 10 min).";
+            $detalles[] = "Un paciente lleva {$maxEspera} min sin clasificar (límite: 10 min).";
         }
+
+        $motivo  = implode(' | ', $motivos);
+        $detalle = implode(' ', $detalles);
 
         // Enviar correo a los 3 destinatarios
         $correos = array_filter([
@@ -66,25 +86,32 @@ class ListUrgencias extends ListRecords
             env('ALERTA_TRIAGE_CORREO_3'),
         ]);
 
+        Log::info('Enviando alerta a: ' . implode(', ', $correos));
+
+        $numerosTurnos = $pacientesEnEspera->pluck('numero_turno')->join(', ');
+
         foreach ($correos as $correo) {
             Mail::to($correo)->send(new AlertaTriageMail(
-                implode(' | ', $motivos),
-                implode(' ', $detalles),
+                $motivo,
+                $detalle,
                 $cantidad,
-                $maxEspera
+                $maxEspera,
+                $numerosTurnos
             ));
         }
 
         // Bloquear 15 minutos para no repetir el envío
-        //Cache::put('alerta_triage_enviada', true, now()->addMinutes(15));
+        Cache::put('alerta_triage_enviada', true, now()->addMinutes(15));
 
-        // Aviso visual en pantalla también
+        // Aviso visual en pantalla
         Notification::make()
             ->title('📧 Alerta enviada')
             ->body('Se notificó por correo a los responsables.')
             ->warning()
             ->persistent()
             ->send();
+
+        Log::info('Alerta enviada correctamente.');
     }
 
     protected function getHeaderActions(): array
