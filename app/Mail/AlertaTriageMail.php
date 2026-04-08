@@ -17,23 +17,44 @@ class AlertaTriageMail extends Mailable
     public int $cantidadEspera;
     public int $maxEspera;
     public string $numero_turno;
+    public string $tiempoFormateado;
 
-     public function __construct($motivo, $detalle, $cantidadEspera, $maxEspera, $numero_turno)
+    public function __construct($motivo, $detalle, $cantidadEspera, $maxEspera, $numero_turno)
     {
         $this->motivo = $motivo;
         $this->detalle = $detalle;
         $this->cantidadEspera = $cantidadEspera;
         $this->maxEspera = $maxEspera;
         $this->numero_turno = $numero_turno;
+        $this->tiempoFormateado = $this->formatearTiempo($maxEspera);
     }
 
-    public function build()
+    public function envelope(): Envelope
     {
-        return $this->subject('Alerta Triage Urgencias - ' . $this->motivo)
-                    ->view('emails.alerta-triage');
+        return new Envelope(
+            subject: 'Alerta Triage Urgencias - ' . $this->motivo,
+        );
     }
 
- 
+    public function content(): Content
+    {
+        return new Content(
+            view: 'emails.alerta-triage',
+        );
+    }
+    private function formatearTiempo($minutos)
+    {
+        $horas = intdiv($minutos, 60);
+        $minutosRestantes = $minutos % 60;
 
-    
+        if ($horas > 0 && $minutosRestantes > 0) {
+            return "{$horas} hora" . ($horas > 1 ? 's' : '') . " y {$minutosRestantes} minuto" . ($minutosRestantes > 1 ? 's' : '');
+        }
+
+        if ($horas > 0) {
+            return "{$horas} hora" . ($horas > 1 ? 's' : '');
+        }
+
+        return "{$minutosRestantes} minuto" . ($minutosRestantes > 1 ? 's' : '');
+    }
 }

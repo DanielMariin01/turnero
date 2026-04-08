@@ -80,7 +80,7 @@
                                             TIEMPO DE ESPERA
                                         </p>
                                         <p style="margin:5px 0 0 0; font-size:22px; font-weight:bold; color:#00B5B5;">
-                                            {{ $maxEspera }} min
+                                            {{ $tiempoFormateado }}
                                         </p>
 
                                         @if ($maxEspera >= 10)
