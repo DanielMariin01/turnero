@@ -163,11 +163,10 @@ class UrgenciasResource extends Resource
                  | ASIGNAR CONSULTORIO
                  ================================= */
                 Tables\Actions\Action::make('asignar_consultorio')
-                    ->label('Asignar Consultorio')
+                    ->label('Enviar al médico')
                     ->button()
-                    ->color('success')
-                    ->icon('heroicon-o-check')
-                    ->iconButton()
+                    ->color('primary')
+                    //->icon('heroicon-o-check') // opcional, puedes dejarlo o quitarlo
                     ->modalHeading('Selecciona el consultorio para este turno')
                     ->modalSubmitActionLabel('Asignar')
                     ->form([
@@ -179,6 +178,7 @@ class UrgenciasResource extends Resource
                                 fn() => Consultorio::pluck('nombre', 'id_consultorio')
                             ))
                             ->required(),
+
                         Forms\Components\TextInput::make('paciente_urgencias')
                             ->label('Nombre del Paciente')
                             ->required()
@@ -186,7 +186,6 @@ class UrgenciasResource extends Resource
                     ])
 
                     ->action(function (Turno $record, array $data) {
-
                         $record->update([
                             'estado' => 'asignado',
                             'hora_atendido' => now()->format('H:i:s'),
@@ -196,11 +195,54 @@ class UrgenciasResource extends Resource
 
                         Notification::make()
                             ->title('Consultorio asignado')
-                            ->body("Turno asignado correctamente")
+                            ->body("Turno enviado al médico correctamente")
                             ->success()
                             ->send();
                     })
+
                     ->visible(fn(Turno $record): bool => $record->estado === 'llamado'),
+                /* ================================
+                 | CANCELAR TURNO
+                 ================================= */
+                Tables\Actions\Action::make('cancelar')
+                    ->label('CANCELAR TURNO')
+                    ->color('danger')
+                    //->icon('heroicon-o-x-circle')
+                    ->requiresConfirmation(false)
+                    ->modalHeading('Cancelar turno')
+                    ->modalSubmitActionLabel('Guardar')
+                    ->form([
+                        Forms\Components\Select::make('observaciones')
+                            ->label('Motivo de cancelación')
+                            ->placeholder('Selecciona una opción')
+                            ->searchPrompt('Escribe para buscar...')
+                            ->noSearchResultsMessage('No se encontraron resultados.')
+                            ->required()
+                            ->searchable()
+                            ->options([
+
+                                'turno_doble' => 'Turno doble',
+                                'otro' => 'Otro motivo',
+                            ])
+                            ->columnSpanFull(),
+                    ])
+                    ->action(function (Turno $record, array $data) {
+                        $record->update([
+                            'estado' => 'no_atendido',
+                            'observaciones' => $data['observaciones'],
+                            //'hora' => now()->format('H:i:s'),
+                        ]);
+
+                        Notification::make()
+                            ->title('Turno cancelado')
+                            ->body("El turno {$record->numero_turno} fue marcado como no atendido.")
+                            ->danger()
+                            ->send();
+                    })
+                    ->visible(
+                        fn(Turno $record): bool =>
+                        in_array($record->estado, ['llamado', 'llamado_facturar'])
+                    ),
 
 
             ])
