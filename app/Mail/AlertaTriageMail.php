@@ -16,36 +16,24 @@ class AlertaTriageMail extends Mailable
     public string $detalle;
     public int $cantidadEspera;
     public int $maxEspera;
+    public string $numero_turno;
 
-    public function __construct(
-        string $motivo,
-        string $detalle,
-        int $cantidadEspera,
-        int $maxEspera
-    ) {
-        $this->motivo         = $motivo;
-        $this->detalle        = $detalle;
+     public function __construct($motivo, $detalle, $cantidadEspera, $maxEspera, $numero_turno)
+    {
+        $this->motivo = $motivo;
+        $this->detalle = $detalle;
         $this->cantidadEspera = $cantidadEspera;
-        $this->maxEspera      = $maxEspera;
+        $this->maxEspera = $maxEspera;
+        $this->numero_turno = $numero_turno;
     }
 
-    public function envelope(): Envelope
+    public function build()
     {
-        return new Envelope(
-            subject: 'Alerta Triage Urgencias - ' . $this->motivo,
-        );
+        return $this->subject('Alerta Triage Urgencias - ' . $this->motivo)
+                    ->view('emails.alerta-triage');
     }
 
-    public function content(): Content
-    {
-        return new Content(
-            htmlString: '<h2>Alerta Triage Urgencias</h2>' .
-                '<p><strong>Motivo:</strong> ' . $this->motivo . '</p>' .
-                '<p><strong>Detalle:</strong> ' . $this->detalle . '</p>' .
-                '<p><strong>Pacientes en espera:</strong> ' . $this->cantidadEspera . '</p>' .
-                '<p><strong>Tiempo maximo de espera:</strong> ' . $this->maxEspera . ' minutos</p>' .
-                '<p><strong>Fecha y hora:</strong> ' . now()->format('d/m/Y H:i:s') . '</p>' .
-                '<hr><small>Mensaje automatico - Sistema Digiturno Urgencias</small>',
-        );
-    }
+ 
+
+    
 }
