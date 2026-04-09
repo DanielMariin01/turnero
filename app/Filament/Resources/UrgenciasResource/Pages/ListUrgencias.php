@@ -87,6 +87,7 @@ class ListUrgencias extends ListRecords
             env('ALERTA_TRIAGE_CORREO_1'),
             env('ALERTA_TRIAGE_CORREO_2'),
             env('ALERTA_TRIAGE_CORREO_3'),
+            env('ALERTA_TRIAGE_CORREO_4'),
         ]);
 
         Log::info('Enviando alerta a: ' . implode(', ', $correos));
@@ -156,6 +157,7 @@ class ListUrgencias extends ListRecords
             env('ALERTA_TRIAGE_CORREO_1'),
             env('ALERTA_TRIAGE_CORREO_2'),
             env('ALERTA_TRIAGE_CORREO_3'),
+            env('ALERTA_TRIAGE_CORREO_4'),
         ]);
         $tiempoFormateado = $this->formatearTiempo($maxDemora);
         foreach ($correos as $correo) {
