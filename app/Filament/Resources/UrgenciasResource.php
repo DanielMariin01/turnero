@@ -69,7 +69,7 @@ class UrgenciasResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->poll('60s') // Auto refresco cada 60s
+            ->poll('30s') // Auto refresco cada 60s
             ->defaultSort('hora', 'asc')
             ->columns([
                 // FECHA
@@ -135,11 +135,10 @@ class UrgenciasResource extends Resource
                     ->form([
                         Forms\Components\Select::make('fk_modulo')
                             ->label('Módulo')
-                            ->options(fn() => Cache::remember(
-                                'modulos_select',
-                                300,
-                                fn() => Modulo::pluck('nombre', 'id_modulo')
-                            ))
+                            ->options(
+                                fn() => Modulo::where('nombre', 'Modulo Urgencias')
+                                    ->pluck('nombre', 'id_modulo')
+                            )
                             ->required()
                             ->placeholder('Seleccione un módulo'),
                     ])
@@ -172,11 +171,10 @@ class UrgenciasResource extends Resource
                     ->form([
                         Forms\Components\Select::make('fk_consultorio')
                             ->label('Consultorio')
-                            ->options(fn() => Cache::remember(
-                                'consultorio_select',
-                                300,
-                                fn() => Consultorio::pluck('nombre', 'id_consultorio')
-                            ))
+                            ->options(
+                                fn() => Consultorio::where('nombre', 'Consultorio Urgencias')
+                                    ->pluck('nombre', 'id_consultorio')
+                            )
                             ->required(),
 
                         Forms\Components\TextInput::make('paciente_urgencias')
@@ -241,7 +239,7 @@ class UrgenciasResource extends Resource
                     })
                     ->visible(
                         fn(Turno $record): bool =>
-                        in_array($record->estado, ['llamado', 'llamado_facturar'])
+                        in_array($record->estado, ['llamado', 'en_espera'])
                     ),
 
 

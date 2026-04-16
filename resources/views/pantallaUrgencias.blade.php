@@ -209,7 +209,7 @@
         var turnoAnterior = null;
         var audio = document.getElementById('audio');
         var sonidoListo = false;
-        var ultimoTurnoConsultorio = null;
+        var ultimoTurnoConsultorio = '';
 
         // 🔊 Intentar cargar audio automáticamente al inicio
         window.addEventListener('load', function() {
@@ -309,7 +309,7 @@
                 var turnoActual = data.numero_turno || '-';
 
                 // ⭐ DETECTAR SI CAMBIÓ EL NÚMERO DE TURNO ⭐
-                if (ultimoTurnoConsultorio !== null && ultimoTurnoConsultorio !== turnoActual) {
+                if (ultimoTurnoConsultorio !== ''  && ultimoTurnoConsultorio !== turnoActual) {
                     console.log("Cambio de turno detectado: " + turnoActual);
 
                     // REPRODUCIR AUDIO

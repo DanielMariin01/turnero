@@ -19,17 +19,10 @@ class ListUrgencias extends ListRecords
 
     public function mount(): void
     {
-        parent::mount();
-        $this->verificarAlertaTriage();
-        $this->verificarAlertaMedico();
+        parent::mount();                  // Solo llama al padre, nada más
     }
 
-    public function getPollingInterval(): ?string
-    {
-        return '60s';
-    }
-
-    public function poll(): void
+    public function hydrate(): void       // ← Este sí corre cada 60s automático
     {
         $this->verificarAlertaTriage();
         $this->verificarAlertaMedico();
@@ -136,7 +129,7 @@ class ListUrgencias extends ListRecords
             ->get();
 
         $pacientesDemorados = $pacientesAsignados->filter(function ($turno) {
-            return Carbon::parse($turno->hora_atendido)->diffInMinutes(now()) >= 15;
+            return Carbon::parse($turno->hora_atendido)->diffInMinutes(now()) >= 3;
         });
 
         if ($pacientesDemorados->isEmpty()) {
@@ -189,7 +182,7 @@ class ListUrgencias extends ListRecords
         return [];
     }
 
-     private function formatearTiempo(int $minutos): string
+    private function formatearTiempo(int $minutos): string
     {
         $horas = intdiv($minutos, 60);
         $minutosRestantes = $minutos % 60;
