@@ -23,10 +23,10 @@ class AlertaTriageMail extends Mailable
     {
         $this->motivo = $motivo;
         $this->detalle = $detalle;
-        $this->cantidadEspera = $cantidadEspera;
-        $this->maxEspera = $maxEspera;
+        $this->cantidadEspera = (int) round($cantidadEspera);
+        $this->maxEspera = (int) round($maxEspera);
         $this->numero_turno = $numero_turno;
-        $this->tiempoFormateado = $this->formatearTiempo($maxEspera);
+        $this->tiempoFormateado = $this->formatearTiempo((int) round($maxEspera));
     }
 
     public function envelope(): Envelope
