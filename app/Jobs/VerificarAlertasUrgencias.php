@@ -61,6 +61,9 @@ class VerificarAlertasUrgencias implements ShouldQueue
         }
 
         $correos = array_filter([
+            env('ALERTA_TRIAGE_CORREO_1'),
+            env('ALERTA_TRIAGE_CORREO_2'),
+            env('ALERTA_TRIAGE_CORREO_3'),
             env('ALERTA_TRIAGE_CORREO_4'),
         ]);
 
@@ -108,7 +111,9 @@ class VerificarAlertasUrgencias implements ShouldQueue
         ));
 
         $correos = array_filter([
-
+            env('ALERTA_TRIAGE_CORREO_1'),
+            env('ALERTA_TRIAGE_CORREO_2'),
+            env('ALERTA_TRIAGE_CORREO_3'),
             env('ALERTA_TRIAGE_CORREO_4'),
         ]);
 
