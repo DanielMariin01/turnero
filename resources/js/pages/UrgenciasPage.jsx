@@ -1,18 +1,40 @@
-import React, { useEffect } from "react"; // ← CAMBIO 1
+import React, { useEffect, useRef, useState } from "react";
 import Tarjeta from "../components/Tarjeta";
 import { useNavigate } from "react-router-dom";
 import urgencias from "../../imagenes/urgencias.png";
-import { connectQZ, isQZConnected } from "../qzConfig"; // ← CAMBIO 2
+import { connectQZ, isQZConnected } from "../qzConfig";
 import Swal from "sweetalert2";
 
 export default function UrgenciasPage() {
     const navigate = useNavigate();
+    const [generando, setGenerando] = useState(false);
+    const procesandoRef = useRef(false); // bloqueo inmediato, no depende del re-render
 
     useEffect(() => {
-        connectQZ(); // Ya estaba bien
+        connectQZ().catch(err => console.error("QZ no conectó al iniciar:", err));
     }, []);
 
     const pedirTurno = async () => {
+        // 🔒 Bloqueo inmediato contra doble clic/doble tap
+        if (procesandoRef.current) return;
+        procesandoRef.current = true;
+        setGenerando(true);
+
+        // Alerta de "generando turno"
+        Swal.fire({
+            title: "Generando turno...",
+            text: "Por favor espera",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+            },
+        });
+
+        let turnoCreado = null;
+
+        // PASO 1: crear el turno
         try {
             const response = await fetch("/api/turno", {
                 method: "POST",
@@ -25,17 +47,40 @@ export default function UrgenciasPage() {
                     fk_paciente: null,
                 }),
             });
-            const data = await response.json();
 
-            // 🔥 IMPRIMIR CON QZ TRAY
-            if (data.turno && data.turno.id_turno) {
-                const printResponse = await fetch(`/api/turnos/${data.turno.id_turno}/imprimir`);
+            if (!response.ok) {
+                throw new Error(`Error del servidor: ${response.status}`);
+            }
+
+            const data = await response.json();
+            turnoCreado = data.turno;
+        } catch (error) {
+            console.error("Error creando turno:", error);
+            await Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "No se pudo generar el turno.",
+                confirmButtonColor: "#d33",
+            });
+            procesandoRef.current = false;
+            setGenerando(false);
+            return;
+        }
+
+        // PASO 2: imprimir (independiente, no debe bloquear el flujo si falla)
+        if (turnoCreado?.id_turno) {
+            try {
+                const printResponse = await fetch(`/api/turnos/${turnoCreado.id_turno}/imprimir`);
+
+                if (!printResponse.ok) {
+                    throw new Error(`Error del servidor: ${printResponse.status}`);
+                }
+
                 const printData = await printResponse.json();
 
                 if (printData.ok && printData.comandos) {
-                    // Conectar a QZ Tray e imprimir
-                    if (!isQZConnected()) { // ← CAMBIO 3
-                        await connectQZ();    // ← CAMBIO 3
+                    if (!isQZConnected()) {
+                        await connectQZ();
                     }
 
                     const config = window.qz.configs.create("TurneroPrinter");
@@ -48,28 +93,35 @@ export default function UrgenciasPage() {
                     await window.qz.print(config, data_print);
                     console.log("✅ Ticket impreso con QZ Tray");
                 }
+            } catch (printError) {
+                console.error("Error imprimiendo:", printError);
+                await Swal.fire({
+                    icon: "warning",
+                    title: "Turno creado, pero no se pudo imprimir",
+                    text: "Verifica la impresora",
+                    confirmButtonColor: "#f0ad4e",
+                });
+                procesandoRef.current = false;
+                setGenerando(false);
+                setTimeout(() => navigate("/urgencias"), 3000);
+                return;
             }
-
-            await Swal.fire({
-                icon: "success",
-                title: "¡Turno creado!",
-                text: "Tu turno de urgencias ha sido registrado.",
-                confirmButtonColor: "#3085d6",
-            });
-
-            setTimeout(() => {
-                navigate("/urgencias");
-            }, 3000);
-
-        } catch (error) {
-            console.error(error);
-            Swal.fire({
-                icon: "error",
-                title: "Error",
-                text: "No se pudo generar el turno.",
-                confirmButtonColor: "#d33",
-            });
         }
+
+        // PASO 3: éxito
+        await Swal.fire({
+            icon: "success",
+            title: "¡Turno creado!",
+            text: "Tu turno de urgencias ha sido registrado.",
+            confirmButtonColor: "#3085d6",
+        });
+
+        procesandoRef.current = false;
+        setGenerando(false);
+
+        setTimeout(() => {
+            navigate("/urgencias");
+        }, 3000);
     };
 
     return (
@@ -79,6 +131,7 @@ export default function UrgenciasPage() {
                 color="blue"
                 imagen={urgencias}
                 onClick={pedirTurno}
+                disabled={generando}
             />
         </div>
     );
