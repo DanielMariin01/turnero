@@ -663,9 +663,9 @@
         obtenerTurnosMedicos();
 
         // Actualizar cada 60 segundos
-        setInterval(obtenerTurno, 5000);
-        setInterval(obtenerTurnosLlamados, 5000);
-        setInterval(obtenerTurnosMedicos, 5000);
+        setInterval(obtenerTurno, 3000);
+        setInterval(obtenerTurnosLlamados, 3000);
+        setInterval(obtenerTurnosMedicos, 3000);
     </script>
 
 </body>

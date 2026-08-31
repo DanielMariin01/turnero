@@ -15,7 +15,7 @@
         }
 
         body {
-            background-image: url('{{ asset("imagenes/fondo.png") }}');
+            background-image: url('{{ asset('imagenes/fondo.png') }}');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -211,21 +211,19 @@
         var sonidoListo = false;
         var ultimoTurnoConsultorio = '';
 
+        function reproducirSonido() {
+            audio.muted = false;
+            audio.currentTime = 0;
+            audio.play().catch(function(err) {
+                console.error('Error reproduciendo audio:', err);
+            });
+        }
+
         // 🔊 Intentar cargar audio automáticamente al inicio
         window.addEventListener('load', function() {
             audio.load();
-            audio.muted = true;
-
-            // Intentar reproducir (algunos navegadores lo permiten)
-            audio.play().then(function() {
-                console.log('Audio activado automáticamente');
-                sonidoListo = true;
-                audio.pause();
-                audio.currentTime = 0;
-            }).catch(function() {
-                console.log('Audio requiere interacción del usuario');
-                // El sonido se activará en el primer clic
-            });
+            audio.muted = false; // ya no depende del truco de mute/play/pause
+            sonidoListo = true;
         });
 
         // Activar audio con cualquier clic en la página
@@ -268,12 +266,9 @@
                     turnoAnterior &&
                     turnoAnterior.numero_turno !== data.numero_turno;
 
-                if (cambioTurno && sonidoListo) {
+                if (cambioTurno) {
                     console.log('Nuevo llamado detectado - Reproduciendo sonido');
-                    audio.currentTime = 0;
-                    audio.play().catch(function(err) {
-                        console.error('Error reproduciendo audio:', err);
-                    });
+                    reproducirSonido();
                 }
 
                 turnoAnterior = data;
@@ -309,19 +304,9 @@
                 var turnoActual = data.numero_turno || '-';
 
                 // ⭐ DETECTAR SI CAMBIÓ EL NÚMERO DE TURNO ⭐
-                if (ultimoTurnoConsultorio !== ''  && ultimoTurnoConsultorio !== turnoActual) {
+                if (ultimoTurnoConsultorio !== '' && ultimoTurnoConsultorio !== turnoActual) {
                     console.log("Cambio de turno detectado: " + turnoActual);
-
-                    // REPRODUCIR AUDIO
-                    try {
-                        audio.muted = false;
-                        audio.currentTime = 0;
-                        audio.play()
-                            .then(() => console.log("Audio reproducido"))
-                            .catch(err => console.warn("No se pudo reproducir el audio:", err));
-                    } catch (e) {
-                        console.error("Error al reproducir el audio:", e);
-                    }
+                    reproducirSonido();
                 }
 
                 // Actualizar el último turno consultorio
@@ -431,9 +416,9 @@
         turnosLlamadosUrgencias();
 
         // Actualizar cada 5 segundos
-        setInterval(obtenerTurnoUrgencias, 5000);
-        setInterval(obtenerTurnoMedicoUrgencias, 5000);
-        setInterval(turnosLlamadosUrgencias, 5000);
+        setInterval(obtenerTurnoUrgencias, 3000);
+        setInterval(obtenerTurnoMedicoUrgencias, 3000);
+        setInterval(turnosLlamadosUrgencias, 3000);
     </script>
 
 </body>
