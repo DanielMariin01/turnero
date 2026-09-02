@@ -255,9 +255,9 @@ class ConsultaExternaResource extends Resource
                         Forms\Components\Select::make('fk_consultorio')
                             ->label('Consultorio')
                             ->options(fn() => Cache::remember(
-                                'consultorio_select',
+                                'consultorio_consulta_externa_select',
                                 300,
-                                fn() => Consultorio::pluck('nombre', 'id_consultorio')  // trae los 13, incluido Triage
+                                fn() => Consultorio::where('area', 'consulta_externa')->pluck('nombre', 'id_consultorio')
                             ))
                             ->required(),
                     ])
