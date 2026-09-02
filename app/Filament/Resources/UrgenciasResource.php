@@ -199,6 +199,21 @@ class UrgenciasResource extends Resource
                     })
 
                     ->visible(fn(Turno $record): bool => $record->estado === 'llamado'),
+
+                /* ================================
+                 | ACCION DE VOLVER A LLAMAR
+                 ================================= */
+                Tables\Actions\Action::make('rellamar')
+                    ->label('Volver a llamar')
+                    ->icon('heroicon-o-speaker-wave')
+                    ->iconButton()
+                    ->color('warning')
+                    ->visible(fn(Turno $record): bool => $record->estado === 'llamado')
+                    ->action(function (Turno $record) {
+                        $record->update([
+                            'llamado_en' => now(),
+                        ]);
+                    }),
                 /* ================================
                  | CANCELAR TURNO
                  ================================= */

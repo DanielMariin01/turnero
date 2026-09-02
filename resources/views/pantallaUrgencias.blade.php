@@ -261,12 +261,17 @@
                     return;
                 }
 
-                // Reproducir sonido si cambió el turno
+                // Reproducir sonido si cambió el turno o si fue re-llamado
                 var cambioTurno =
                     turnoAnterior &&
                     turnoAnterior.numero_turno !== data.numero_turno;
 
-                if (cambioTurno) {
+                var rellamado =
+                    turnoAnterior &&
+                    turnoAnterior.llamado_en !== data.llamado_en &&
+                    data.llamado_en !== null;
+
+                if (cambioTurno || rellamado) {
                     console.log('Nuevo llamado detectado - Reproduciendo sonido');
                     reproducirSonido();
                 }
