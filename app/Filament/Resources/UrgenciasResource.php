@@ -25,7 +25,7 @@ class UrgenciasResource extends Resource
 
     protected static ?string $model = Turno::class;
     protected static ?string $navigationIcon = 'heroicon-o-user';
-    protected static ?string $label = 'Urgencias ';
+    protected static ?string $label = 'Admisiones Urgencias ';
 
 
     public static function getEloquentQuery(): Builder
@@ -162,7 +162,7 @@ class UrgenciasResource extends Resource
                  | ASIGNAR CONSULTORIO
                  ================================= */
                 Tables\Actions\Action::make('asignar_consultorio')
-                    ->label('Enviar al médico')
+                    ->label('Enviar a Triage')
                     ->button()
                     ->color('primary')
                     //->icon('heroicon-o-check') // opcional, puedes dejarlo o quitarlo

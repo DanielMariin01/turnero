@@ -21,7 +21,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class ConsultorioUrgenciasResource extends Resource
 {
     protected static ?string $model = Turno::class;
-    protected static ?string $label = 'Consultorio urgencias';
+    protected static ?string $label = 'Consultorio Triage ';
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
     protected static ?int $navigationSort = 4;
 
