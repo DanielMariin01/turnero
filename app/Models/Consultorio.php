@@ -10,11 +10,7 @@ class Consultorio extends Model
     protected $primaryKey = 'id_consultorio';
 
 
-    protected $fillable = [
-        'nombre',
-        'ubicacion',
-     
-    ];
+  protected $fillable = ['nombre', 'ubicacion', 'area'];
 
 
    // public function usuarios()

@@ -257,7 +257,7 @@ class ConsultaExternaResource extends Resource
                             ->options(fn() => Cache::remember(
                                 'consultorio_select',
                                 300,
-                                fn() => Consultorio::pluck('nombre', 'id_consultorio')
+                                fn() => Consultorio::pluck('nombre', 'id_consultorio')  // trae los 13, incluido Triage
                             ))
                             ->required(),
                     ])

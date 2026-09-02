@@ -172,7 +172,7 @@ class UrgenciasResource extends Resource
                         Forms\Components\Select::make('fk_consultorio')
                             ->label('Consultorio')
                             ->options(
-                                fn() => Consultorio::where('nombre', 'Consultorio Urgencias')
+                                fn() => Consultorio::where('area', 'urgencias')
                                     ->pluck('nombre', 'id_consultorio')
                             )
                             ->required(),
