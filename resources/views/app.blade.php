@@ -297,7 +297,6 @@
                 <table class="tabla-horizontal">
                     <thead>
                         <tr>
-                            <th>Turno</th>
                             <th>Paciente</th>
                             <th>ubicación</th>
                             <th>Hora</th>
@@ -523,11 +522,6 @@
                         data.forEach(function(t) {
                             var tr = document.createElement('tr');
 
-                            // Columna Turno
-                            var tdTurno = document.createElement('td');
-                            tdTurno.style.fontWeight = 'bold';
-                            tdTurno.textContent = t.numero_turno;
-                            tr.appendChild(tdTurno);
 
                             // Columna Paciente
                             var tdPaciente = document.createElement('td');

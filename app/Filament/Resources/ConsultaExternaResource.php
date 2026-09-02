@@ -177,9 +177,9 @@ class ConsultaExternaResource extends Resource
                         Forms\Components\Select::make('fk_modulo')
                             ->label('Módulo')
                             ->options(fn() => Cache::remember(
-                                'modulos_select',
+                                'modulos_consulta_externa_select',
                                 300,
-                                fn() => Modulo::pluck('nombre', 'id_modulo')
+                                fn() => Modulo::where('area', 'consulta_externa')->pluck('nombre', 'id_modulo')
                             ))
                             ->required()
                             ->placeholder('Seleccione un módulo'),
@@ -216,11 +216,12 @@ class ConsultaExternaResource extends Resource
                         Forms\Components\Select::make('fk_modulo')
                             ->label('Módulo')
                             ->options(fn() => Cache::remember(
-                                'modulos_select',
+                                'modulos_consulta_externa_select',
                                 300,
-                                fn() => Modulo::pluck('nombre', 'id_modulo')
+                                fn() => Modulo::where('area', 'consulta_externa')->pluck('nombre', 'id_modulo')
                             ))
-                            ->required(),
+                            ->required()
+                            ->placeholder('Seleccione un módulo'),
                     ])
                     ->before(function (Turno $record) {
                         $record->update([

@@ -136,7 +136,7 @@ class UrgenciasResource extends Resource
                         Forms\Components\Select::make('fk_modulo')
                             ->label('Módulo')
                             ->options(
-                                fn() => Modulo::where('nombre', 'Modulo Urgencias')
+                                fn() => Modulo::where('area', 'urgencias')
                                     ->pluck('nombre', 'id_modulo')
                             )
                             ->required()

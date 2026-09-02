@@ -132,9 +132,9 @@ class OncologiaResource extends Resource
                         Forms\Components\Select::make('fk_modulo')
                             ->label('Módulo')
                             ->options(fn() => Cache::remember(
-                                'modulos_select',
+                                'modulos_oncologia_select',
                                 300,
-                                fn() => Modulo::pluck('nombre', 'id_modulo')
+                                fn() => Modulo::where('area', 'oncologia')->pluck('nombre', 'id_modulo')
                             ))
                             ->required()
                             ->placeholder('Seleccione un módulo'),
