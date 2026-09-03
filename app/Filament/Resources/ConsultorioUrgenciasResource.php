@@ -31,9 +31,8 @@ class ConsultorioUrgenciasResource extends Resource
             ->hoy()
             ->where('estado', 'asignado')
             ->whereHas('consultorio', function ($q) {
-                $q->where('nombre', 'consultorio urgencias');
+                $q->where('area', 'urgencias');   // ✅ ya no depende del nombre
             });
-        //->where('motivo', 'consulta externa');
     }
     public static function canCreate(): bool
     {
@@ -46,7 +45,7 @@ class ConsultorioUrgenciasResource extends Resource
     }
 
 
-        //permisos para ver recursos 
+    //permisos para ver recursos 
     public static function canViewAny(): bool
     {
         return auth()->user()?->hasAnyRole(['admin', 'medico_urgencias']) ?? false;
@@ -89,7 +88,7 @@ class ConsultorioUrgenciasResource extends Resource
 
 
             ])
-            ->defaultSort('hora', 'asc')
+            ->defaultSort('hora_atendido', 'asc')
             ->filters([
                 //
             ])
