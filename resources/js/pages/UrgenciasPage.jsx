@@ -364,47 +364,51 @@ export default function UrgenciasPage() {
         const numeros = "1234567890".split("");
 
         return (
-            <div className="w-full bg-gray-800 p-3 rounded-t-2xl shadow-2xl">
-                <div className="flex justify-center gap-1.5 mb-2">
+            <div className="w-full bg-slate-900 p-3 rounded-t-2xl shadow-2xl">
+                {/* Fila de números */}
+                <div className="flex gap-1.5 mb-2">
                     {numeros.map((num) => (
                         <button
                             key={num}
                             onClick={() => onClickTecla(num)}
-                            className="bg-gray-700 text-white p-2 rounded-lg text-lg font-bold hover:bg-gray-600 w-16 h-12 transition-all active:scale-95"
+                            className="bg-gray-700 text-white p-2 rounded-lg text-lg font-bold hover:bg-gray-600 flex-1 h-12 transition-all active:scale-95"
                         >
                             {num}
                         </button>
                     ))}
                 </div>
 
-                <div className="flex justify-center gap-1.5 mb-2">
+                {/* Primera fila - QWERTY */}
+                <div className="flex gap-1.5 mb-2">
                     {fila1.map((letra) => (
                         <button
                             key={letra}
                             onClick={() => onClickTecla(letra)}
-                            className="bg-white text-gray-800 p-2 rounded-lg text-lg font-bold hover:bg-gray-100 w-16 h-12 transition-all active:scale-95"
+                            className="bg-white text-gray-800 p-2 rounded-lg text-lg font-bold hover:bg-gray-100 flex-1 h-12 transition-all active:scale-95"
                         >
                             {letra}
                         </button>
                     ))}
                 </div>
 
-                <div className="flex justify-center gap-1.5 mb-2">
+                {/* Segunda fila - ASDF */}
+                <div className="flex gap-1.5 mb-2">
                     {fila2.map((letra) => (
                         <button
                             key={letra}
                             onClick={() => onClickTecla(letra)}
-                            className="bg-white text-gray-800 p-2 rounded-lg text-lg font-bold hover:bg-gray-100 w-16 h-12 transition-all active:scale-95"
+                            className="bg-white text-gray-800 p-2 rounded-lg text-lg font-bold hover:bg-gray-100 flex-1 h-12 transition-all active:scale-95"
                         >
                             {letra}
                         </button>
                     ))}
                 </div>
 
-                <div className="flex justify-center gap-1.5 mb-2">
+                {/* Tercera fila - ZXCV + Borrar */}
+                <div className="flex gap-1.5 mb-2">
                     <button
                         onClick={onBorrar}
-                        className="bg-red-600 text-white p-2 rounded-lg font-bold hover:bg-red-700 w-20 h-12 text-sm transition-all active:scale-95"
+                        className="bg-red-600 text-white p-2 rounded-lg font-bold hover:bg-red-700 flex-1 h-12 text-sm transition-all active:scale-95"
                     >
                         ← DEL
                     </button>
@@ -413,7 +417,7 @@ export default function UrgenciasPage() {
                         <button
                             key={letra}
                             onClick={() => onClickTecla(letra)}
-                            className="bg-white text-gray-800 p-2 rounded-lg text-lg font-bold hover:bg-gray-100 w-16 h-12 transition-all active:scale-95"
+                            className="bg-white text-gray-800 p-2 rounded-lg text-lg font-bold hover:bg-gray-100 flex-1 h-12 transition-all active:scale-95"
                         >
                             {letra}
                         </button>
@@ -421,13 +425,14 @@ export default function UrgenciasPage() {
 
                     <button
                         onClick={onBorrar}
-                        className="bg-red-600 text-white p-2 rounded-lg font-bold hover:bg-red-700 w-20 h-12 text-sm transition-all active:scale-95"
+                        className="bg-red-600 text-white p-2 rounded-lg font-bold hover:bg-red-700 flex-1 h-12 text-sm transition-all active:scale-95"
                     >
                         DEL →
                     </button>
                 </div>
 
-                <div className="flex justify-center gap-1.5">
+                {/* Barra espaciadora */}
+                <div className="flex gap-1.5">
                     <button
                         onClick={() => onClickTecla(" ")}
                         className="bg-blue-500 text-white p-2 rounded-lg font-bold hover:bg-blue-600 flex-1 h-12 text-base transition-all active:scale-95"
@@ -462,16 +467,14 @@ export default function UrgenciasPage() {
                         Turno de Urgencias
                     </h2>
 
-                    <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-indigo-500 rounded-lg">
+                    <div className="mb-4 p-4  border-t-4 border-indigo-800 rounded-lg shadow-sm">
                         <div className="flex items-start gap-3">
                             <svg className="w-6 h-6 text-indigo-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                             </svg>
                             <div className="flex-1">
-                                <p className="font-semibold text-indigo-800 text-lg mb-1">Escaneo rápido de cédula</p>
-                                <p className="text-indigo-700 text-sm">
-                                    Escanee el código de barras del <strong>reverso de la cédula</strong> para completar automáticamente los datos
-                                </p>
+                                <p className="font-semibold text-indigo-800 text-lg mb-1">Escanee el código de barras del <strong>reverso de la cédula</strong> para completar automáticamente los datos</p>
+
                             </div>
                         </div>
                     </div>
