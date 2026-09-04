@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Turno;
 use Carbon\Carbon;
+use App\Models\Paciente;
 use Illuminate\Support\Str;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -89,39 +90,90 @@ class TurnoController extends Controller
         ], 201);
     }
 
-public function imprimir($id_turno)
-{
-    try {
-        $turno = Turno::findOrFail($id_turno);
-        
-        // Comandos ESC/POS (los que ya funcionaban)
-        $esc  = "\x1B\x40";            // Reset
-        $esc .= "\x1B\x61\x01";        // Centrar
-        $esc .= "\x1B\x21\x30";        // Texto grande
-        $esc .= "URGENCIAS\n\n";
-        $esc .= "\x1B\x21\x20";        // Normal
-        $esc .= "Turno\n\n";
-        $esc .= "\x1B\x21\x38";        // MUY grande
-        $esc .= $turno->numero_turno . "\n\n";
-        $esc .= "\x1B\x21\x00";        // Normal
-        $esc .= Carbon::parse($turno->fecha . ' ' . $turno->hora)->format('d/m/Y H:i:s') . "\n\n";
-        $esc .= "Espere su llamado\n\n\n";
-        $esc .= "\x1D\x56\x00";        // Corte completo
-        
-        // Convertir a base64 para enviar por JSON
-        return response()->json([
-            'ok' => true,
-            'comandos' => base64_encode($esc)
+
+    public function storeUrgencias(Request $request)
+    {
+        $validated = $request->validate([
+            'nombre' => 'required|string|max:250',
+            'apellido' => 'required|string|max:250',
+            'tipo_documento' => 'required|string|max:10',
+            'numero_documento' => 'required|string|max:150',
         ]);
-        
-    } catch (\Exception $e) {
-        return response()->json(['error' => 'Turno no encontrado'], 404);
+
+        // Buscar el paciente por documento, o crearlo si no existe
+        $paciente = Paciente::firstOrCreate(
+            ['numero_documento' => $validated['numero_documento']],
+            [
+                'nombre' => $validated['nombre'],
+                'apellido' => $validated['apellido'],
+                'tipo_documento' => $validated['tipo_documento'],
+            ]
+        );
+
+        $fecha = Carbon::today()->toDateString();
+        $hora = Carbon::now()->toTimeString();
+
+        // Generar número de turno (misma lógica que store())
+        $ultimoTurno = Turno::whereDate('fecha', $fecha)
+            ->orderBy('id_turno', 'desc')
+            ->first();
+
+        if ($ultimoTurno) {
+            preg_match('/\d+$/', $ultimoTurno->numero_turno, $matches);
+            $ultimoNumero = isset($matches[0]) ? intval($matches[0]) : 0;
+            $numero = $ultimoNumero + 1;
+        } else {
+            $numero = 1;
+        }
+
+        $codigoTurno = 'UR' . $numero;
+
+        // Crear el turno YA ASIGNADO a Triage (sin pasar por admisiones)
+        $turno = Turno::create([
+            'fk_paciente' => $paciente->id_paciente, // ajustar si la PK se llama distinto
+            'numero_turno' => $codigoTurno,
+            'motivo' => 'urgencias',
+            'fecha' => $fecha,
+            'hora' => $hora,
+            'estado' => 'asignado',
+            'hora_atendido' => $hora,
+            'paciente_urgencias' => trim($paciente->nombre . ' ' . $paciente->apellido),
+        ]);
+
+        $turno->load('paciente');
+
+        return response()->json([
+            'message' => 'Su turno se ha generado correctamente.',
+            'turno' => $turno,
+        ], 201);
     }
-}
 
+    public function imprimir($id_turno)
+    {
+        try {
+            $turno = Turno::findOrFail($id_turno);
 
+            // Comandos ESC/POS (los que ya funcionaban)
+            $esc  = "\x1B\x40";            // Reset
+            $esc .= "\x1B\x61\x01";        // Centrar
+            $esc .= "\x1B\x21\x30";        // Texto grande
+            $esc .= "URGENCIAS\n\n";
+            $esc .= "\x1B\x21\x20";        // Normal
+            $esc .= "Turno\n\n";
+            $esc .= "\x1B\x21\x38";        // MUY grande
+            $esc .= $turno->numero_turno . "\n\n";
+            $esc .= "\x1B\x21\x00";        // Normal
+            $esc .= Carbon::parse($turno->fecha . ' ' . $turno->hora)->format('d/m/Y H:i:s') . "\n\n";
+            $esc .= "Espere su llamado\n\n\n";
+            $esc .= "\x1D\x56\x00";        // Corte completo
 
-
-
-
+            // Convertir a base64 para enviar por JSON
+            return response()->json([
+                'ok' => true,
+                'comandos' => base64_encode($esc)
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Turno no encontrado'], 404);
+        }
+    }
 }

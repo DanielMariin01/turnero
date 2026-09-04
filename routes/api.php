@@ -16,6 +16,7 @@ Route::get('/user', function (Request $request) {
 
 Route::get('/pacientes/{numero_documento}', [PacienteController::class, 'show']);
 Route::post('/turno', [TurnoController::class, 'store']);
+Route::post('/turno/urgencias', [\App\Http\Controllers\Api\TurnoController::class, 'storeUrgencias']);
 //api para consultar el ultimo turno que fue llamado
 Route::get('/turno-ultimo', [TurnoPantallaController::class, 'ultimo']);
 //api para crear un nuevo paciente

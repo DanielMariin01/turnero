@@ -30,9 +30,7 @@ class ConsultorioUrgenciasResource extends Resource
         return parent::getEloquentQuery()
             ->hoy()
             ->where('estado', 'asignado')
-            ->whereHas('consultorio', function ($q) {
-                $q->where('area', 'urgencias');   // ✅ ya no depende del nombre
-            });
+            ->where('motivo', 'urgencias');
     }
     public static function canCreate(): bool
     {
@@ -99,26 +97,30 @@ class ConsultorioUrgenciasResource extends Resource
                     ->button()
                     ->color('primary')
                     ->icon('heroicon-o-phone')
-                    ->action(function (Turno $record) {
-
-                        // ========================================
-                        // PASO 3: Llamar al turno actual
-                        // ========================================
+                    ->modalHeading('Selecciona tu consultorio')
+                    ->modalSubmitActionLabel('Llamar')
+                    ->form([
+                        Forms\Components\Select::make('fk_consultorio')
+                            ->label('Consultorio')
+                            ->options(
+                                fn() => Consultorio::where('area', 'urgencias')
+                                    ->pluck('nombre', 'id_consultorio')
+                            )
+                            ->required(),
+                    ])
+                    ->action(function (Turno $record, array $data) {
                         $record->update([
                             'estado' => 'llamado_medico',
                             'hora_llamado_medico' => now()->format('H:i:s'),
+                            'fk_consultorio' => $data['fk_consultorio'],
                         ]);
 
-                        // ========================================
-                        // PASO 4: Notificar éxito
-                        // ========================================
                         Notification::make()
                             ->title('Turno llamado')
                             ->body("Se llamó al turno {$record->numero_turno}")
                             ->success()
                             ->send();
                     })
-
                     ->visible(fn(Turno $record): bool => $record->estado === 'asignado'),
             ])
             ->bulkActions([]);
