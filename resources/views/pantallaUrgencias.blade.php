@@ -369,15 +369,15 @@
                             var tdUbicacion = document.createElement('td');
                             var ubicacion = '-';
 
-                            // Priorizar Consultorio si existe
-                            if (t.consultorio && typeof t.consultorio === 'object' && t.consultorio.nombre) {
+                            // Solo mostrar el consultorio si el médico YA llamó al paciente
+                            if (t.estado === 'llamado_medico' && t.consultorio && typeof t.consultorio ===
+                                'object' && t.consultorio.nombre) {
                                 ubicacion = t.consultorio.nombre;
-                            } else if (t.consultorio && typeof t.consultorio === 'string') {
+                            } else if (t.estado === 'llamado_medico' && t.consultorio && typeof t
+                                .consultorio === 'string') {
                                 ubicacion = t.consultorio;
-                            } else if (t.fk_consultorio) {
-                                ubicacion = 'Consultorio ' + t.fk_consultorio;
                             }
-                            // Si no hay consultorio, mostrar módulo
+                            // En cualquier otro caso (aún no lo ha llamado el médico), mostrar el módulo
                             else if (t.modulo && typeof t.modulo === 'object' && t.modulo.nombre) {
                                 ubicacion = t.modulo.nombre;
                             } else if (t.modulo && typeof t.modulo === 'string') {
