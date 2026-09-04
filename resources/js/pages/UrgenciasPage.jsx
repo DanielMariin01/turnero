@@ -468,7 +468,7 @@ export default function UrgenciasPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                             </svg>
                             <div className="flex-1">
-                                <p className="font-semibold text-indigo-800 text-lg mb-1">📱 Escaneo rápido de cédula</p>
+                                <p className="font-semibold text-indigo-800 text-lg mb-1">Escaneo rápido de cédula</p>
                                 <p className="text-indigo-700 text-sm">
                                     Escanee el código de barras del <strong>reverso de la cédula</strong> para completar automáticamente los datos
                                 </p>
@@ -564,16 +564,6 @@ export default function UrgenciasPage() {
                             Limpiar
                         </button>
 
-                        <button
-                            className="bg-red-600 text-white px-6 py-3 rounded-lg w-full text-lg font-bold hover:bg-red-700 transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2"
-                            onClick={() => navigate("/Urgencias")}
-                            disabled={generando}
-                        >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                            Cancelar
-                        </button>
                     </div>
                 </div>
             </div>
