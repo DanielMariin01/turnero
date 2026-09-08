@@ -232,6 +232,31 @@ export default function UrgenciasPage() {
     };
 
     // ============================================
+    // BUSCAR PACIENTE SI EXISTE EN LA BASE DE DATOS CLINICA
+    // ============================================
+
+    const buscarPacienteClinica = async (documento) => {
+        if (!documento || documento.length < 6) return;
+
+        try {
+            const response = await fetch(`/api/clinica/pacientes/${documento}`);
+            if (response.ok) {
+                const data = await response.json();
+                setPaciente(prev => ({
+                    ...prev,
+                    nombre: data.nombre,
+                    apellido: data.apellido,
+                    tipo_documento: data.tipo_documento,
+                }));
+                mostrarMensaje('✅ Paciente encontrado en la clínica, datos cargados', 'success');
+            }
+            // Si no existe (404), no hacemos nada: el usuario sigue llenando manualmente
+        } catch (err) {
+            console.error('Error consultando paciente en la clínica:', err);
+        }
+    };
+
+    // ============================================
     // MANEJO DE CAMBIOS EN FORMULARIO
     // ============================================
     const handleChange = (campo, valor) => {
@@ -488,7 +513,7 @@ export default function UrgenciasPage() {
     // RENDER
     // ============================================
     return (
-        <div className="flex flex-col h-screen w-[1000px] mx-auto bg-gradient-to-br from-blue-50 to-green-300">
+        <div className="flex flex-col h-screen w-[1000px] mx-auto bg-gradient-to-br from-blue-50 bg-[#5B6BB1]">
             <div className="flex-1 flex items-center justify-center p-4 overflow-auto">
                 <div className="w-full max-w-5xl bg-white shadow-2xl rounded-2xl p-6">
                     <h2 className="text-3xl font-bold mb-4 text-center text-indigo-700">
@@ -544,7 +569,18 @@ export default function UrgenciasPage() {
                             <option value="TI">Tarjeta de identidad</option>
                             <option value="CE">Cédula de extranjería</option>
                             <option value="PA">Pasaporte</option>
-                            <option value="RC">Registro Civil</option>
+                            <option value="RC">Registro civil de nacimiento</option>
+                            <option value="AS">Adulto sin identificación</option>
+                            <option value="CD">Carné diplomático</option>
+                            <option value="CN">Certificado de nacido vivo</option>
+                            <option value="DE">Documento extranjero</option>
+                            <option value="MS">Menor sin identificación</option>
+                            <option value="NIT">NIT</option>
+                            <option value="PE">Permiso especial de permanencia</option>
+                            <option value="PT">Permiso por protección temporal</option>
+                            <option value="SC">Salvoconducto de permanencia</option>
+                            <option value="SI">Sin identificación</option>
+                            <option value="TE">Tarjeta de extranjería</option>
                         </select>
 
                         <input
@@ -557,13 +593,14 @@ export default function UrgenciasPage() {
                             onChange={(e) =>
                                 handleChange("numero_documento", e.target.value.replace(/\D/g, ""))
                             }
+                            onBlur={(e) => buscarPacienteClinica(e.target.value)}
                         />
 
                         <div className="col-span-2 relative">
                             <input
                                 type="text"
                                 name="busqueda_contrato"
-                                placeholder="Buscar EPS, SOAT o Particular..."
+                                placeholder="Seleccionao o Busca  EPS, SOAT o Particular..."
                                 className="border-2 border-gray-300 p-3 rounded-lg w-full text-base focus:border-indigo-500 focus:outline-none transition-all"
                                 value={busquedaContrato}
                                 onFocus={(e) => (inputActivo.current = e.target)}
@@ -574,10 +611,7 @@ export default function UrgenciasPage() {
                             />
                             {contratoSeleccionado && (
                                 <p className="text-sm text-green-700 mt-1 font-semibold">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                    </svg>   Seleccionado: {contratoSeleccionado.nombre}
-
+                                    ✅ Seleccionado: {contratoSeleccionado.nombre}
                                 </p>
                             )}
                             {busquedaContrato && !contratoSeleccionado && (

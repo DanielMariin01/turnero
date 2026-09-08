@@ -21,4 +21,22 @@ class ClinicaController extends Controller
 
         return response()->json($contratos);
     }
+
+    public function paciente($documento)
+    {
+        $paciente = DB::connection('sqlsrv')->table('CAPBAS')
+            ->where('MPCedu', $documento)
+            ->first();
+
+        if (!$paciente) {
+            return response()->json(['message' => 'Paciente no encontrado en la clínica'], 404);
+        }
+
+        return response()->json([
+            'nombre' => trim($paciente->MPNom1 . ' ' . $paciente->MPNom2),
+            'apellido' => trim($paciente->MPApe1 . ' ' . $paciente->MPApe2),
+            'tipo_documento' => trim($paciente->MPTDoc),
+            'numero_documento' => trim($paciente->MPCedu),
+        ]);
+    }
 }
