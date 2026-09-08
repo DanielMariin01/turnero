@@ -24,6 +24,8 @@ Route::post('/pacientes', [PacienteController::class, 'crear_paciente']);
 Route::get('/turnos-llamados', [TurnoPantallaController::class, 'turnosLlamados']);
 //Route::get('/turnos-llamadosmedicos', [TurnoPantallaController:: class, 'turnosLlamadosMedicos']);
 Route::get('/turnos-medicos', [TurnoPantallaController::class, 'turnosMedico']);
+//api para consultar los contratos
+Route::get('/contratos', [\App\Http\Controllers\Api\ClinicaController::class, 'contratos']);
 
 //api para crear la ruta para imprimit turno en urgencias
 Route::get('/turnos/{id_turno}/imprimir', [TurnoController::class, 'imprimir']);

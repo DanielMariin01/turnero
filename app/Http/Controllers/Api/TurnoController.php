@@ -91,56 +91,24 @@ class TurnoController extends Controller
     }
 
 
-    public function storeUrgencias(Request $request)
+    public function storeUrgencias(Request $request, \App\Services\ClinicaIntegrationService $clinica)
     {
         $validated = $request->validate([
             'nombre' => 'required|string|max:250',
             'apellido' => 'required|string|max:250',
             'tipo_documento' => 'required|string|max:10',
             'numero_documento' => 'required|string|max:150',
+            'contrato_nit' => 'required|string|max:20',
+            'contrato_nombre' => 'required|string|max:250',
         ]);
 
-        // Buscar el paciente por documento, o crearlo si no existe
-        $paciente = Paciente::firstOrCreate(
-            ['numero_documento' => $validated['numero_documento']],
-            [
-                'nombre' => $validated['nombre'],
-                'apellido' => $validated['apellido'],
-                'tipo_documento' => $validated['tipo_documento'],
-            ]
-        );
-
-        $fecha = Carbon::today()->toDateString();
-        $hora = Carbon::now()->toTimeString();
-
-        // Generar número de turno (misma lógica que store())
-        $ultimoTurno = Turno::whereDate('fecha', $fecha)
-            ->orderBy('id_turno', 'desc')
-            ->first();
-
-        if ($ultimoTurno) {
-            preg_match('/\d+$/', $ultimoTurno->numero_turno, $matches);
-            $ultimoNumero = isset($matches[0]) ? intval($matches[0]) : 0;
-            $numero = $ultimoNumero + 1;
-        } else {
-            $numero = 1;
+        try {
+            $turno = $clinica->crearTurnoUrgencias($validated);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'No se pudo generar el turno. Por favor intente de nuevo.',
+            ], 500);
         }
-
-        $codigoTurno = 'UR' . $numero;
-
-        // Crear el turno YA ASIGNADO a Triage (sin pasar por admisiones)
-        $turno = Turno::create([
-            'fk_paciente' => $paciente->id_paciente, // ajustar si la PK se llama distinto
-            'numero_turno' => $codigoTurno,
-            'motivo' => 'urgencias',
-            'fecha' => $fecha,
-            'hora' => $hora,
-            'estado' => 'asignado',
-            'hora_atendido' => $hora,
-            'paciente_urgencias' => trim($paciente->nombre . ' ' . $paciente->apellido),
-        ]);
-
-        $turno->load('paciente');
 
         return response()->json([
             'message' => 'Su turno se ha generado correctamente.',

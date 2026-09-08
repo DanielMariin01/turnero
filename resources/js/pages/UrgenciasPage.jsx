@@ -20,6 +20,20 @@ export default function UrgenciasPage() {
     const scanTimeoutRef = useRef(null);
     const [generando, setGenerando] = useState(false);
 
+    // ============================================
+    // CONTRATO / EPS
+    // ============================================
+    const [contratos, setContratos] = useState([]);
+    const [busquedaContrato, setBusquedaContrato] = useState('');
+    const [contratoSeleccionado, setContratoSeleccionado] = useState(null);
+
+    useEffect(() => {
+        fetch('/api/contratos')
+            .then(res => res.json())
+            .then(data => setContratos(data))
+            .catch(err => console.error('Error cargando contratos:', err));
+    }, []);
+
     useEffect(() => {
         connectQZ().catch(err => console.error("QZ no conectó al iniciar:", err));
     }, []);
@@ -180,7 +194,6 @@ export default function UrgenciasPage() {
                 return;
             }
 
-            // Verificar si el paciente ya existe, para traer su tipo_documento real
             try {
                 const response = await fetch(`/api/pacientes/${numeroDocumento}`);
                 if (response.ok) {
@@ -248,6 +261,10 @@ export default function UrgenciasPage() {
             Swal.fire({ title: "Campo requerido", text: "Por favor ingrese el número de documento", icon: "warning", confirmButtonText: "Aceptar" });
             return;
         }
+        if (!contratoSeleccionado) {
+            Swal.fire({ title: "Campo requerido", text: "Por favor busque y seleccione su EPS, SOAT o Particular", icon: "warning", confirmButtonText: "Aceptar" });
+            return;
+        }
 
         if (procesandoRef.current) return;
         procesandoRef.current = true;
@@ -269,6 +286,8 @@ export default function UrgenciasPage() {
                 apellido: paciente.apellido.toUpperCase(),
                 tipo_documento: paciente.tipo_documento,
                 numero_documento: paciente.numero_documento,
+                contrato_nit: contratoSeleccionado.nit,
+                contrato_nombre: contratoSeleccionado.nombre,
             };
 
             const response = await fetch("/api/turno/urgencias", {
@@ -297,7 +316,6 @@ export default function UrgenciasPage() {
             return;
         }
 
-        // Imprimir ticket
         if (turnoCreado?.id_turno) {
             try {
                 const printResponse = await fetch(`/api/turnos/${turnoCreado.id_turno}/imprimir`);
@@ -352,6 +370,8 @@ export default function UrgenciasPage() {
         });
         setMensajeEscaneo('');
         inputActivo.current = null;
+        setBusquedaContrato('');
+        setContratoSeleccionado(null);
     };
 
     // ============================================
@@ -365,20 +385,18 @@ export default function UrgenciasPage() {
 
         return (
             <div className="w-full bg-slate-900 p-3 rounded-t-2xl shadow-2xl">
-                {/* Fila de números */}
                 <div className="flex gap-1.5 mb-2">
                     {numeros.map((num) => (
                         <button
                             key={num}
                             onClick={() => onClickTecla(num)}
-                            className="bg-gray-700 text-white p-2 rounded-lg text-lg font-bold hover:bg-gray-600 flex-1 h-12 transition-all active:scale-95"
+                            className="bg-[#587EAC] text-white p-2 rounded-lg text-lg font-bold hover:bg-gray-600 flex-1 h-12 transition-all active:scale-95"
                         >
                             {num}
                         </button>
                     ))}
                 </div>
 
-                {/* Primera fila - QWERTY */}
                 <div className="flex gap-1.5 mb-2">
                     {fila1.map((letra) => (
                         <button
@@ -391,7 +409,6 @@ export default function UrgenciasPage() {
                     ))}
                 </div>
 
-                {/* Segunda fila - ASDF */}
                 <div className="flex gap-1.5 mb-2">
                     {fila2.map((letra) => (
                         <button
@@ -404,11 +421,10 @@ export default function UrgenciasPage() {
                     ))}
                 </div>
 
-                {/* Tercera fila - ZXCV + Borrar */}
                 <div className="flex gap-1.5 mb-2">
                     <button
                         onClick={onBorrar}
-                        className="bg-red-600 text-white p-2 rounded-lg font-bold hover:bg-red-700 flex-1 h-12 text-sm transition-all active:scale-95"
+                        className="bg-[#686868] text-white p-2 rounded-lg font-bold hover:bg-red-700 flex-1 h-12 text-sm transition-all active:scale-95"
                     >
                         ← DEL
                     </button>
@@ -425,17 +441,16 @@ export default function UrgenciasPage() {
 
                     <button
                         onClick={onBorrar}
-                        className="bg-red-600 text-white p-2 rounded-lg font-bold hover:bg-red-700 flex-1 h-12 text-sm transition-all active:scale-95"
+                        className="bg-[#686868] text-white p-2 rounded-lg font-bold hover:bg-red-700 flex-1 h-12 text-sm transition-all active:scale-95"
                     >
                         DEL →
                     </button>
                 </div>
 
-                {/* Barra espaciadora */}
                 <div className="flex gap-1.5">
                     <button
                         onClick={() => onClickTecla(" ")}
-                        className="bg-blue-500 text-white p-2 rounded-lg font-bold hover:bg-blue-600 flex-1 h-12 text-base transition-all active:scale-95"
+                        className="bg-[#00A09B] text-white p-2 rounded-lg font-bold hover:bg-[#028580] flex-1 h-12 text-base transition-all active:scale-95"
                     >
                         ESPACIO
                     </button>
@@ -447,12 +462,25 @@ export default function UrgenciasPage() {
     const escribirTecla = (tecla) => {
         if (!inputActivo.current) return;
         const campo = inputActivo.current;
+
+        if (campo.name === 'busqueda_contrato') {
+            setBusquedaContrato(prev => prev + tecla);
+            setContratoSeleccionado(null);
+            return;
+        }
+
         handleChange(campo.name, paciente[campo.name] + tecla);
     };
 
     const borrarTecla = () => {
         if (!inputActivo.current) return;
         const campo = inputActivo.current;
+
+        if (campo.name === 'busqueda_contrato') {
+            setBusquedaContrato(prev => prev.slice(0, -1));
+            return;
+        }
+
         handleChange(campo.name, paciente[campo.name].slice(0, -1));
     };
 
@@ -460,24 +488,12 @@ export default function UrgenciasPage() {
     // RENDER
     // ============================================
     return (
-        <div className="flex flex-col h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="flex flex-col h-screen w-[1000px] mx-auto bg-gradient-to-br from-blue-50 to-green-300">
             <div className="flex-1 flex items-center justify-center p-4 overflow-auto">
                 <div className="w-full max-w-5xl bg-white shadow-2xl rounded-2xl p-6">
                     <h2 className="text-3xl font-bold mb-4 text-center text-indigo-700">
                         Turno de Urgencias
                     </h2>
-
-                    <div className="mb-4 p-4  border-t-4 border-indigo-800 rounded-lg shadow-sm">
-                        <div className="flex items-start gap-3">
-                            <svg className="w-6 h-6 text-indigo-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                            </svg>
-                            <div className="flex-1">
-                                <p className="font-semibold text-indigo-800 text-lg mb-1">Escanee el código de barras del <strong>reverso de la cédula</strong> para completar automáticamente los datos</p>
-
-                            </div>
-                        </div>
-                    </div>
 
                     {mensajeEscaneo && (
                         <div className={`mb-4 p-3 rounded-lg border-l-4 transition-all ${mensajeEscaneo.tipo === 'success'
@@ -542,11 +558,53 @@ export default function UrgenciasPage() {
                                 handleChange("numero_documento", e.target.value.replace(/\D/g, ""))
                             }
                         />
+
+                        <div className="col-span-2 relative">
+                            <input
+                                type="text"
+                                name="busqueda_contrato"
+                                placeholder="Buscar EPS, SOAT o Particular..."
+                                className="border-2 border-gray-300 p-3 rounded-lg w-full text-base focus:border-indigo-500 focus:outline-none transition-all"
+                                value={busquedaContrato}
+                                onFocus={(e) => (inputActivo.current = e.target)}
+                                onChange={(e) => {
+                                    setBusquedaContrato(e.target.value);
+                                    setContratoSeleccionado(null);
+                                }}
+                            />
+                            {contratoSeleccionado && (
+                                <p className="text-sm text-green-700 mt-1 font-semibold">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                    </svg>   Seleccionado: {contratoSeleccionado.nombre}
+
+                                </p>
+                            )}
+                            {busquedaContrato && !contratoSeleccionado && (
+                                <div className="absolute z-10 w-full bg-white border-2 border-gray-200 rounded-lg mt-1 max-h-48 overflow-y-auto shadow-lg">
+                                    {contratos
+                                        .filter(c => c.nombre.toLowerCase().includes(busquedaContrato.toLowerCase()))
+                                        .slice(0, 8)
+                                        .map(c => (
+                                            <div
+                                                key={c.nit}
+                                                className="p-3 hover:bg-indigo-50 cursor-pointer border-b border-gray-100 text-sm"
+                                                onClick={() => {
+                                                    setContratoSeleccionado(c);
+                                                    setBusquedaContrato(c.nombre);
+                                                }}
+                                            >
+                                                {c.nombre}
+                                            </div>
+                                        ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     <div className="flex gap-4 mt-5">
                         <button
-                            className="bg-green-600 text-white px-6 py-3 rounded-lg w-full text-lg font-bold hover:bg-green-700 transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
+                            className="bg-[#5B6BB1] text-white px-6 py-3 rounded-lg w-full text-lg font-bold bg-[#5564A8] transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
                             onClick={handleGuardar}
                             disabled={generando}
                         >
@@ -566,7 +624,6 @@ export default function UrgenciasPage() {
                             </svg>
                             Limpiar
                         </button>
-
                     </div>
                 </div>
             </div>
