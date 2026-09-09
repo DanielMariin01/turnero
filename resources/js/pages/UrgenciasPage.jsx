@@ -580,102 +580,155 @@ export default function UrgenciasPage() {
                     )}
 
                     <div className="grid grid-cols-2 gap-4 mb-5">
-                        <input
-                            type="text"
-                            name="nombre"
-                            placeholder="Nombre"
-                            className="border-2 border-gray-300 p-3 rounded-lg w-full text-base focus:border-indigo-500 focus:outline-none transition-all"
-                            value={paciente.nombre}
-                            onFocus={(e) => (inputActivo.current = e.target)}
-                            onChange={(e) => handleChange("nombre", e.target.value)}
-                        />
-
-                        <input
-                            type="text"
-                            name="apellido"
-                            placeholder="Apellido"
-                            className="border-2 border-gray-300 p-3 rounded-lg w-full text-base focus:border-indigo-500 focus:outline-none transition-all"
-                            value={paciente.apellido}
-                            onFocus={(e) => (inputActivo.current = e.target)}
-                            onChange={(e) => handleChange("apellido", e.target.value)}
-                        />
-
-                        <select
-                            name="tipo_documento"
-                            className="border-2 border-gray-300 p-3 rounded-lg w-full text-base focus:border-indigo-500 focus:outline-none transition-all"
-                            value={paciente.tipo_documento}
-                            onFocus={() => (inputActivo.current = null)}
-                            onChange={(e) => handleChange("tipo_documento", e.target.value)}
-                        >
-                            <option value="">Tipo de documento</option>
-                            <option value="CC">Cédula de ciudadanía</option>
-                            <option value="TI">Tarjeta de identidad</option>
-                            <option value="CE">Cédula de extranjería</option>
-                            <option value="PA">Pasaporte</option>
-                            <option value="RC">Registro civil de nacimiento</option>
-                            <option value="AS">Adulto sin identificación</option>
-                            <option value="CD">Carné diplomático</option>
-                            <option value="CN">Certificado de nacido vivo</option>
-                            <option value="DE">Documento extranjero</option>
-                            <option value="MS">Menor sin identificación</option>
-                            <option value="NIT">NIT</option>
-                            <option value="PE">Permiso especial de permanencia</option>
-                            <option value="PT">Permiso por protección temporal</option>
-                            <option value="SC">Salvoconducto de permanencia</option>
-                            <option value="SI">Sin identificación</option>
-                            <option value="TE">Tarjeta de extranjería</option>
-                        </select>
-
-                        <input
-                            type="text"
-                            name="numero_documento"
-                            placeholder="Número de documento"
-                            className="border-2 border-gray-300 p-3 rounded-lg w-full text-base focus:border-indigo-500 focus:outline-none transition-all"
-                            value={paciente.numero_documento}
-                            onFocus={(e) => (inputActivo.current = e.target)}
-                            onChange={(e) =>
-                                handleChange("numero_documento", e.target.value.replace(/\D/g, ""))
-                            }
-                            onBlur={(e) => buscarPacienteClinica(e.target.value)}
-                        />
-
-                        <div className="col-span-2 relative">
+                        <div>
+                            <label className="block text-lg font-semibold text-gray-700 mb-1">
+                                Ingrese su Nombre
+                            </label>
                             <input
                                 type="text"
-                                name="busqueda_contrato"
-                                placeholder="Seleccionao o Busca  EPS, SOAT o Particular..."
+                                name="nombre"
+                                placeholder="Nombre"
                                 className="border-2 border-gray-300 p-3 rounded-lg w-full text-base focus:border-indigo-500 focus:outline-none transition-all"
-                                value={busquedaContrato}
+                                value={paciente.nombre}
                                 onFocus={(e) => (inputActivo.current = e.target)}
-                                onChange={(e) => {
-                                    setBusquedaContrato(e.target.value);
-                                    setContratoSeleccionado(null);
-                                }}
+                                onChange={(e) => handleChange("nombre", e.target.value)}
                             />
-                            {contratoSeleccionado && (
-                                <p className="text-sm text-green-700 mt-1 font-semibold">
-                                    ✅ Seleccionado: {contratoSeleccionado.nombre}
-                                </p>
-                            )}
-                            {busquedaContrato && !contratoSeleccionado && (
-                                <div className="absolute z-10 w-full bg-white border-2 border-gray-200 rounded-lg mt-1 max-h-48 overflow-y-auto shadow-lg">
-                                    {contratos
-                                        .filter(c => c.nombre.toLowerCase().includes(busquedaContrato.toLowerCase()))
-                                        .slice(0, 8)
-                                        .map(c => (
-                                            <div
-                                                key={c.nit}
-                                                className="p-3 hover:bg-indigo-50 cursor-pointer border-b border-gray-100 text-sm"
-                                                onClick={() => {
-                                                    setContratoSeleccionado(c);
-                                                    setBusquedaContrato(c.nombre);
-                                                }}
-                                            >
-                                                {c.nombre}
-                                            </div>
-                                        ))}
-                                </div>
-                            )}
+                        </div>
+
+                        <div>
+                            <label className="block text-lg font-semibold text-gray-700 mb-1">
+                                Ingrese su Apellido
+                            </label>
+                            <input
+                                type="text"
+                                name="apellido"
+                                placeholder="Apellido"
+                                className="border-2 border-gray-300 p-3 rounded-lg w-full text-base focus:border-indigo-500 focus:outline-none transition-all"
+                                value={paciente.apellido}
+                                onFocus={(e) => (inputActivo.current = e.target)}
+                                onChange={(e) => handleChange("apellido", e.target.value)}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-lg font-semibold text-gray-700 mb-1">
+                                Seleccione su Tipo de Documento
+                            </label>
+                            <select
+                                name="tipo_documento"
+                                className="border-2 border-gray-300 p-3 rounded-lg w-full text-base focus:border-indigo-500 focus:outline-none transition-all"
+                                value={paciente.tipo_documento}
+                                onFocus={() => (inputActivo.current = null)}
+                                onChange={(e) => handleChange("tipo_documento", e.target.value)}
+                            >
+                                <option value="">Tipo de documento</option>
+                                <option value="CC">Cédula de ciudadanía</option>
+                                <option value="TI">Tarjeta de identidad</option>
+                                <option value="CE">Cédula de extranjería</option>
+                                <option value="PA">Pasaporte</option>
+                                <option value="RC">Registro civil de nacimiento</option>
+                                <option value="AS">Adulto sin identificación</option>
+                                <option value="CD">Carné diplomático</option>
+                                <option value="CN">Certificado de nacido vivo</option>
+                                <option value="DE">Documento extranjero</option>
+                                <option value="MS">Menor sin identificación</option>
+                                <option value="NIT">NIT</option>
+                                <option value="PE">Permiso especial de permanencia</option>
+                                <option value="PT">Permiso por protección temporal</option>
+                                <option value="SC">Salvoconducto de permanencia</option>
+                                <option value="SI">Sin identificación</option>
+                                <option value="TE">Tarjeta de extranjería</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-lg font-semibold text-gray-700 mb-1">
+                                Digite su Número de Documento
+                            </label>
+                            <input
+                                type="text"
+                                name="numero_documento"
+                                placeholder="Número de documento"
+                                className="border-2 border-gray-300 p-3 rounded-lg w-full text-base focus:border-indigo-500 focus:outline-none transition-all"
+                                value={paciente.numero_documento}
+                                onFocus={(e) => (inputActivo.current = e.target)}
+                                onChange={(e) =>
+                                    handleChange("numero_documento", e.target.value.replace(/\D/g, ""))
+                                }
+                                onBlur={(e) => buscarPacienteClinica(e.target.value)}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-lg font-semibold text-gray-700 mb-1">
+                                Seleccione su Fecha de Nacimiento
+                            </label>
+                            <input
+                                type="date"
+                                name="fecha_nacimiento"
+                                placeholder="Fecha de nacimiento"
+                                className="border-2 border-gray-300 p-3 rounded-lg w-full text-base focus:border-indigo-500 focus:outline-none transition-all"
+                                value={paciente.fecha_nacimiento}
+                                onFocus={() => (inputActivo.current = null)}
+                                onChange={(e) => handleChange("fecha_nacimiento", e.target.value)}
+                                max={new Date().toISOString().split('T')[0]}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-lg font-semibold text-gray-700 mb-1">
+                                Seleccione su Sexo
+                            </label>
+                            <select
+                                name="sexo"
+                                className="border-2 border-gray-300 p-3 rounded-lg w-full text-base focus:border-indigo-500 focus:outline-none transition-all"
+                                value={paciente.sexo}
+                                onFocus={() => (inputActivo.current = null)}
+                                onChange={(e) => handleChange("sexo", e.target.value)}
+                            >
+                                <option value="">Sexo</option>
+                                <option value="M">Masculino</option>
+                                <option value="F">Femenino</option>
+                            </select>
+                        </div>
+                        <div className="col-span-2">
+                            <label className="block text-lg font-semibold text-gray-700 mb-1">
+                                ¿Con qué EPS o seguro viene?
+                            </label>
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    name="busqueda_contrato"
+                                    placeholder="Seleccionao o Busca  EPS, SOAT o Particular..."
+                                    className="border-2 border-gray-300 p-3 rounded-lg w-full text-base focus:border-indigo-500 focus:outline-none transition-all"
+                                    value={busquedaContrato}
+                                    onFocus={(e) => (inputActivo.current = e.target)}
+                                    onChange={(e) => {
+                                        setBusquedaContrato(e.target.value);
+                                        setContratoSeleccionado(null);
+                                    }}
+                                />
+                                {contratoSeleccionado && (
+                                    <p className="text-sm text-green-700 mt-1 font-semibold">
+                                        ✅ Seleccionado: {contratoSeleccionado.nombre}
+                                    </p>
+                                )}
+                                {busquedaContrato && !contratoSeleccionado && (
+                                    <div className="absolute z-10 w-full bg-white border-2 border-gray-200 rounded-lg mt-1 max-h-48 overflow-y-auto shadow-lg">
+                                        {contratos
+                                            .filter(c => c.nombre.toLowerCase().includes(busquedaContrato.toLowerCase()))
+                                            .slice(0, 8)
+                                            .map(c => (
+                                                <div
+                                                    key={c.nit}
+                                                    className="p-3 hover:bg-indigo-50 cursor-pointer border-b border-gray-100 text-sm"
+                                                    onClick={() => {
+                                                        setContratoSeleccionado(c);
+                                                        setBusquedaContrato(c.nombre);
+                                                    }}
+                                                >
+                                                    {c.nombre}
+                                                </div>
+                                            ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
 
