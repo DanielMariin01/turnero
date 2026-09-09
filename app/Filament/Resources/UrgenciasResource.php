@@ -154,12 +154,12 @@ class UrgenciasResource extends Resource
                  | FINALIZAR ADMISIÓN
                  ================================= */
                 Tables\Actions\Action::make('finalizar_admisiones')
-                    ->label('Finalizar Admisión')
-                    ->button()
+                    ->label('Enviar a Consulta Médica')
+                    ->iconButton()
                     ->color('success')
-                    ->icon('heroicon-o-check')
+                    ->icon('heroicon-o-arrow-right-circle')
                     ->requiresConfirmation()
-                    ->modalHeading('Finalizar proceso de admisión')
+                    ->modalHeading('Enviar a Consulta Médica')
                     ->modalDescription('¿Confirmas que ya terminaste el proceso administrativo de este paciente?')
                     ->action(function (Turno $record) {
                         $updates = ['estado_admisiones' => 'atendido'];
@@ -179,7 +179,7 @@ class UrgenciasResource extends Resource
                         }
 
                         Notification::make()
-                            ->title('Admisión finalizada')
+                            ->title('Paciente enviado a Consulta Médica')
                             ->body("Turno {$record->numero_turno} procesado correctamente")
                             ->success()
                             ->send();
@@ -187,11 +187,27 @@ class UrgenciasResource extends Resource
                     ->visible(fn(Turno $record): bool => $record->estado_admisiones === 'llamado'),
 
                 /* ================================
+ | VOLVER A LLAMAR
+ ================================= */
+                Tables\Actions\Action::make('rellamar_admisiones')
+                    ->label('Volver a llamar')
+                    ->icon('heroicon-o-speaker-wave')
+                    ->iconButton()
+                    ->color('warning')
+                    ->visible(fn(Turno $record): bool => $record->estado_admisiones === 'llamado')
+                    ->action(function (Turno $record) {
+                        $record->update([
+                            'llamado_en' => now(),
+                        ]);
+                    }),
+                /* ================================
                  | CANCELAR TURNO
                  ================================= */
                 Tables\Actions\Action::make('cancelar')
                     ->label('CANCELAR TURNO')
                     ->color('danger')
+                    ->iconButton()
+                    ->icon('heroicon-o-x-circle')
                     ->requiresConfirmation(false)
                     ->modalHeading('Cancelar turno')
                     ->modalSubmitActionLabel('Guardar')
