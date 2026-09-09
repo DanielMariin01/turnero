@@ -62,10 +62,15 @@ class UrgenciasResource extends Resource
     {
         return $table
             ->poll('10s')
-            ->defaultSort('nivel_triage', 'asc')
+            ->defaultSort('hora_ingreso_cola', 'asc')
             ->columns([
                 TextColumn::make('numero_turno')
                     ->label('Turno')
+                    ->sortable()
+                    ->searchable(),
+
+                TextColumn::make('paciente.numero_documento')
+                    ->label('Documento')
                     ->sortable()
                     ->searchable(),
 
@@ -103,6 +108,9 @@ class UrgenciasResource extends Resource
 
                 TextColumn::make('consultorio.nombre')
                     ->label('Consultorio Triage')
+                    ->sortable(),
+                TextColumn::make('hora_ingreso_cola')
+                    ->label('Esperando desde')
                     ->sortable(),
             ])
             ->filters([

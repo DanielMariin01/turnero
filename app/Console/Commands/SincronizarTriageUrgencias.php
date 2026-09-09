@@ -83,12 +83,16 @@ class SincronizarTriageUrgencias extends Command
 
         switch ($nivel) {
             case 1:
+                $datos['estado'] = 'en_proceso';
                 $datos['estado_admisiones'] = 'pendiente';
                 $datos['estado_consulta_medica'] = 'pendiente';
+                $datos['hora_ingreso_cola'] = now()->format('H:i:s');
                 break;
             case 2:
             case 3:
+                $datos['estado'] = 'en_proceso';
                 $datos['estado_admisiones'] = 'pendiente';
+                $datos['hora_ingreso_cola'] = now()->format('H:i:s');
                 break;
             case 4:
             case 5:

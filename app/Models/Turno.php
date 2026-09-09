@@ -34,6 +34,7 @@ class Turno extends Model
         'estado_admisiones',
         'estado_consulta_medica',
         'ingreso_consecutivo',
+        'hora_ingreso_cola',
     ];
 
     public function scopeHoy($query)
