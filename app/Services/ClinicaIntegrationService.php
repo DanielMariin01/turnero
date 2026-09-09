@@ -263,6 +263,7 @@ class ClinicaIntegrationService
                 $ingCsc = ($maxCsc ?? 0) + 1;
 
                 DB::connection('sqlsrv')->table('INGRESOS')->insert([
+                    // Datos del paciente y la visita
                     'MPCedu' => $documento,
                     'MPTDoc' => $tipoDocumento,
                     'ClaPro' => self::CLAPRO_TRIAGE,
@@ -274,7 +275,53 @@ class ClinicaIntegrationService
                     'IngNit' => $contratoNit,
                     'IngAtnAct' => self::CLAPRO_TRIAGE,
                     'IngUlcMoP' => 1,
+                    'IngTip' => 'GN',
+                    'IngCauE' => 13,
                     'EstAdmSld' => 'Activo',
+
+                    // Responsable (fijos, confirmados)
+                    'IngDocResp' => '0',
+                    'IngTDoResp' => $tipoDocumento,   // refleja el tipo de documento del paciente
+                    'IngInSlC' => 'N',
+                    'IngIPSAtn' => '0',
+
+                    // Numéricas en 0
+                    'IngFac' => 0,
+                    'IngDoc' => 0,
+                    'IngExtEst' => 0,
+                    'IngEstSld' => 0,
+                    'IngIPS' => 0,
+                    'IngDxTip' => 0,
+                    'IngMEdEsp' => 0,
+                    'IngDxTip1' => 0,
+                    'IngDxTip2' => 0,
+                    'IngHorObs' => 0,
+                    'IngDoAco' => 0,
+                    'IngMunRe' => 0,
+                    'IngEsMt' => 0,
+                    'IngCtvAc' => 0,
+                    'IngCodPEg' => 0,
+                    'IngNumCit' => 0,
+                    'IngCscN' => 0,
+                    'IngSege' => 0,
+                    'IngUCtvEp' => 0,
+                    'IngCnsPlt' => 0,
+                    'IngHosTTo' => 0,
+                    'IngNroAn1' => 0,
+                    'IngNroAn2' => 0,
+                    'IngEsSAT' => 0,
+                    'IngRieCod' => 0,
+                    'IngRiCnDe' => 0,
+                    'IngRiCoDe' => 0,
+                    'INGDXTIP3' => 0,
+                    'indRefac' => 0,
+
+                    // Fechas sentinela
+                    'IngFchM' => '1753-01-01',
+                    'IngFchAnu' => '1753-01-01',
+                    'IngFeHAtU' => '1753-01-01',
+                    'IngFSAdTr' => '1900-01-01',
+                    'IngFecTur' => '1900-01-01',
                 ]);
 
                 DB::connection('sqlsrv')->table('INGRESOMP')->insert([
