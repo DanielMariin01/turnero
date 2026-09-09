@@ -12,6 +12,8 @@ export default function UrgenciasPage() {
         apellido: "",
         tipo_documento: "",
         numero_documento: "",
+        fecha_nacimiento: "",
+        sexo: "",
     });
 
     const inputActivo = useRef(null);
@@ -170,6 +172,8 @@ export default function UrgenciasPage() {
             }
 
             let numeroDocumento, nombres, apellidos;
+            let fechaNacimiento = '';
+            let sexo = '';
 
             if (formatoDetectado === '$') {
                 if (partes.length < 6) {
@@ -187,6 +191,32 @@ export default function UrgenciasPage() {
                 apellidos = [partes[1]?.trim(), partes[2]?.trim()].filter(Boolean).join(' ');
                 nombres = [partes[3]?.trim(), partes[4]?.trim()].filter(Boolean).join(' ');
                 numeroDocumento = (partes[0]?.trim() || '').replace(/^0+/, '');
+
+                // Extraer fecha de nacimiento y sexo, según el formato de cédula (antigua vs nueva)
+                if (partes.length >= 8) {
+                    // Cédula ANTIGUA: sexo en [5], fecha DDMMYYYY en [6]
+                    sexo = (partes[5]?.trim() || '').toUpperCase();
+                    const fechaRaw = partes[6]?.trim() || '';
+                    if (fechaRaw.length === 8) {
+                        const dia = fechaRaw.substring(0, 2);
+                        const mes = fechaRaw.substring(2, 4);
+                        const anio = fechaRaw.substring(4, 8);
+                        fechaNacimiento = `${anio}-${mes}-${dia}`;
+                    }
+                } else if (partes.length === 7) {
+                    // Cédula NUEVA: fecha AAMMDD en [5], sexo en [6]
+                    const fechaRaw = partes[5]?.trim() || '';
+                    sexo = (partes[6]?.trim() || '').toUpperCase();
+                    if (fechaRaw.length === 6) {
+                        const aa = parseInt(fechaRaw.substring(0, 2), 10);
+                        const mes = fechaRaw.substring(2, 4);
+                        const dia = fechaRaw.substring(4, 6);
+                        const anioActual = new Date().getFullYear();
+                        const siglo2000 = 2000 + aa;
+                        const anio = siglo2000 > anioActual ? 1900 + aa : siglo2000;
+                        fechaNacimiento = `${anio}-${mes}-${dia}`;
+                    }
+                }
             }
 
             if (!numeroDocumento || !nombres || !apellidos) {
@@ -203,6 +233,8 @@ export default function UrgenciasPage() {
                         apellido: data.apellido,
                         tipo_documento: data.tipo_documento,
                         numero_documento: data.numero_documento,
+                        fecha_nacimiento: fechaNacimiento,
+                        sexo: sexo,
                     });
                     mostrarMensaje('✅ Paciente encontrado, datos cargados', 'success');
                 } else {
@@ -211,6 +243,8 @@ export default function UrgenciasPage() {
                         apellido: apellidos,
                         tipo_documento: '',
                         numero_documento: numeroDocumento,
+                        fecha_nacimiento: fechaNacimiento,
+                        sexo: sexo,
                     });
                     mostrarMensaje('✅ Cédula escaneada. Seleccione el tipo de documento.', 'success');
                 }
@@ -220,6 +254,8 @@ export default function UrgenciasPage() {
                     apellido: apellidos,
                     tipo_documento: '',
                     numero_documento: numeroDocumento,
+                    fecha_nacimiento: fechaNacimiento,
+                    sexo: sexo,
                 });
                 mostrarMensaje('✅ Cédula escaneada correctamente', 'success');
             }
@@ -244,13 +280,18 @@ export default function UrgenciasPage() {
                 const data = await response.json();
                 setPaciente(prev => ({
                     ...prev,
-                    nombre: data.nombre,
-                    apellido: data.apellido,
+                    nombre: data.nombre.toUpperCase(),
+                    apellido: data.apellido.toUpperCase(),
                     tipo_documento: data.tipo_documento,
                 }));
+
+                if (data.contrato) {
+                    setContratoSeleccionado(data.contrato);
+                    setBusquedaContrato(data.contrato.nombre);
+                }
+
                 mostrarMensaje('✅ Paciente encontrado en la clínica, datos cargados', 'success');
             }
-            // Si no existe (404), no hacemos nada: el usuario sigue llenando manualmente
         } catch (err) {
             console.error('Error consultando paciente en la clínica:', err);
         }
@@ -388,10 +429,12 @@ export default function UrgenciasPage() {
     // ============================================
     const limpiarFormulario = () => {
         setPaciente({
-            nombre: "",
-            apellido: "",
-            tipo_documento: "",
-            numero_documento: "",
+            nombre: nombres,
+            apellido: apellidos,
+            tipo_documento: '',
+            numero_documento: numeroDocumento,
+            fecha_nacimiento: fechaNacimiento,
+            sexo: sexo,
         });
         setMensajeEscaneo('');
         inputActivo.current = null;
