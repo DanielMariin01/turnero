@@ -32,6 +32,8 @@ Route::get('/contratos', [\App\Http\Controllers\Api\ClinicaController::class, 'c
 //API PARA CONSULTAR PACIENTES POR NUMERO DE DOCUMENTO 
 Route::get('/clinica/pacientes/{documento}', [\App\Http\Controllers\Api\ClinicaController::class, 'paciente']);
 
+Route::post('/turno/urgencias/{id_turno}/revertir', [\App\Http\Controllers\Api\TurnoController::class, 'revertirPorImpresion']);
+
 
 //api para crear la ruta para imprimit turno en urgencias
 Route::get('/turnos/{id_turno}/imprimir', [TurnoController::class, 'imprimir']);

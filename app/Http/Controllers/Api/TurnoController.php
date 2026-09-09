@@ -146,4 +146,10 @@ class TurnoController extends Controller
             return response()->json(['error' => 'Turno no encontrado'], 404);
         }
     }
+
+    public function revertirPorImpresion($id_turno, \App\Services\ClinicaIntegrationService $clinica)
+    {
+        $clinica->revertirTurnoPorFalloImpresion((int) $id_turno);
+        return response()->json(['message' => 'Turno revertido correctamente.']);
+    }
 }

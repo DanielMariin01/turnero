@@ -42,8 +42,13 @@ class ClinicaIntegrationService
             'contrato_nit' => $datos['contrato_nit'] ?? null,
         ]);
 
+
         try {
+            $etapa = 'desactivar_ingresos_previos';
+            $this->desactivarIngresosActivosClinica($documento, $tipoDocumento, $refId);
             $etapa = 'paciente_clinica';
+
+
             $this->buscarOCrearPacienteClinica(
                 $documento,
                 $tipoDocumento,
@@ -51,6 +56,7 @@ class ClinicaIntegrationService
                 $datos['apellido'],
                 $datos['fecha_nacimiento'],
                 $datos['sexo'],
+
                 $refId
             );
 
@@ -133,6 +139,7 @@ class ClinicaIntegrationService
             }
 
             $mensajesPorEtapa = [
+                'desactivar_ingresos_previos' => 'No pudimos preparar su ingreso en el sistema de la clínica.',
                 'paciente_clinica' => 'No pudimos verificar sus datos con el sistema de la clínica.',
                 'ingreso_clinica' => 'No pudimos registrar su ingreso en el sistema de la clínica.',
                 'turno_local' => 'No pudimos generar su turno en el sistema.',
@@ -143,7 +150,43 @@ class ClinicaIntegrationService
             throw new RuntimeException($mensajeUsuario, 0, $e);
         }
     }
+    /**
+     * Desactiva (EstAdmSld = 'Inactivo') todos los ingresos activos del paciente,
+     * sin importar el tipo (ClaPro), para permitir el ingreso de Urgencias.
+     * Urgencias nunca puede negar la atención. La reactivación es manual,
+     * a cargo del personal de la clínica — este sistema no la revierte.
+     * Retorna los IngCsc que fueron desactivados (para dejar rastro claro en el log).
+     */
+    private function desactivarIngresosActivosClinica(string $documento, string $tipoDocumento, string $refId): array
+    {
+        $log = Log::channel('urgencias');
 
+        $idsActivos = DB::connection('sqlsrv')->table('INGRESOS')
+            ->where('MPCedu', $documento)
+            ->where('MPTDoc', $tipoDocumento)
+            ->where('IngFecEgr', '<=', '1753-01-02')
+            ->where('EstAdmSld', 'Activo')
+            ->pluck('IngCsc')
+            ->toArray();
+
+        if (empty($idsActivos)) {
+            return [];
+        }
+
+        DB::connection('sqlsrv')->table('INGRESOS')
+            ->where('MPCedu', $documento)
+            ->where('MPTDoc', $tipoDocumento)
+            ->whereIn('IngCsc', $idsActivos)
+            ->update(['EstAdmSld' => 'Inactivo']);
+
+        $log->warning('Urgencias: ingresos activos desactivados para permitir turno de Urgencias (reactivación manual requerida por la clínica)', [
+            'ref' => $refId,
+            'documento' => $documento,
+            'ingresos_desactivados' => $idsActivos,
+        ]);
+
+        return $idsActivos;
+    }
     /**
      * Busca al paciente en CAPBAS; si no existe, lo crea.
      * Retorna true si SE CREÓ un registro nuevo.
@@ -214,7 +257,6 @@ class ClinicaIntegrationService
                 $maxCsc = DB::connection('sqlsrv')->table('INGRESOS')
                     ->where('MPCedu', $documento)
                     ->where('MPTDoc', $tipoDocumento)
-                    ->where('ClaPro', self::CLAPRO_TRIAGE)
                     ->lockForUpdate()
                     ->max('IngCsc');
 
@@ -325,5 +367,41 @@ class ClinicaIntegrationService
     {
         $partes = explode(' ', trim($texto), 2);
         return [$partes[0] ?? '', $partes[1] ?? ''];
+    }
+
+    /**
+     * Revierte un turno completo (clínica + local) cuando falló la impresión del ticket.
+     */
+    public function revertirTurnoPorFalloImpresion(int $idTurno): void
+    {
+        $log = Log::channel('urgencias');
+        $refId = (string) Str::uuid();
+
+        $turno = Turno::with('paciente')->find($idTurno);
+        if (!$turno) {
+            $log->warning('Urgencias: intento de revertir turno inexistente', ['ref' => $refId, 'id_turno' => $idTurno]);
+            return;
+        }
+
+        $log->warning('Urgencias: revirtiendo turno por fallo de impresión', [
+            'ref' => $refId,
+            'id_turno' => $idTurno,
+            'numero_turno' => $turno->numero_turno,
+        ]);
+
+        $documento = $turno->paciente->numero_documento ?? null;
+        $tipoDocumento = $turno->paciente->tipo_documento ?? null;
+        $ingCsc = $turno->ingreso_consecutivo;
+
+        if ($ingCsc !== null && $documento && $tipoDocumento) {
+            $this->eliminarIngresoCompletoClinica((int) $ingCsc, $documento, $tipoDocumento, $refId);
+        }
+
+        $turno->delete();
+
+        $log->info('Urgencias: turno revertido completamente por fallo de impresión', [
+            'ref' => $refId,
+            'id_turno' => $idTurno,
+        ]);
     }
 }

@@ -407,11 +407,18 @@ export default function UrgenciasPage() {
                 }
             } catch (printError) {
                 console.error("Error imprimiendo:", printError);
+
+                try {
+                    await fetch(`/api/turno/urgencias/${turnoCreado.id_turno}/revertir`, { method: 'POST' });
+                } catch (revertError) {
+                    console.error("Error revirtiendo turno:", revertError);
+                }
+
                 await Swal.fire({
-                    icon: "warning",
-                    title: "Turno creado, pero no se pudo imprimir",
-                    text: "Verifica la impresora",
-                    confirmButtonColor: "#f0ad4e",
+                    icon: "error",
+                    title: "No se pudo imprimir su turno",
+                    text: "Por seguridad, cancelamos el proceso. Por favor verifique la impresora e intente de nuevo.",
+                    confirmButtonColor: "#d33",
                 });
                 procesandoRef.current = false;
                 setGenerando(false);
