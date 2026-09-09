@@ -22,27 +22,19 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class UrgenciasResource extends Resource
 {
-
     protected static ?string $model = Turno::class;
-    protected static ?string $navigationIcon = 'heroicon-o-user';
+    protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';
     protected static ?string $label = 'Admisiones Urgencias ';
-
 
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
             ->hoy()
-            ->whereIn('estado', ['en_espera', 'llamado'])
+            ->whereIn('estado_admisiones', ['pendiente', 'llamado'])
             ->where('motivo', 'urgencias')
-            ///->whereIn('motivo', ['Urgencias', 'pendiente para facturar'])
-            //codigo para cargar las relaciones de paciente, modulo y consultorio
-            ->with(['paciente', 'modulo', 'consultorio']);
+            ->with(['paciente', 'consultorio', 'modulo']);
     }
-    /* ============================================
-     |  PERMISOS DEL RESOURCE
-     ============================================ */
-    //se agrega el permiso de spatie 
-    // app/Filament/Resources/TurnoResource.php
+
     public static function canViewAny(): bool
     {
         return auth()->user()?->hasAnyRole(['admin', 'admisiones_urgencias']) ?? false;
@@ -50,12 +42,12 @@ class UrgenciasResource extends Resource
 
     public static function canCreate(): bool
     {
-        return false; // No se pueden crear turnos manualmente
+        return false;
     }
 
     public static function canEdit(Model $record): bool
     {
-        return false; // No se editan turnos aquí
+        return false;
     }
 
     public static function form(Form $form): Form
@@ -69,158 +61,129 @@ class UrgenciasResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->poll('30s') // Auto refresco cada 60s
-            ->defaultSort('hora', 'asc')
+            ->poll('10s')
+            ->defaultSort('nivel_triage', 'asc')
             ->columns([
-                // FECHA
-                Tables\Columns\TextColumn::make('fecha')
-                    ->label('Fecha')
-                    ->date()
-                    ->sortable(),
-
-                // NÚMERO DE TURNO
                 TextColumn::make('numero_turno')
                     ->label('Turno')
                     ->sortable()
                     ->searchable(),
 
-
-                // MOTIVO
-                Tables\Columns\TextColumn::make('motivo')
-                    ->label('Motivo')
+                TextColumn::make('paciente_urgencias')
+                    ->label('Paciente')
                     ->sortable()
                     ->searchable(),
 
-                // MÓDULO
-                Tables\Columns\TextColumn::make('modulo.nombre')
-                    ->label('Ventanilla')
-                    ->sortable()
-                    ->searchable(),
-
-                // ESTADO
-                Tables\Columns\TextColumn::make('estado')
-                    ->label('Estado')
+                TextColumn::make('nivel_triage')
+                    ->label('Triage')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
-                        'llamado' => 'success',
-                        'en_espera' => 'warning',
-                        'asignado' => 'success',
-                        'facturar' => 'info',
-                        'llamado_facturar' => 'info',
+                    ->color(fn($state) => match ((int) $state) {
+                        1 => 'danger',
+                        2, 3 => 'warning',
                         default => 'gray',
                     }),
 
-                // HORA
-                Tables\Columns\TextColumn::make('hora')
-                    ->label('Hora')
-                    ->sortable()
-                    ->time('g:i A'),
-            ])
+                TextColumn::make('estado_admisiones')
+                    ->label('Estado')
+                    ->badge()
+                    ->color(fn($state) => match ($state) {
+                        'pendiente' => 'warning',
+                        'llamado' => 'info',
+                        default => 'gray',
+                    }),
 
+                TextColumn::make('modulo.nombre')
+                    ->label('Ventanilla')
+                    ->sortable(),
+
+                TextColumn::make('contrato_nombre')
+                    ->label('Contrato / EPS')
+                    ->sortable()
+                    ->searchable(),
+
+                TextColumn::make('consultorio.nombre')
+                    ->label('Consultorio Triage')
+                    ->sortable(),
+            ])
             ->filters([
                 //
             ])
             ->actions([
                 /* ================================
-                 | LLAMAR DESDE EN ESPERA
+                 | LLAMAR A ADMISIONES
                  ================================= */
-                Tables\Actions\Action::make('llamar_enespera')
+                Tables\Actions\Action::make('llamar_admisiones')
                     ->label('Llamar')
                     ->iconButton()
                     ->color('primary')
                     ->icon('heroicon-o-phone')
-                    ->requiresConfirmation(false)
-                    ->modalHeading('Asignar Módulo')
+                    ->modalHeading('Asignar ventanilla de Admisiones')
                     ->modalSubmitActionLabel('Llamar')
                     ->form([
                         Forms\Components\Select::make('fk_modulo')
-                            ->label('Módulo')
+                            ->label('Ventanilla')
                             ->options(
                                 fn() => Modulo::where('area', 'urgencias')
                                     ->pluck('nombre', 'id_modulo')
                             )
-                            ->required()
-                            ->placeholder('Seleccione un módulo'),
-                    ])
-                    ->before(function (Turno $record) {
-                        $record->update([
-                            'estado' => 'llamado',
-                            'hora_llamado' => now()->format('H:i:s'),
-                        ]);
-                        Notification::make()->title('Turno llamado')->success()->send();
-                    })
-                    ->action(function (Turno $record, array $data) {
-                        $record->update(['fk_modulo' => $data['fk_modulo']]);
-                        Notification::make()
-                            ->title('Paciente Llamado')
-                            ->body("Turno asignado correctamente")
-                            ->success()
-                            ->send();
-                    })
-                    ->visible(fn(Turno $record): bool => $record->estado === 'en_espera'),
-                /* ================================
-                 | ASIGNAR CONSULTORIO
-                 ================================= */
-                Tables\Actions\Action::make('asignar_consultorio')
-                    ->label('Enviar a Triage')
-                    ->button()
-                    ->color('primary')
-                    //->icon('heroicon-o-check') // opcional, puedes dejarlo o quitarlo
-                    ->modalHeading('Selecciona el consultorio para este turno')
-                    ->modalSubmitActionLabel('Asignar')
-                    ->form([
-                        Forms\Components\Select::make('fk_consultorio')
-                            ->label('Consultorio')
-                            ->options(
-                                fn() => Consultorio::where('area', 'urgencias')
-                                    ->pluck('nombre', 'id_consultorio')
-                            )
                             ->required(),
-
-                        Forms\Components\TextInput::make('paciente_urgencias')
-                            ->label('Nombre del Paciente')
-                            ->required()
-                            ->maxLength(255),
                     ])
-
                     ->action(function (Turno $record, array $data) {
                         $record->update([
-                            'estado' => 'asignado',
-                            'hora_atendido' => now()->format('H:i:s'),
-                            'fk_consultorio' => $data['fk_consultorio'],
-                            'paciente_urgencias' => $data['paciente_urgencias'],
+                            'estado_admisiones' => 'llamado',
+                            'fk_modulo' => $data['fk_modulo'],
                         ]);
 
                         Notification::make()
-                            ->title('Consultorio asignado')
-                            ->body("Turno enviado al médico correctamente")
+                            ->title('Paciente llamado a Admisiones')
+                            ->body("Turno {$record->numero_turno} llamado correctamente")
                             ->success()
                             ->send();
                     })
-
-                    ->visible(fn(Turno $record): bool => $record->estado === 'llamado'),
+                    ->visible(fn(Turno $record): bool => $record->estado_admisiones === 'pendiente'),
 
                 /* ================================
-                 | ACCION DE VOLVER A LLAMAR
+                 | FINALIZAR ADMISIÓN
                  ================================= */
-                Tables\Actions\Action::make('rellamar')
-                    ->label('Volver a llamar')
-                    ->icon('heroicon-o-speaker-wave')
-                    ->iconButton()
-                    ->color('warning')
-                    ->visible(fn(Turno $record): bool => $record->estado === 'llamado')
+                Tables\Actions\Action::make('finalizar_admisiones')
+                    ->label('Finalizar Admisión')
+                    ->button()
+                    ->color('success')
+                    ->icon('heroicon-o-check')
+                    ->requiresConfirmation()
+                    ->modalHeading('Finalizar proceso de admisión')
+                    ->modalDescription('¿Confirmas que ya terminaste el proceso administrativo de este paciente?')
                     ->action(function (Turno $record) {
-                        $record->update([
-                            'llamado_en' => now(),
-                        ]);
-                    }),
+                        $updates = ['estado_admisiones' => 'atendido'];
+
+                        if ($record->estado_consulta_medica === null) {
+                            $updates['estado_consulta_medica'] = 'pendiente';
+                        }
+
+                        $record->update($updates);
+                        $record->refresh();
+
+                        if ($record->estado_consulta_medica === 'atendido') {
+                            $record->update([
+                                'estado' => 'atendido',
+                                'hora_finalizacion' => now()->format('H:i:s'),
+                            ]);
+                        }
+
+                        Notification::make()
+                            ->title('Admisión finalizada')
+                            ->body("Turno {$record->numero_turno} procesado correctamente")
+                            ->success()
+                            ->send();
+                    })
+                    ->visible(fn(Turno $record): bool => $record->estado_admisiones === 'llamado'),
+
                 /* ================================
                  | CANCELAR TURNO
                  ================================= */
                 Tables\Actions\Action::make('cancelar')
                     ->label('CANCELAR TURNO')
                     ->color('danger')
-                    //->icon('heroicon-o-x-circle')
                     ->requiresConfirmation(false)
                     ->modalHeading('Cancelar turno')
                     ->modalSubmitActionLabel('Guardar')
@@ -233,8 +196,8 @@ class UrgenciasResource extends Resource
                             ->required()
                             ->searchable()
                             ->options([
-
                                 'turno_doble' => 'Turno doble',
+                                'no_atiende_llamado' => 'No atiende al llamado',
                                 'otro' => 'Otro motivo',
                             ])
                             ->columnSpanFull(),
@@ -242,8 +205,8 @@ class UrgenciasResource extends Resource
                     ->action(function (Turno $record, array $data) {
                         $record->update([
                             'estado' => 'no_atendido',
+                            'estado_admisiones' => 'atendido',
                             'observaciones' => $data['observaciones'],
-                            //'hora' => now()->format('H:i:s'),
                         ]);
 
                         Notification::make()
@@ -252,12 +215,7 @@ class UrgenciasResource extends Resource
                             ->danger()
                             ->send();
                     })
-                    ->visible(
-                        fn(Turno $record): bool =>
-                        in_array($record->estado, ['llamado', 'en_espera'])
-                    ),
-
-
+                    ->visible(fn(Turno $record): bool => in_array($record->estado_admisiones, ['pendiente', 'llamado'])),
             ])
             ->bulkActions([]);
     }

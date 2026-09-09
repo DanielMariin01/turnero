@@ -55,7 +55,7 @@ class TurnoPantallaController extends Controller
     {
         $ultimoTurno = Turno::with('modulo')
             ->where('motivo', 'urgencias')
-            ->where('estado', 'llamado')
+            ->where('estado_admisiones', 'llamado')
             ->orderBy('updated_at', 'desc')
             ->first();
 
@@ -91,14 +91,16 @@ class TurnoPantallaController extends Controller
     public function turnosLlamadosUrgencias()
     {
         return Turno::with(['consultorio', 'modulo'])
-            ->whereIn('estado', ['llamado', 'llamado_medico','asignado'])
-            ->where('motivo', 'urgencias')
             ->whereDate('fecha', now()->toDateString())
+            ->where('motivo', 'urgencias')
+            ->where(function ($query) {
+                $query->whereIn('estado', ['llamado', 'asignado'])
+                    ->orWhere('estado_admisiones', 'llamado');
+            })
             ->orderBy('updated_at', 'desc')
             ->take(4)
             ->get();
     }
-
 
     public function turnoUltimoQuimioterapia()
     {
