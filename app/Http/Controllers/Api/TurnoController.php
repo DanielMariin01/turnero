@@ -98,6 +98,8 @@ class TurnoController extends Controller
             'apellido' => 'required|string|max:250',
             'tipo_documento' => 'required|string|max:10',
             'numero_documento' => 'required|string|max:150',
+            'fecha_nacimiento' => 'required|date',
+            'sexo' => 'required|string|max:1|in:M,F',
             'contrato_nit' => 'required|string|max:20',
             'contrato_nombre' => 'required|string|max:250',
         ]);
@@ -106,7 +108,7 @@ class TurnoController extends Controller
             $turno = $clinica->crearTurnoUrgencias($validated);
         } catch (\Throwable $e) {
             return response()->json([
-                'message' => 'No se pudo generar el turno. Por favor intente de nuevo.',
+                'message' => $e->getMessage(),
             ], 500);
         }
 

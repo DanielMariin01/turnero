@@ -6,41 +6,65 @@ use App\Models\Paciente;
 use App\Models\Turno;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 use RuntimeException;
 
 class ClinicaIntegrationService
 {
-    /** Código fijo para "Triage" en el catálogo ClaPro de la clínica */
     const CLAPRO_TRIAGE = '5';
+    const PABELLON_TRIAGE = 15;
+    const USUARIO_SISTEMA = 'SISTEMAS';
 
     /**
      * Orquesta la creación completa de un turno de Urgencias:
-     * paciente + ingreso en la clínica, y paciente + turno local.
-     * Si cualquier paso falla, deshace todo lo que ya se había creado.
-     *
-     * @throws RuntimeException si no se pudo completar el proceso
+     * paciente + ingreso (INGRESOS+INGRESOMP+LOGINGR) en la clínica,
+     * y paciente + turno local. Si algo falla, deshace todo lo creado.
      */
     public function crearTurnoUrgencias(array $datos): Turno
     {
         $documento = $datos['numero_documento'];
         $tipoDocumento = $datos['tipo_documento'];
 
-        $pacienteCreadoEnClinica = false;
+        // Código de referencia único para rastrear este intento en todos los logs
+        $refId = (string) Str::uuid();
+        $inicio = microtime(true);
+
         $ingCsc = null;
+        $etapa = null;
+
+        $log = Log::channel('urgencias');
+
+        $log->info('Urgencias: INICIO de creación de turno', [
+            'ref' => $refId,
+            'documento' => $documento,
+            'tipo_documento' => $tipoDocumento,
+            'contrato_nit' => $datos['contrato_nit'] ?? null,
+        ]);
 
         try {
-            $pacienteCreadoEnClinica = $this->buscarOCrearPacienteClinica(
+            $etapa = 'paciente_clinica';
+            $this->buscarOCrearPacienteClinica(
                 $documento,
                 $tipoDocumento,
                 $datos['nombre'],
-                $datos['apellido']
+                $datos['apellido'],
+                $datos['fecha_nacimiento'],
+                $datos['sexo'],
+                $refId
             );
 
-            $ingCsc = $this->crearIngresoClinica($documento, $tipoDocumento, $datos['contrato_nit']);
+            $etapa = 'ingreso_clinica';
+            $ingCsc = $this->crearIngresoCompletoClinica(
+                $documento,
+                $tipoDocumento,
+                $datos['contrato_nit'],
+                $refId
+            );
 
-            $turno = DB::transaction(function () use ($datos, $documento, $ingCsc) {
-                Log::info('Urgencias: creando paciente local', ['documento' => $documento]);
+            $etapa = 'turno_local';
+            $turno = DB::transaction(function () use ($datos, $documento, $ingCsc, $refId, $log) {
+                $log->info('Urgencias: creando paciente local', ['ref' => $refId, 'documento' => $documento]);
 
                 $paciente = Paciente::firstOrCreate(
                     ['numero_documento' => $documento],
@@ -69,7 +93,8 @@ class ClinicaIntegrationService
                     'ingreso_consecutivo' => $ingCsc,
                 ]);
 
-                Log::info('Urgencias: turno local creado', [
+                $log->info('Urgencias: turno local creado', [
+                    'ref' => $refId,
                     'id_turno' => $turno->id_turno,
                     'numero_turno' => $turno->numero_turno,
                 ]);
@@ -79,33 +104,61 @@ class ClinicaIntegrationService
 
             $turno->load('paciente');
 
-            Log::info('Urgencias: turno completo creado exitosamente', [
+            $duracionMs = round((microtime(true) - $inicio) * 1000);
+
+            $log->info('Urgencias: ÉXITO - turno completo creado', [
+                'ref' => $refId,
                 'id_turno' => $turno->id_turno,
+                'numero_turno' => $turno->numero_turno,
                 'documento' => $documento,
                 'ingreso_consecutivo' => $ingCsc,
+                'duracion_ms' => $duracionMs,
             ]);
 
             return $turno;
         } catch (\Throwable $e) {
-            Log::error('Urgencias: fallo creando turno, deshaciendo cambios', [
+            $duracionMs = round((microtime(true) - $inicio) * 1000);
+
+            $log->error('Urgencias: FALLO creando turno, deshaciendo cambios', [
+                'ref' => $refId,
+                'etapa' => $etapa,
                 'documento' => $documento,
                 'error' => $e->getMessage(),
+                'archivo' => $e->getFile() . ':' . $e->getLine(),
+                'duracion_ms' => $duracionMs,
             ]);
 
             if ($ingCsc !== null) {
-                $this->eliminarIngresoClinica($ingCsc);
-            }
-            if ($pacienteCreadoEnClinica) {
-                $this->eliminarPacienteClinica($documento, $tipoDocumento);
+                $this->eliminarIngresoCompletoClinica($ingCsc, $documento, $tipoDocumento, $refId);
             }
 
-            throw new RuntimeException('No se pudo generar el turno de urgencias: ' . $e->getMessage(), 0, $e);
+            $mensajesPorEtapa = [
+                'paciente_clinica' => 'No pudimos verificar sus datos con el sistema de la clínica.',
+                'ingreso_clinica' => 'No pudimos registrar su ingreso en el sistema de la clínica.',
+                'turno_local' => 'No pudimos generar su turno en el sistema.',
+            ];
+            $mensajeUsuario = $mensajesPorEtapa[$etapa] ?? 'No se pudo generar el turno.';
+            $mensajeUsuario .= " Por favor intente de nuevo. (Código de referencia: {$refId})";
+
+            throw new RuntimeException($mensajeUsuario, 0, $e);
         }
     }
 
-    private function buscarOCrearPacienteClinica(string $documento, string $tipoDocumento, string $nombreCompleto, string $apellidoCompleto): bool
-    {
-        Log::info('Urgencias: verificando paciente en clínica (CAPBAS)', ['documento' => $documento]);
+    /**
+     * Busca al paciente en CAPBAS; si no existe, lo crea.
+     * Retorna true si SE CREÓ un registro nuevo.
+     */
+    private function buscarOCrearPacienteClinica(
+        string $documento,
+        string $tipoDocumento,
+        string $nombreCompleto,
+        string $apellidoCompleto,
+        string $fechaNacimiento,
+        string $sexo,
+        string $refId
+    ): bool {
+        $log = Log::channel('urgencias');
+        $log->info('Urgencias: verificando paciente en clínica (CAPBAS)', ['ref' => $refId, 'documento' => $documento]);
 
         try {
             $existe = DB::connection('sqlsrv')->table('CAPBAS')
@@ -114,7 +167,7 @@ class ClinicaIntegrationService
                 ->exists();
 
             if ($existe) {
-                Log::info('Urgencias: paciente ya existía en CAPBAS', ['documento' => $documento]);
+                $log->info('Urgencias: paciente ya existía en CAPBAS', ['ref' => $refId, 'documento' => $documento]);
                 return false;
             }
 
@@ -129,14 +182,17 @@ class ClinicaIntegrationService
                 'MPNom2' => $nombre2,
                 'MPApe1' => $apellido1,
                 'MPApe2' => $apellido2,
+                'MPFchN' => $fechaNacimiento,
+                'MPSexo' => $sexo,
                 'MPNOMC' => $nombreConcatenado,
                 'MPEstPac' => 'S',
             ]);
 
-            Log::info('Urgencias: paciente creado en CAPBAS', ['documento' => $documento]);
+            $log->info('Urgencias: paciente creado en CAPBAS', ['ref' => $refId, 'documento' => $documento]);
             return true;
         } catch (\Throwable $e) {
-            Log::error('Urgencias: error creando paciente en CAPBAS', [
+            $log->error('Urgencias: error creando paciente en CAPBAS', [
+                'ref' => $refId,
                 'documento' => $documento,
                 'error' => $e->getMessage(),
             ]);
@@ -144,27 +200,72 @@ class ClinicaIntegrationService
         }
     }
 
-    private function crearIngresoClinica(string $documento, string $tipoDocumento, string $contratoNit): int
+    /**
+     * Crea el ingreso completo en la clínica: INGRESOS + INGRESOMP + LOGINGR,
+     * dentro de una sola transacción. Retorna el IngCsc generado.
+     */
+    private function crearIngresoCompletoClinica(string $documento, string $tipoDocumento, string $contratoNit, string $refId): int
     {
-        Log::info('Urgencias: creando ingreso en clínica (INGRESOS)', ['documento' => $documento]);
+        $log = Log::channel('urgencias');
+        $log->info('Urgencias: creando ingreso completo en clínica', ['ref' => $refId, 'documento' => $documento]);
 
         try {
-            $ingCsc = DB::connection('sqlsrv')->table('INGRESOS')->insertGetId([
-                'MPCedu' => $documento,
-                'MPTDoc' => $tipoDocumento,
-                'ClaPro' => self::CLAPRO_TRIAGE,
-                'IngFecAdm' => now(),
-                'IngNit' => $contratoNit,
-            ], 'IngCsc');
+            return DB::connection('sqlsrv')->transaction(function () use ($documento, $tipoDocumento, $contratoNit, $refId, $log) {
+                $maxCsc = DB::connection('sqlsrv')->table('INGRESOS')
+                    ->where('MPCedu', $documento)
+                    ->where('MPTDoc', $tipoDocumento)
+                    ->where('ClaPro', self::CLAPRO_TRIAGE)
+                    ->lockForUpdate()
+                    ->max('IngCsc');
 
-            Log::info('Urgencias: ingreso creado en clínica', [
-                'documento' => $documento,
-                'ing_csc' => $ingCsc,
-            ]);
+                $ingCsc = ($maxCsc ?? 0) + 1;
 
-            return $ingCsc;
+                DB::connection('sqlsrv')->table('INGRESOS')->insert([
+                    'MPCedu' => $documento,
+                    'MPTDoc' => $tipoDocumento,
+                    'ClaPro' => self::CLAPRO_TRIAGE,
+                    'IngCsc' => $ingCsc,
+                    'IngFecAdm' => now(),
+                    'IngUsrReg' => self::USUARIO_SISTEMA,
+                    'IngFecEgr' => '1753-01-01',
+                    'MPCodP' => self::PABELLON_TRIAGE,
+                    'IngNit' => $contratoNit,
+                    'IngAtnAct' => self::CLAPRO_TRIAGE,
+                    'IngUlcMoP' => 1,
+                    'EstAdmSld' => 'Activo',
+                ]);
+
+                DB::connection('sqlsrv')->table('INGRESOMP')->insert([
+                    'MPCedu' => $documento,
+                    'MPTDoc' => $tipoDocumento,
+                    'ClaPro' => self::CLAPRO_TRIAGE,
+                    'IngCsc' => $ingCsc,
+                    'IngCtvMoP' => 1,
+                    'IngCodPab' => self::PABELLON_TRIAGE,
+                    'IngCodCam' => '',
+                    'IngFecMoP' => now(),
+                    'IngUsuMoP' => self::USUARIO_SISTEMA,
+                ]);
+
+                DB::connection('sqlsrv')->table('LOGINGR')->insert([
+                    'MPCedu' => $documento,
+                    'MPTDoc' => $tipoDocumento,
+                    'IngCsc' => $ingCsc,
+                    'IngFec' => now(),
+                    'UsrIng' => self::USUARIO_SISTEMA,
+                ]);
+
+                $log->info('Urgencias: ingreso completo creado (INGRESOS+INGRESOMP+LOGINGR)', [
+                    'ref' => $refId,
+                    'documento' => $documento,
+                    'ing_csc' => $ingCsc,
+                ]);
+
+                return $ingCsc;
+            });
         } catch (\Throwable $e) {
-            Log::error('Urgencias: error creando ingreso en INGRESOS', [
+            $log->error('Urgencias: error creando ingreso completo en la clínica', [
+                'ref' => $refId,
                 'documento' => $documento,
                 'contrato_nit' => $contratoNit,
                 'error' => $e->getMessage(),
@@ -173,29 +274,29 @@ class ClinicaIntegrationService
         }
     }
 
-    private function eliminarIngresoClinica(int $ingCsc): void
+    /** Rollback: elimina el ingreso completo (LOGINGR, INGRESOMP, INGRESOS) en orden inverso */
+    private function eliminarIngresoCompletoClinica(int $ingCsc, string $documento, string $tipoDocumento, string $refId): void
     {
+        $log = Log::channel('urgencias');
         try {
-            DB::connection('sqlsrv')->table('INGRESOS')->where('IngCsc', $ingCsc)->delete();
-            Log::warning('Urgencias: ingreso revertido en la clínica', ['ing_csc' => $ingCsc]);
-        } catch (\Throwable $e) {
-            Log::critical('Urgencias: NO se pudo revertir el ingreso en la clínica, requiere revisión manual', [
-                'ing_csc' => $ingCsc,
-                'error' => $e->getMessage(),
-            ]);
-        }
-    }
+            DB::connection('sqlsrv')->transaction(function () use ($ingCsc, $documento, $tipoDocumento) {
+                DB::connection('sqlsrv')->table('LOGINGR')
+                    ->where('MPCedu', $documento)->where('MPTDoc', $tipoDocumento)->where('IngCsc', $ingCsc)
+                    ->delete();
 
-    private function eliminarPacienteClinica(string $documento, string $tipoDocumento): void
-    {
-        try {
-            DB::connection('sqlsrv')->table('CAPBAS')
-                ->where('MPCedu', $documento)
-                ->where('MPTDoc', $tipoDocumento)
-                ->delete();
-            Log::warning('Urgencias: paciente revertido en la clínica', ['documento' => $documento]);
+                DB::connection('sqlsrv')->table('INGRESOMP')
+                    ->where('MPCedu', $documento)->where('MPTDoc', $tipoDocumento)->where('IngCsc', $ingCsc)
+                    ->delete();
+
+                DB::connection('sqlsrv')->table('INGRESOS')
+                    ->where('MPCedu', $documento)->where('MPTDoc', $tipoDocumento)->where('IngCsc', $ingCsc)
+                    ->delete();
+            });
+            $log->warning('Urgencias: ingreso completo revertido en la clínica', ['ref' => $refId, 'ing_csc' => $ingCsc]);
         } catch (\Throwable $e) {
-            Log::critical('Urgencias: NO se pudo revertir el paciente en la clínica, requiere revisión manual', [
+            $log->critical('Urgencias: NO se pudo revertir el ingreso completo, requiere revisión manual', [
+                'ref' => $refId,
+                'ing_csc' => $ingCsc,
                 'documento' => $documento,
                 'error' => $e->getMessage(),
             ]);
