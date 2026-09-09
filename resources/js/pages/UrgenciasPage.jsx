@@ -327,6 +327,14 @@ export default function UrgenciasPage() {
             Swal.fire({ title: "Campo requerido", text: "Por favor ingrese el número de documento", icon: "warning", confirmButtonText: "Aceptar" });
             return;
         }
+        if (!paciente.fecha_nacimiento) {
+            Swal.fire({ title: "Campo requerido", text: "Por favor ingrese la fecha de nacimiento", icon: "warning", confirmButtonText: "Aceptar" });
+            return;
+        }
+        if (!paciente.sexo) {
+            Swal.fire({ title: "Campo requerido", text: "Por favor seleccione el sexo", icon: "warning", confirmButtonText: "Aceptar" });
+            return;
+        }
         if (!contratoSeleccionado) {
             Swal.fire({ title: "Campo requerido", text: "Por favor busque y seleccione su EPS, SOAT o Particular", icon: "warning", confirmButtonText: "Aceptar" });
             return;
@@ -352,6 +360,8 @@ export default function UrgenciasPage() {
                 apellido: paciente.apellido.toUpperCase(),
                 tipo_documento: paciente.tipo_documento,
                 numero_documento: paciente.numero_documento,
+                fecha_nacimiento: paciente.fecha_nacimiento,
+                sexo: paciente.sexo,
                 contrato_nit: contratoSeleccionado.nit,
                 contrato_nombre: contratoSeleccionado.nombre,
             };
