@@ -446,12 +446,12 @@ export default function UrgenciasPage() {
     // ============================================
     const limpiarFormulario = () => {
         setPaciente({
-            nombre: nombres,
-            apellido: apellidos,
-            tipo_documento: '',
-            numero_documento: numeroDocumento,
-            fecha_nacimiento: fechaNacimiento,
-            sexo: sexo,
+            nombre: "",
+            apellido: "",
+            tipo_documento: "",
+            numero_documento: "",
+            fecha_nacimiento: "",
+            sexo: "",
         });
         setMensajeEscaneo('');
         inputActivo.current = null;

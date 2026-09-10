@@ -177,7 +177,10 @@ class ClinicaIntegrationService
             ->where('MPCedu', $documento)
             ->where('MPTDoc', $tipoDocumento)
             ->whereIn('IngCsc', $idsActivos)
-            ->update(['EstAdmSld' => 'Inactivo']);
+            ->update([
+                'EstAdmSld' => 'Inactivo',
+                'IngFecEgr' => now(),   // ⬅️ agregada
+            ]);
 
         $log->warning('Urgencias: ingresos activos desactivados para permitir turno de Urgencias (reactivación manual requerida por la clínica)', [
             'ref' => $refId,
@@ -263,7 +266,6 @@ class ClinicaIntegrationService
                 $ingCsc = ($maxCsc ?? 0) + 1;
 
                 DB::connection('sqlsrv')->table('INGRESOS')->insert([
-                    // Datos del paciente y la visita
                     'MPCedu' => $documento,
                     'MPTDoc' => $tipoDocumento,
                     'ClaPro' => self::CLAPRO_TRIAGE,
@@ -278,14 +280,10 @@ class ClinicaIntegrationService
                     'IngTip' => 'GN',
                     'IngCauE' => 13,
                     'EstAdmSld' => 'Activo',
-
-                    // Responsable (fijos, confirmados)
                     'IngDocResp' => '0',
-                    'IngTDoResp' => $tipoDocumento,   // refleja el tipo de documento del paciente
+                    'IngTDoResp' => $tipoDocumento,
                     'IngInSlC' => 'N',
                     'IngIPSAtn' => '0',
-
-                    // Numéricas en 0
                     'IngFac' => 0,
                     'IngDoc' => 0,
                     'IngExtEst' => 0,
@@ -315,8 +313,6 @@ class ClinicaIntegrationService
                     'IngRiCoDe' => 0,
                     'INGDXTIP3' => 0,
                     'indRefac' => 0,
-
-                    // Fechas sentinela
                     'IngFchM' => '1753-01-01',
                     'IngFchAnu' => '1753-01-01',
                     'IngFeHAtU' => '1753-01-01',
@@ -344,7 +340,76 @@ class ClinicaIntegrationService
                     'UsrIng' => self::USUARIO_SISTEMA,
                 ]);
 
-                $log->info('Urgencias: ingreso completo creado (INGRESOS+INGRESOMP+LOGINGR)', [
+                // ⬇️ NUEVO: TMPFAC
+                DB::connection('sqlsrv')->table('TMPFAC')->insert([
+                    'TFCedu' => $documento,
+                    'TFTDoc' => $tipoDocumento,
+                    'TmCtvIng' => $ingCsc,   // mismo consecutivo que IngCsc
+                    'TFFchI' => now(),
+                    'TFHorI' => now()->format('H:i:s'),
+                    'SCCCod' => '001',
+                    'SccEmp' => '1',
+                    'ClaPro' => self::CLAPRO_TRIAGE,
+
+                    'TFMENi' => $contratoNit,
+                    'TFcCodPab' => self::PABELLON_TRIAGE,
+                    'TFCauE' => 13,
+                    'ClaproI' => self::CLAPRO_TRIAGE,
+                    'TFTDoRep' => $tipoDocumento,
+                    'TFDocRep' => '0',
+                    'TFUIng' => self::USUARIO_SISTEMA,
+                    'TFTiRe' => '1',
+
+                    'SOFchVIni' => '1900-01-01',
+                    'SOFchAcc' => '1900-01-01',
+                    'SOFchVFin' => '1900-01-01',
+                    'MPFEsH' => '1900-01-01',
+                    'TFFchM' => '1753-01-01',
+                    'TFFchS' => '1753-01-01',
+
+                    'MICodI' => 0,
+                    'SOCodM' => 0,
+                    'SOCodMCnd' => 0,
+                    'SOTpoEC' => 0,
+                    'SOCodME' => 0,
+                    'TFViaI' => 0,
+                    'TFEsMI' => 0,
+                    'TFEsMS' => 0,
+                    'TFEstS' => 0,
+                    'TFSeGe' => 0,
+                    'TFHorO' => 0,
+                    'TFVNPU' => 0,
+                    'TFUscP' => 0,
+                    'TFUlcAC' => 0,
+                    'TFEstP' => 0,
+                    'TFTotP' => 0,
+                    'TFTotS' => 0,
+                    'TFTotF' => 0,
+                    'TFValS' => 0,
+                    'TFVaAb' => 0,
+                    'TFVAPU' => 0,
+                    'TFVPaU' => 0,
+                    'TFVDsc' => 0,
+                    'TFUscS' => 0,
+                    'TFUcsA' => 0,
+                    'TFUcsN' => 0,
+                    'TFTpeAut' => 0,
+                    'TFVlrAut' => 0,
+                    'TFcCodCns' => 0,
+                    'TFVlrImpt' => 0,
+                    'TFCnTQx' => 0,
+                    'ReFatMat' => 0,
+                    'ReFatNum' => 0,
+                    'TmCtvAct' => 0,
+                    'TFIPSENT' => 0,
+                    'TFDocAco' => 0,
+                    'TFMunRes' => 0,
+                    'TFEsMt' => 0,
+                    'TFVPOCo' => 0,
+                    'TFVlrTIv' => 0,
+                ]);
+
+                $log->info('Urgencias: ingreso completo creado (INGRESOS+INGRESOMP+LOGINGR+TMPFAC)', [
                     'ref' => $refId,
                     'documento' => $documento,
                     'ing_csc' => $ingCsc,
@@ -369,6 +434,10 @@ class ClinicaIntegrationService
         $log = Log::channel('urgencias');
         try {
             DB::connection('sqlsrv')->transaction(function () use ($ingCsc, $documento, $tipoDocumento) {
+                DB::connection('sqlsrv')->table('TMPFAC')
+                    ->where('TFCedu', $documento)->where('TFTDoc', $tipoDocumento)->where('TmCtvIng', $ingCsc)
+                    ->delete();
+
                 DB::connection('sqlsrv')->table('LOGINGR')
                     ->where('MPCedu', $documento)->where('MPTDoc', $tipoDocumento)->where('IngCsc', $ingCsc)
                     ->delete();
