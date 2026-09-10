@@ -65,23 +65,55 @@ class TurnoPantallaController extends Controller
             'modulo'       => $ultimoTurno?->modulo ?? null,
             'fk_modulo'    => $ultimoTurno?->fk_modulo ?? null,
             'llamado_en'   => $ultimoTurno?->llamado_en,
+            'paciente_urgencias' => $ultimoTurno?->paciente_urgencias,   // ⬅nueva linea para mostrar el nombre del paciente
         ]);
     }
 
 
-
     public function turnoMedicoUrgencias()
     {
-        $turno = Turno::with('consultorio')
+        $turnoTriage = Turno::with('consultorio')
             ->where('motivo', 'urgencias')
             ->where('estado', 'llamado_medico')
             ->orderBy('updated_at', 'desc')
             ->first();
 
+        $turnoConsulta = Turno::with('consultorioConsulta')
+            ->where('motivo', 'urgencias')
+            ->where('estado_consulta_medica', 'atendido')
+            ->whereNotNull('fk_consultorio_consulta')
+            ->orderBy('updated_at', 'desc')
+            ->first();
+
+        $turno = null;
+        $tipo = null;
+        $nombreConsultorio = null;
+
+        if ($turnoTriage && $turnoConsulta) {
+            if ($turnoTriage->updated_at->greaterThanOrEqualTo($turnoConsulta->updated_at)) {
+                $turno = $turnoTriage;
+                $tipo = 'triage';
+                $nombreConsultorio = $turnoTriage->consultorio?->nombre;
+            } else {
+                $turno = $turnoConsulta;
+                $tipo = 'consulta_medica';
+                $nombreConsultorio = $turnoConsulta->consultorioConsulta?->nombre;
+            }
+        } elseif ($turnoTriage) {
+            $turno = $turnoTriage;
+            $tipo = 'triage';
+            $nombreConsultorio = $turnoTriage->consultorio?->nombre;
+        } elseif ($turnoConsulta) {
+            $turno = $turnoConsulta;
+            $tipo = 'consulta_medica';
+            $nombreConsultorio = $turnoConsulta->consultorioConsulta?->nombre;
+        }
+
         return response()->json([
             'id'           => $turno?->id,
             'numero_turno' => $turno?->numero_turno ?? null,
-            'consultorio'  => $turno?->consultorio?->nombre ?? null,
+            'consultorio'  => $nombreConsultorio,
+            'tipo'         => $tipo,
             'llamado_en'   => $turno?->llamado_en,
             'paciente_urgencias' => $turno?->paciente_urgencias
         ]);
@@ -90,12 +122,13 @@ class TurnoPantallaController extends Controller
 
     public function turnosLlamadosUrgencias()
     {
-        return Turno::with(['consultorio', 'modulo'])
+        return Turno::with(['consultorio', 'modulo', 'consultorioConsulta'])
             ->whereDate('fecha', now()->toDateString())
             ->where('motivo', 'urgencias')
             ->where(function ($query) {
-                $query->whereIn('estado', ['llamado', 'llamado_medico'])
-                    ->orWhere('estado_admisiones', 'llamado');
+                $query->whereIn('estado', ['llamado', 'asignado', 'llamado_medico'])
+                    ->orWhere('estado_admisiones', 'llamado')
+                    ->orWhere('estado_consulta_medica', 'atendido');
             })
             ->orderBy('updated_at', 'desc')
             ->take(4)

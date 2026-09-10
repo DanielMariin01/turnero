@@ -102,8 +102,8 @@ class ConsultaMedicaUrgenciasResource extends Resource
             ->filters([])
             ->actions([
                 /* ================================
-                 | LLAMAR A CONSULTA MÉDICA
-                 ================================= */
+     | LLAMAR A CONSULTA MÉDICA
+     ================================= */
                 Tables\Actions\Action::make('llamar_consulta')
                     ->label('Llamar')
                     ->iconButton()
@@ -122,44 +122,10 @@ class ConsultaMedicaUrgenciasResource extends Resource
                     ])
                     ->action(function (Turno $record, array $data) {
                         $record->update([
-                            'estado_consulta_medica' => 'llamado',
+                            'estado_consulta_medica' => 'atendido',
                             'fk_consultorio_consulta' => $data['fk_consultorio_consulta'],
+                            'llamado_en' => now(),
                         ]);
-
-                        Notification::make()
-                            ->title('Paciente llamado a Consulta Médica')
-                            ->body("Turno {$record->numero_turno} llamado correctamente")
-                            ->success()
-                            ->send();
-                    })
-                    ->visible(fn(Turno $record): bool => $record->estado_consulta_medica === 'pendiente'),
-
-                /* ================================
-                 | VOLVER A LLAMAR
-                 ================================= */
-                Tables\Actions\Action::make('rellamar_consulta')
-                    ->label('Volver a llamar')
-                    ->icon('heroicon-o-speaker-wave')
-                    ->iconButton()
-                    ->color('warning')
-                    ->visible(fn(Turno $record): bool => $record->estado_consulta_medica === 'llamado')
-                    ->action(function (Turno $record) {
-                        $record->update(['llamado_en' => now()]);
-                    }),
-
-                /* ================================
-                 | FINALIZAR CONSULTA
-                 ================================= */
-                Tables\Actions\Action::make('finalizar_consulta')
-                    ->label('Finalizar Consulta')
-                    ->iconButton()
-                    ->color('success')
-                    ->icon('heroicon-o-check-badge')
-                    ->requiresConfirmation()
-                    ->modalHeading('Finalizar consulta médica')
-                    ->modalDescription('¿Confirmas que la atención médica de este paciente terminó?')
-                    ->action(function (Turno $record) {
-                        $record->update(['estado_consulta_medica' => 'atendido']);
                         $record->refresh();
 
                         if ($record->estado_admisiones === 'atendido') {
@@ -170,16 +136,16 @@ class ConsultaMedicaUrgenciasResource extends Resource
                         }
 
                         Notification::make()
-                            ->title('Consulta finalizada')
+                            ->title('Paciente llamado')
                             ->body("Turno {$record->numero_turno} procesado correctamente")
                             ->success()
                             ->send();
                     })
-                    ->visible(fn(Turno $record): bool => $record->estado_consulta_medica === 'llamado'),
+                    ->visible(fn(Turno $record): bool => $record->estado_consulta_medica === 'pendiente'),
 
                 /* ================================
-                 | CANCELAR TURNO
-                 ================================= */
+     | CANCELAR TURNO
+     ================================= */
                 Tables\Actions\Action::make('cancelar')
                     ->label('CANCELAR TURNO')
                     ->iconButton()
@@ -216,7 +182,7 @@ class ConsultaMedicaUrgenciasResource extends Resource
                             ->danger()
                             ->send();
                     })
-                    ->visible(fn(Turno $record): bool => in_array($record->estado_consulta_medica, ['pendiente', 'llamado'])),
+                    ->visible(fn(Turno $record): bool => $record->estado_consulta_medica === 'pendiente'),
             ])
             ->bulkActions([]);
     }

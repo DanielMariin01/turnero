@@ -154,14 +154,17 @@
         <div class="grid-superior">
 
             <div class="panel">
-                <h1 class="titulo">Turno</h1>
+                <h1 class="titulo">Modulo</h1>
                 <div class="turno-box-turno">
                     <p id="numeroTurno" class="numero-turno-urgencias">-</p>
+                </div>
+                <div class="turno-box" style="background-color: #00B5B5;">
+                    <p id="nombrePacienteAdmisiones" class="numero-turno">-</p>
                 </div>
             </div>
 
             <div class="panel">
-                <h1 class="titulo">Consultorio</h1>
+                <h1 class="titulo" id="tituloConsultorioPanel">Consultorio</h1>
                 <div class="turno-box">
                     <p id="numeroTurnoConsultorio" class="numero-turno">-</p>
                 </div>
@@ -258,6 +261,7 @@
 
                 if (!data || !data.numero_turno) {
                     document.getElementById('numeroTurno').textContent = '-';
+                    document.getElementById('nombrePacienteAdmisiones').textContent = '-';
                     return;
                 }
 
@@ -277,7 +281,16 @@
                 }
 
                 turnoAnterior = data;
-                document.getElementById('numeroTurno').textContent = data.numero_turno;
+
+                var nombreModulo = '-';
+                if (data.modulo && typeof data.modulo === 'object' && data.modulo.nombre) {
+                    nombreModulo = data.modulo.nombre;
+                } else if (data.fk_modulo) {
+                    nombreModulo = 'Módulo ' + data.fk_modulo;
+                }
+                document.getElementById('numeroTurno').textContent = nombreModulo;
+
+                document.getElementById('nombrePacienteAdmisiones').textContent = data.paciente_urgencias || '-';
             };
 
             xhr.onerror = function() {
@@ -321,6 +334,11 @@
                 console.log('paciente_urgencias:', data.paciente_urgencias);
                 var nombrePaciente = data.paciente_urgencias || '-';
                 document.getElementById('nombrePacienteConsultorio').textContent = nombrePaciente;
+                var tituloPanel = 'Consultorio';
+                if (data.tipo === 'triage' || data.tipo === 'consulta_medica') {
+                    tituloPanel = data.consultorio || tituloPanel;
+                }
+                document.getElementById('tituloConsultorioPanel').textContent = tituloPanel;
             };
 
             xhr.onerror = function() {
@@ -369,21 +387,15 @@
                             var tdUbicacion = document.createElement('td');
                             var ubicacion = '-';
 
-                            // Solo mostrar el consultorio si el médico YA llamó al paciente
-                            if (t.estado === 'llamado_medico' && t.consultorio && typeof t.consultorio ===
-                                'object' && t.consultorio.nombre) {
-                                ubicacion = t.consultorio.nombre;
-                            } else if (t.estado === 'llamado_medico' && t.consultorio && typeof t
-                                .consultorio === 'string') {
-                                ubicacion = t.consultorio;
-                            }
-                            // En cualquier otro caso (aún no lo ha llamado el médico), mostrar el módulo
-                            else if (t.modulo && typeof t.modulo === 'object' && t.modulo.nombre) {
+                            if (t.estado_consulta_medica === 'atendido' && t.consultorio_consulta && t
+                                .consultorio_consulta.nombre) {
+                                ubicacion = t.consultorio_consulta.nombre;
+                            } else if (t.estado_admisiones === 'llamado' && t.modulo && t.modulo.nombre) {
                                 ubicacion = t.modulo.nombre;
-                            } else if (t.modulo && typeof t.modulo === 'string') {
-                                ubicacion = t.modulo;
-                            } else if (t.fk_modulo) {
-                                ubicacion = 'Módulo ' + t.fk_modulo;
+                            } else if (t.estado === 'llamado_medico' && t.consultorio && t.consultorio.nombre) {
+                                ubicacion = t.consultorio.nombre;
+                            } else if (t.modulo && t.modulo.nombre) {
+                                ubicacion = t.modulo.nombre;
                             }
 
                             tdUbicacion.textContent = ubicacion;
