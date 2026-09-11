@@ -221,17 +221,67 @@ class ClinicaIntegrationService
             [$apellido1, $apellido2] = $this->separarEnDosPartes($apellidoCompleto);
             $nombreConcatenado = trim("$nombre1 $nombre2 $apellido1 $apellido2");
 
+            // Valores genéricos de ubicación (Pereira) — el kiosco no captura dirección real
+            $departamentoGenerico = '66';
+            $municipioGenerico = 1;
+            $barrioGenerico = 80200; // Caminos de Maraya
+
             DB::connection('sqlsrv')->table('CAPBAS')->insert([
                 'MPCedu' => $documento,
                 'MPTDoc' => $tipoDocumento,
+                'MPNHiC' => $documento,
                 'MPNom1' => $nombre1,
                 'MPNom2' => $nombre2,
                 'MPApe1' => $apellido1,
                 'MPApe2' => $apellido2,
+                'MPNOMC' => $nombreConcatenado,
                 'MPFchN' => $fechaNacimiento,
                 'MPSexo' => $sexo,
-                'MPNOMC' => $nombreConcatenado,
+                'MPDire' => 'NN',
+                'MPTele' => '00000',
+                'MpTele1' => '00000',
+                'MpTele2' => '00000',
+                'MDCodD' => $departamentoGenerico,
+                'MDCodM' => $municipioGenerico,
+                'MDCodB' => $barrioGenerico,
+                'MdCodDNac' => $departamentoGenerico,
+                'MdCodMNac' => $municipioGenerico,
                 'MPEstPac' => 'S',
+                'MPGrEs' => '9  ',
+                'MPPstNuc' => 0,
+                'MPCodEtn' => '06',
+                'MPCodDisc' => '1',
+                'MPGrPo' => 'ND ',
+                'MPConNac' => 0,
+                'MPTmpRes' => 0,
+                'mpfalta' => 0,
+                'MDCodBE' => 0,
+                'MPDocInt' => 0,
+                'MpCtvoActe' => 0,
+                'MpCtvGes' => 0,
+                'MpUltCtPr' => 0,
+                'MpCtvoAtn' => 0,
+                'MpUsrPrf' => '1',
+                'MPPacNN' => 'N',
+                'MPCtvMed' => 0,
+                'MPSemCSis' => 0,
+                'MPSmCtCm' => 0,
+                'MPTipAfi' => 0,
+                'MPCalAfi' => 0,
+                'MPBEIps' => 0,
+                'MPCodPai' => null,
+                'MPFchDef' => '1753-01-01',
+                'MPCPEtn' => '',
+                'MPCscInM' => 0,
+                'MPViveS' => 0,
+                'MpOcuAnte' => 0,
+                'MPCODSEGTR' => 0,
+                'MPCODTRA' => 0,
+                'MPConPob' => '',
+                'MPINDIS' => '0',
+                'MPNivEEs' => 'C',
+                'MPTTmRes' => null,
+                'MPFECACT' => '1753-01-01',
             ]);
 
             $log->info('Urgencias: paciente creado en CAPBAS', ['ref' => $refId, 'documento' => $documento]);
@@ -245,7 +295,6 @@ class ClinicaIntegrationService
             throw $e;
         }
     }
-
     /**
      * Crea el ingreso completo en la clínica: INGRESOS + INGRESOMP + LOGINGR,
      * dentro de una sola transacción. Retorna el IngCsc generado.
