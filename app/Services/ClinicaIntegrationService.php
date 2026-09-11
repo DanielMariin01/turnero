@@ -48,7 +48,6 @@ class ClinicaIntegrationService
             $this->desactivarIngresosActivosClinica($documento, $tipoDocumento, $refId);
             $etapa = 'paciente_clinica';
 
-
             $this->buscarOCrearPacienteClinica(
                 $documento,
                 $tipoDocumento,
@@ -59,6 +58,9 @@ class ClinicaIntegrationService
 
                 $refId
             );
+
+            $etapa = 'afiliacion_clinica';
+            $this->buscarOCrearAfiliacionClinica($documento, $tipoDocumento, $datos['contrato_nit'], $refId);
 
             $etapa = 'ingreso_clinica';
             $ingCsc = $this->crearIngresoCompletoClinica(
@@ -141,6 +143,7 @@ class ClinicaIntegrationService
             $mensajesPorEtapa = [
                 'desactivar_ingresos_previos' => 'No pudimos preparar su ingreso en el sistema de la clínica.',
                 'paciente_clinica' => 'No pudimos verificar sus datos con el sistema de la clínica.',
+                'afiliacion_clinica' => 'No pudimos verificar su afiliación con el sistema de la clínica.',
                 'ingreso_clinica' => 'No pudimos registrar su ingreso en el sistema de la clínica.',
                 'turno_local' => 'No pudimos generar su turno en el sistema.',
             ];
@@ -477,6 +480,87 @@ class ClinicaIntegrationService
         }
     }
 
+    /**
+     * Busca la afiliación paciente+contrato en MAEPAC; si no existe esa combinación
+     * exacta, la crea. Un mismo paciente puede tener varias filas (una por cada
+     * contrato distinto que haya usado a lo largo del tiempo).
+     * MTUCod/MTCodP usan un valor genérico confirmado como el más frecuente en la
+     * práctica (Contributivo / Cotizante Nivel 1) — el personal de Admisiones lo
+     * corrige después con el dato real del paciente. IPSCbr queda en NULL (su
+     * valor no sigue un patrón claro y tiene peso legal en reportes RIPS).
+     * No se revierte si algo falla después (mismo criterio que CAPBAS: es un
+     * dato real y reutilizable).
+     */
+    private function buscarOCrearAfiliacionClinica(string $documento, string $tipoDocumento, string $contratoNit, string $refId): bool
+    {
+        $log = Log::channel('urgencias');
+        $log->info('Urgencias: verificando afiliación en clínica (MAEPAC)', [
+            'ref' => $refId,
+            'documento' => $documento,
+            'contrato_nit' => $contratoNit,
+        ]);
+
+        try {
+            return DB::connection('sqlsrv')->transaction(function () use ($documento, $tipoDocumento, $contratoNit, $refId, $log) {
+                $existe = DB::connection('sqlsrv')->table('MAEPAC')
+                    ->where('MPCedu', $documento)
+                    ->where('MPTDoc', $tipoDocumento)
+                    ->where('MENNIT', $contratoNit)
+                    ->exists();
+
+                if ($existe) {
+                    $log->info('Urgencias: afiliación ya existía en MAEPAC', [
+                        'ref' => $refId,
+                        'documento' => $documento,
+                        'contrato_nit' => $contratoNit,
+                    ]);
+                    return false;
+                }
+
+                $maxOrd = DB::connection('sqlsrv')->table('MAEPAC')
+                    ->where('MPCedu', $documento)
+                    ->where('MPTDoc', $tipoDocumento)
+                    ->lockForUpdate()
+                    ->max('MPOrd');
+
+                $siguienteOrd = ($maxOrd ?? 0) + 1;
+
+                DB::connection('sqlsrv')->table('MAEPAC')->insert([
+                    'MPCedu' => $documento,
+                    'MPTDoc' => $tipoDocumento,
+                    'MENNIT' => $contratoNit,
+                    'MTUCod' => '1', // Contributivo (el régimen más común)
+                    'MTCodP' => 'A', // Cotizante Nivel 1
+                    'MPNoCa' => 0,
+                    'MPstatus' => 'A',
+                    'MPACMO' => 0.0000,
+                    'MPOrd' => $siguienteOrd,
+                    'UltCtvPrx' => 0,
+                    'MPResExe' => null,
+                    'MpPunSIS' => 0.0000,
+                    'MpFicSIS' => 0,
+                    'MPPoPla' => '',
+                    'IPSCbr' => null, //SEDE IPS
+                ]);
+
+                $log->info('Urgencias: afiliación creada en MAEPAC (pendiente de verificar por Admisiones)', [
+                    'ref' => $refId,
+                    'documento' => $documento,
+                    'contrato_nit' => $contratoNit,
+                    'mp_ord' => $siguienteOrd,
+                ]);
+                return true;
+            });
+        } catch (\Throwable $e) {
+            $log->error('Urgencias: error creando afiliación en MAEPAC', [
+                'ref' => $refId,
+                'documento' => $documento,
+                'contrato_nit' => $contratoNit,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+    }
     /** Rollback: elimina el ingreso completo (LOGINGR, INGRESOMP, INGRESOS) en orden inverso */
     private function eliminarIngresoCompletoClinica(int $ingCsc, string $documento, string $tipoDocumento, string $refId): void
     {
