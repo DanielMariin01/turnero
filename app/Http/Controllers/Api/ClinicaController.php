@@ -63,15 +63,22 @@ class ClinicaController extends Controller
             }
         }
 
-        // Limpiar espacios de relleno de cada campo ANTES de unirlos
         $partesNombre = array_filter([trim($paciente->MPNom1 ?? ''), trim($paciente->MPNom2 ?? '')]);
         $partesApellido = array_filter([trim($paciente->MPApe1 ?? ''), trim($paciente->MPApe2 ?? '')]);
+
+        // Formatear fecha de nacimiento a YYYY-MM-DD para el <input type="date">
+        $fechaNacimiento = null;
+        if (!empty($paciente->MPFchN)) {
+            $fechaNacimiento = \Carbon\Carbon::parse($paciente->MPFchN)->format('Y-m-d');
+        }
 
         return response()->json([
             'nombre' => implode(' ', $partesNombre),
             'apellido' => implode(' ', $partesApellido),
             'tipo_documento' => trim($paciente->MPTDoc),
             'numero_documento' => trim($paciente->MPCedu),
+            'fecha_nacimiento' => $fechaNacimiento,
+            'sexo' => trim($paciente->MPSexo ?? ''),
             'contrato' => $contrato,
         ]);
     }

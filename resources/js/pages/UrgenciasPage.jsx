@@ -21,6 +21,35 @@ export default function UrgenciasPage() {
     const [mensajeEscaneo, setMensajeEscaneo] = useState('');
     const scanTimeoutRef = useRef(null);
     const [generando, setGenerando] = useState(false);
+    const [fechaDia, setFechaDia] = useState('');
+    const [fechaMes, setFechaMes] = useState('');
+    const [fechaAnio, setFechaAnio] = useState('');
+
+
+    useEffect(() => {
+        if (paciente.fecha_nacimiento) {
+            const [anio, mes, dia] = paciente.fecha_nacimiento.split('-');
+            setFechaAnio(anio || '');
+            setFechaMes(mes || '');
+            setFechaDia(dia || '');
+        } else {
+            setFechaAnio('');
+            setFechaMes('');
+            setFechaDia('');
+        }
+    }, [paciente.fecha_nacimiento]);
+
+    const actualizarFecha = (dia, mes, anio) => {
+        if (dia && mes && anio) {
+            // Validar que el día exista en ese mes/año (ej. 31 de febrero)
+            const diasEnMes = new Date(anio, mes, 0).getDate();
+            const diaFinal = Math.min(parseInt(dia), diasEnMes);
+            const fecha = `${anio}-${mes.padStart(2, '0')}-${String(diaFinal).padStart(2, '0')}`;
+            handleChange('fecha_nacimiento', fecha);
+        } else {
+            handleChange('fecha_nacimiento', '');
+        }
+    };
 
     // ============================================
     // CONTRATO / EPS
@@ -283,6 +312,10 @@ export default function UrgenciasPage() {
                     nombre: data.nombre.toUpperCase(),
                     apellido: data.apellido.toUpperCase(),
                     tipo_documento: data.tipo_documento,
+                    fecha_nacimiento: data.fecha_nacimiento
+                        ? data.fecha_nacimiento.substring(0, 10)
+                        : prev.fecha_nacimiento,
+                    sexo: data.sexo || prev.sexo,
                 }));
 
                 if (data.contrato) {
@@ -679,16 +712,58 @@ export default function UrgenciasPage() {
                             <label className="block text-lg font-semibold text-gray-700 mb-1">
                                 Seleccione su Fecha de Nacimiento
                             </label>
-                            <input
-                                type="date"
-                                name="fecha_nacimiento"
-                                placeholder="Fecha de nacimiento"
-                                className="border-2 border-gray-300 p-3 rounded-lg w-full text-base focus:border-indigo-500 focus:outline-none transition-all"
-                                value={paciente.fecha_nacimiento}
-                                onFocus={() => (inputActivo.current = null)}
-                                onChange={(e) => handleChange("fecha_nacimiento", e.target.value)}
-                                max={new Date().toISOString().split('T')[0]}
-                            />
+                            <div className="grid grid-cols-3 gap-2">
+                                <select
+                                    className="border-2 border-gray-300 p-3 rounded-lg text-base focus:border-indigo-500 focus:outline-none transition-all"
+                                    value={fechaDia}
+                                    onFocus={() => (inputActivo.current = null)}
+                                    onChange={(e) => {
+                                        setFechaDia(e.target.value);
+                                        actualizarFecha(e.target.value, fechaMes, fechaAnio);
+                                    }}
+                                >
+                                    <option value="">Día</option>
+                                    {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                                        <option key={d} value={String(d).padStart(2, '0')}>{d}</option>
+                                    ))}
+                                </select>
+
+                                <select
+                                    className="border-2 border-gray-300 p-3 rounded-lg text-base focus:border-indigo-500 focus:outline-none transition-all"
+                                    value={fechaMes}
+                                    onFocus={() => (inputActivo.current = null)}
+                                    onChange={(e) => {
+                                        setFechaMes(e.target.value);
+                                        actualizarFecha(fechaDia, e.target.value, fechaAnio);
+                                    }}
+                                >
+                                    <option value="">Mes</option>
+                                    {[
+                                        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                                        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+                                    ].map((nombreMes, i) => (
+                                        <option key={i} value={String(i + 1).padStart(2, '0')}>{nombreMes}</option>
+                                    ))}
+                                </select>
+
+                                <select
+                                    className="border-2 border-gray-300 p-3 rounded-lg text-base focus:border-indigo-500 focus:outline-none transition-all"
+                                    value={fechaAnio}
+                                    onFocus={() => (inputActivo.current = null)}
+                                    onChange={(e) => {
+                                        setFechaAnio(e.target.value);
+                                        actualizarFecha(fechaDia, fechaMes, e.target.value);
+                                    }}
+                                >
+                                    <option value="">Año</option>
+                                    {Array.from(
+                                        { length: new Date().getFullYear() - 1900 + 1 },
+                                        (_, i) => new Date().getFullYear() - i
+                                    ).map((a) => (
+                                        <option key={a} value={a}>{a}</option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
                         <div>
                             <label className="block text-lg font-semibold text-gray-700 mb-1">
