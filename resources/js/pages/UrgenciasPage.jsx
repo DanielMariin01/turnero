@@ -599,31 +599,19 @@ export default function UrgenciasPage() {
                     <div className="grid grid-cols-2 gap-4 mb-5">
                         <div>
                             <label className="block text-lg font-semibold text-gray-700 mb-1">
-                                Ingrese su Nombre
+                                Digite su Número de Documento
                             </label>
                             <input
                                 type="text"
-                                name="nombre"
-                                placeholder="Nombre"
+                                name="numero_documento"
+                                placeholder="Número de documento"
                                 className="border-2 border-gray-300 p-3 rounded-lg w-full text-base focus:border-indigo-500 focus:outline-none transition-all"
-                                value={paciente.nombre}
+                                value={paciente.numero_documento}
                                 onFocus={(e) => (inputActivo.current = e.target)}
-                                onChange={(e) => handleChange("nombre", e.target.value)}
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-lg font-semibold text-gray-700 mb-1">
-                                Ingrese su Apellido
-                            </label>
-                            <input
-                                type="text"
-                                name="apellido"
-                                placeholder="Apellido"
-                                className="border-2 border-gray-300 p-3 rounded-lg w-full text-base focus:border-indigo-500 focus:outline-none transition-all"
-                                value={paciente.apellido}
-                                onFocus={(e) => (inputActivo.current = e.target)}
-                                onChange={(e) => handleChange("apellido", e.target.value)}
+                                onChange={(e) =>
+                                    handleChange("numero_documento", e.target.value.replace(/\D/g, ""))
+                                }
+                                onBlur={(e) => buscarPacienteClinica(e.target.value)}
                             />
                         </div>
                         <div>
@@ -658,21 +646,35 @@ export default function UrgenciasPage() {
                         </div>
                         <div>
                             <label className="block text-lg font-semibold text-gray-700 mb-1">
-                                Digite su Número de Documento
+                                Ingrese su Nombre
                             </label>
                             <input
                                 type="text"
-                                name="numero_documento"
-                                placeholder="Número de documento"
+                                name="nombre"
+                                placeholder="Nombre"
                                 className="border-2 border-gray-300 p-3 rounded-lg w-full text-base focus:border-indigo-500 focus:outline-none transition-all"
-                                value={paciente.numero_documento}
+                                value={paciente.nombre}
                                 onFocus={(e) => (inputActivo.current = e.target)}
-                                onChange={(e) =>
-                                    handleChange("numero_documento", e.target.value.replace(/\D/g, ""))
-                                }
-                                onBlur={(e) => buscarPacienteClinica(e.target.value)}
+                                onChange={(e) => handleChange("nombre", e.target.value)}
                             />
                         </div>
+
+                        <div>
+                            <label className="block text-lg font-semibold text-gray-700 mb-1">
+                                Ingrese su Apellido
+                            </label>
+                            <input
+                                type="text"
+                                name="apellido"
+                                placeholder="Apellido"
+                                className="border-2 border-gray-300 p-3 rounded-lg w-full text-base focus:border-indigo-500 focus:outline-none transition-all"
+                                value={paciente.apellido}
+                                onFocus={(e) => (inputActivo.current = e.target)}
+                                onChange={(e) => handleChange("apellido", e.target.value)}
+                            />
+                        </div>
+
+
                         <div>
                             <label className="block text-lg font-semibold text-gray-700 mb-1">
                                 Seleccione su Fecha de Nacimiento
