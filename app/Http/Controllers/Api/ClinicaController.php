@@ -12,11 +12,19 @@ class ClinicaController extends Controller
     {
         $contratos = Cache::remember('clinica_contratos', now()->addHours(6), function () {
             return DB::connection('sqlsrv')
-                ->table('MAEEMP as M')
-                ->join('EMPRESS as E', 'M.MEcntr', '=', 'E.MEcntr')
-                ->select('M.MENNIT as nit', DB::raw('RTRIM(E.EmpDsc) as nombre'))
-                ->orderBy('E.EmpDsc')
-                ->get();
+                ->table('MAEEMP')
+                ->select('MENNIT as nit', DB::raw('RTRIM(MENOMB) as nombre_original'))
+                ->orderBy('MENOMB')
+                ->get()
+                ->map(function ($contrato) {
+                    $nombreLimpio = preg_replace('/^\(ARL\)\s*/i', '', $contrato->nombre_original);
+                    $nombreLimpio = preg_replace('/^ADSCRITO\s*-\s*/i', '', $nombreLimpio);
+                    $nombreLimpio = preg_replace('/\s*\*U\*\s*$/i', '', $nombreLimpio);
+                    return [
+                        'nit' => $contrato->nit,
+                        'nombre' => trim($nombreLimpio),
+                    ];
+                });
         });
 
         return response()->json($contratos);

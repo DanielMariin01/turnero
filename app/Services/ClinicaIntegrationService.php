@@ -26,7 +26,6 @@ class ClinicaIntegrationService
         $documento = $datos['numero_documento'];
         $tipoDocumento = $datos['tipo_documento'];
 
-        // Código de referencia único para rastrear este intento en todos los logs
         $refId = (string) Str::uuid();
         $inicio = microtime(true);
 
@@ -45,25 +44,36 @@ class ClinicaIntegrationService
 
 
         try {
-            $etapa = 'desactivar_ingresos_previos';
-            $this->desactivarIngresosActivosClinica($documento, $tipoDocumento, $refId);
             $etapa = 'paciente_clinica';
+            $log->info('Urgencias: iniciando etapa — verificar/crear paciente en CAPBAS', ['ref' => $refId]);
 
-            $this->buscarOCrearPacienteClinica(
+            $pacienteRecienCreado = $this->buscarOCrearPacienteClinica(
                 $documento,
                 $tipoDocumento,
                 $datos['nombre'],
                 $datos['apellido'],
                 $datos['fecha_nacimiento'],
                 $datos['sexo'],
-
                 $refId
             );
 
+            if (!$pacienteRecienCreado) {
+                $etapa = 'desactivar_ingresos_previos';
+                $log->info('Urgencias: iniciando etapa — paciente ya existía, revisando ingresos previos abiertos', ['ref' => $refId]);
+                $this->desactivarIngresosActivosClinica($documento, $tipoDocumento, $refId);
+            } else {
+                $log->info('Urgencias: paciente recién creado, se omite verificación de ingresos activos', [
+                    'ref' => $refId,
+                    'documento' => $documento,
+                ]);
+            }
+
             $etapa = 'afiliacion_clinica';
+            $log->info('Urgencias: iniciando etapa — verificar/crear afiliación en MAEPAC', ['ref' => $refId]);
             $this->buscarOCrearAfiliacionClinica($documento, $tipoDocumento, $datos['contrato_nit'], $refId);
 
             $etapa = 'ingreso_clinica';
+            $log->info('Urgencias: iniciando etapa — crear ingreso completo (INGRESOS+INGRESOMP+LOGINGR+TMPFAC)', ['ref' => $refId]);
             $resultadoIngreso = $this->crearIngresoCompletoClinica(
                 $documento,
                 $tipoDocumento,
@@ -74,6 +84,8 @@ class ClinicaIntegrationService
             $tmCtvIng = $resultadoIngreso['tmCtvIng'];
 
             $etapa = 'turno_local';
+            $log->info('Urgencias: iniciando etapa — crear turno en base de datos local', ['ref' => $refId]);
+
             $turno = DB::transaction(function () use ($datos, $documento, $ingCsc, $tmCtvIng, $refId, $log) {
                 $log->info('Urgencias: creando paciente local', ['ref' => $refId, 'documento' => $documento]);
 
@@ -102,7 +114,7 @@ class ClinicaIntegrationService
                     'contrato_nit' => $datos['contrato_nit'],
                     'contrato_nombre' => $datos['contrato_nombre'],
                     'ingreso_consecutivo' => $ingCsc,
-                    'tmpfac_consecutivo' => $tmCtvIng, // NUEVO: requiere columna en la tabla turnos (ver migración)
+                    'tmpfac_consecutivo' => $tmCtvIng,
                 ]);
 
                 $log->info('Urgencias: turno local creado', [
@@ -145,8 +157,8 @@ class ClinicaIntegrationService
             }
 
             $mensajesPorEtapa = [
-                'desactivar_ingresos_previos' => 'No pudimos preparar su ingreso en el sistema de la clínica.',
                 'paciente_clinica' => 'No pudimos verificar sus datos con el sistema de la clínica.',
+                'desactivar_ingresos_previos' => 'No pudimos preparar su ingreso en el sistema de la clínica.',
                 'afiliacion_clinica' => 'No pudimos verificar su afiliación con el sistema de la clínica.',
                 'ingreso_clinica' => 'No pudimos registrar su ingreso en el sistema de la clínica.',
                 'turno_local' => 'No pudimos generar su turno en el sistema.',
@@ -168,31 +180,70 @@ class ClinicaIntegrationService
     {
         $log = Log::channel('urgencias');
 
-        $idsActivos = DB::connection('sqlsrv')->table('INGRESOS')
+        $ingresosNoInactivos = DB::connection('sqlsrv')->table('INGRESOS')
             ->where('MPCedu', $documento)
             ->where('MPTDoc', $tipoDocumento)
-            ->where('IngFecEgr', '<=', '1753-01-02')
-            ->where('EstAdmSld', 'Activo')
-            ->pluck('IngCsc')
-            ->toArray();
+            ->where('EstAdmSld', '!=', 'Inactivo')
+            ->select('IngCsc', 'IngFecEgr', 'EstAdmSld')
+            ->get();
 
-        if (empty($idsActivos)) {
+        if ($ingresosNoInactivos->isEmpty()) {
             return [];
         }
 
-        DB::connection('sqlsrv')->table('INGRESOS')
-            ->where('MPCedu', $documento)
-            ->where('MPTDoc', $tipoDocumento)
-            ->whereIn('IngCsc', $idsActivos)
-            ->update([
-                'EstAdmSld' => 'Inactivo',
-                'IngFecEgr' => DB::raw("CONVERT(datetime, '" . now()->format('Y-m-d H:i:s') . "', 120)"),
-            ]);
+        $idsSinFechaReal = [];
+        $idsConFechaReal = [];
 
-        $log->warning('Urgencias: ingresos activos desactivados para permitir turno de Urgencias (reactivación manual requerida por la clínica)', [
+        foreach ($ingresosNoInactivos as $ingreso) {
+            if ($ingreso->IngFecEgr <= '1753-01-02') {
+                $idsSinFechaReal[] = $ingreso->IngCsc;
+                $log->warning('Urgencias: ingreso activo SIN fecha de salida previa — se cierra con fecha de hoy', [
+                    'ref' => $refId,
+                    'documento' => $documento,
+                    'ing_csc' => $ingreso->IngCsc,
+                    'estado_anterior' => $ingreso->EstAdmSld,
+                ]);
+            } else {
+                $idsConFechaReal[] = $ingreso->IngCsc;
+                $log->warning('Urgencias: ingreso con estado no-inactivo PERO ya tenía fecha de salida real — solo se corrige el estado, se preserva la fecha', [
+                    'ref' => $refId,
+                    'documento' => $documento,
+                    'ing_csc' => $ingreso->IngCsc,
+                    'estado_anterior' => $ingreso->EstAdmSld,
+                    'fecha_salida_preservada' => $ingreso->IngFecEgr,
+                ]);
+            }
+        }
+
+        if (!empty($idsSinFechaReal)) {
+            DB::connection('sqlsrv')->table('INGRESOS')
+                ->where('MPCedu', $documento)
+                ->where('MPTDoc', $tipoDocumento)
+                ->whereIn('IngCsc', $idsSinFechaReal)
+                ->update([
+                    'EstAdmSld' => 'Inactivo',
+                    'IngFecEgr' => DB::raw("CONVERT(datetime, '" . now()->format('Y-m-d H:i:s') . "', 120)"),
+                ]);
+        }
+
+        if (!empty($idsConFechaReal)) {
+            DB::connection('sqlsrv')->table('INGRESOS')
+                ->where('MPCedu', $documento)
+                ->where('MPTDoc', $tipoDocumento)
+                ->whereIn('IngCsc', $idsConFechaReal)
+                ->update([
+                    'EstAdmSld' => 'Inactivo',
+                ]);
+        }
+
+        $idsActivos = array_merge($idsSinFechaReal, $idsConFechaReal);
+
+        $log->info('Urgencias: resumen de desactivación de ingresos previos', [
             'ref' => $refId,
             'documento' => $documento,
-            'ingresos_desactivados' => $idsActivos,
+            'total_desactivados' => count($idsActivos),
+            'sin_fecha_real' => count($idsSinFechaReal),
+            'con_fecha_real_preservada' => count($idsConFechaReal),
         ]);
 
         return $idsActivos;
