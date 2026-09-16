@@ -17,12 +17,11 @@ class ActualizarTurnosCommand extends Command
         try {
             // Tarea 1: Marcar turnos antiguos como no_atendido (solo a medianoche)
             $this->actualizarTurnosAntiguos();
-            
+
             // Tarea 2: Actualizar llamado_medico a facturar (siempre)
             $this->actualizarTurnosFacturar();
 
             return self::SUCCESS;
-
         } catch (\Exception $e) {
             $this->error("❌ Error: {$e->getMessage()}");
             Log::error('Error en comando turnos:actualizar', [
@@ -40,7 +39,7 @@ class ActualizarTurnosCommand extends Command
     private function actualizarTurnosAntiguos()
     {
         $horaActual = Carbon::now();
-        
+
         // Solo ejecutar a medianoche
         if ($horaActual->hour === 0 && $horaActual->minute < 5) {
             $hoy = Carbon::today();
@@ -68,6 +67,7 @@ class ActualizarTurnosCommand extends Command
         $limite = Carbon::now()->subMinutes(10);
         $facturar = DB::table('turno')
             ->where('estado', 'llamado_medico')
+            ->where('motivo', '!=', 'urgencias')   // ⬅️ agregada
             ->where('updated_at', '<=', $limite)
             ->update([
                 'estado' => 'facturar',

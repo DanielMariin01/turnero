@@ -30,8 +30,8 @@ class MedicoResource extends Resource
     {
         return parent::getEloquentQuery()
             ->hoy()
-            ->where('estado', 'asignado');
-        //->where('motivo', 'consulta externa');
+            ->where('estado', 'asignado')
+            ->where('motivo', '!=', 'urgencias');   // ⬅️ agregada
     }
 
     //public static function getNavigationBadge(): ?string
@@ -43,7 +43,7 @@ class MedicoResource extends Resource
     //permisos para ver recursos 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->hasAnyRole(['admin', 'medico','admisiones_consultaExterna']) ?? false;
+        return auth()->user()?->hasAnyRole(['admin', 'medico', 'admisiones_consultaExterna']) ?? false;
     }
     public static function canCreate(): bool
     {
@@ -124,12 +124,12 @@ class MedicoResource extends Resource
                         // ========================================
                         Turno::where('fk_consultorio', $record->fk_consultorio)
                             ->where('estado', 'llamado_medico')
-                            ->whereDate('fecha', today()) // Solo turnos de hoy
+                            ->where('motivo', '!=', 'urgencias')   // ⬅️ agregada
+                            ->whereDate('fecha', today())
                             ->update([
                                 'estado' => 'facturar',
-                                'motivo' => 'pendiente para facturar', // Opcional: registrar cuándo se envió
+                                'motivo' => 'pendiente para facturar',
                             ]);
-
                         // ========================================
                         // PASO 3: Llamar al turno actual
                         // ========================================

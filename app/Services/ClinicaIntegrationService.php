@@ -31,6 +31,7 @@ class ClinicaIntegrationService
         $inicio = microtime(true);
 
         $ingCsc = null;
+        $tmCtvIng = null;
         $etapa = null;
 
         $log = Log::channel('urgencias');
@@ -63,15 +64,17 @@ class ClinicaIntegrationService
             $this->buscarOCrearAfiliacionClinica($documento, $tipoDocumento, $datos['contrato_nit'], $refId);
 
             $etapa = 'ingreso_clinica';
-            $ingCsc = $this->crearIngresoCompletoClinica(
+            $resultadoIngreso = $this->crearIngresoCompletoClinica(
                 $documento,
                 $tipoDocumento,
                 $datos['contrato_nit'],
                 $refId
             );
+            $ingCsc = $resultadoIngreso['ingCsc'];
+            $tmCtvIng = $resultadoIngreso['tmCtvIng'];
 
             $etapa = 'turno_local';
-            $turno = DB::transaction(function () use ($datos, $documento, $ingCsc, $refId, $log) {
+            $turno = DB::transaction(function () use ($datos, $documento, $ingCsc, $tmCtvIng, $refId, $log) {
                 $log->info('Urgencias: creando paciente local', ['ref' => $refId, 'documento' => $documento]);
 
                 $paciente = Paciente::firstOrCreate(
@@ -99,6 +102,7 @@ class ClinicaIntegrationService
                     'contrato_nit' => $datos['contrato_nit'],
                     'contrato_nombre' => $datos['contrato_nombre'],
                     'ingreso_consecutivo' => $ingCsc,
+                    'tmpfac_consecutivo' => $tmCtvIng, // NUEVO: requiere columna en la tabla turnos (ver migración)
                 ]);
 
                 $log->info('Urgencias: turno local creado', [
@@ -137,7 +141,7 @@ class ClinicaIntegrationService
             ]);
 
             if ($ingCsc !== null) {
-                $this->eliminarIngresoCompletoClinica($ingCsc, $documento, $tipoDocumento, $refId);
+                $this->eliminarIngresoCompletoClinica($ingCsc, $tmCtvIng, $documento, $tipoDocumento, $refId);
             }
 
             $mensajesPorEtapa = [
@@ -182,7 +186,7 @@ class ClinicaIntegrationService
             ->whereIn('IngCsc', $idsActivos)
             ->update([
                 'EstAdmSld' => 'Inactivo',
-                'IngFecEgr' => now(),   // ⬅️ agregada
+                'IngFecEgr' => DB::raw("CONVERT(datetime, '" . now()->format('Y-m-d H:i:s') . "', 120)"),
             ]);
 
         $log->warning('Urgencias: ingresos activos desactivados para permitir turno de Urgencias (reactivación manual requerida por la clínica)', [
@@ -238,7 +242,7 @@ class ClinicaIntegrationService
                 'MPApe1' => $apellido1,
                 'MPApe2' => $apellido2,
                 'MPNOMC' => $nombreConcatenado,
-                'MPFchN' => $fechaNacimiento,
+                'MPFchN' => DB::raw("CONVERT(datetime, '" . Carbon::parse($fechaNacimiento)->format('Y-m-d') . "', 120)"),
                 'MPSexo' => $sexo,
                 'MPDire' => 'NN',
                 'MPTele' => '00000',
@@ -273,7 +277,7 @@ class ClinicaIntegrationService
                 'MPCalAfi' => 0,
                 'MPBEIps' => 0,
                 'MPCodPai' => null,
-                'MPFchDef' => '1753-01-01',
+                'MPFchDef' => DB::raw("CONVERT(datetime, '1753-01-01', 120)"),
                 'MPCPEtn' => null,
                 'MPCscInM' => 0,
                 'MPViveS' => 0,
@@ -284,7 +288,7 @@ class ClinicaIntegrationService
                 'MPINDIS' => '0',
                 'MPNivEEs' => 'C',
                 'MPTTmRes' => null,
-                'MPFECACT' => '1753-01-01',
+                'MPFECACT' => DB::raw("CONVERT(datetime, '1753-01-01', 120)"),
             ]);
 
             $log->info('Urgencias: paciente creado en CAPBAS', ['ref' => $refId, 'documento' => $documento]);
@@ -299,16 +303,33 @@ class ClinicaIntegrationService
         }
     }
     /**
-     * Crea el ingreso completo en la clínica: INGRESOS + INGRESOMP + LOGINGR,
-     * dentro de una sola transacción. Retorna el IngCsc generado.
+     * Crea el ingreso completo en la clínica: INGRESOS + INGRESOMP + LOGINGR + TMPFAC,
+     * dentro de una sola transacción. Retorna ['ingCsc' => ..., 'tmCtvIng' => ...] —
+     * IMPORTANTE: TmCtvIng (consecutivo de TMPFAC) es INDEPENDIENTE de IngCsc (consecutivo
+     * de INGRESOS), cada uno lleva su propia numeración por paciente y normalmente no
+     * coinciden. Por eso hay que guardar y propagar ambos valores para poder revertir
+     * correctamente el registro de TMPFAC si algo falla más adelante.
+     *
+     * NOTA sobre fechas: todas las columnas datetime se insertan con CONVERT(datetime, ..., 120)
+     * envuelto en DB::raw() en lugar de pasar objetos Carbon/strings simples como parámetro.
+     * Esto evita que el driver ODBC/PDO_SQLSRV tenga que inferir el tipo del parámetro en un
+     * INSERT con muchas columnas mezcladas (texto vacío + datetime + numérico), que en algunos
+     * entornos (versión de driver ODBC/PDO distinta) puede producir el error:
+     * "La conversión del tipo de datos nvarchar en datetime produjo un valor fuera de intervalo."
+     * IMPORTANTE: el valor dentro del CONVERT() SIEMPRE debe ser una constante generada por este
+     * código (now(), o los sentinels fijos) — nunca un dato que venga de input de usuario, porque
+     * DB::raw() con concatenación de string no escapa nada y abriría una inyección SQL.
      */
-    private function crearIngresoCompletoClinica(string $documento, string $tipoDocumento, string $contratoNit, string $refId): int
+    private function crearIngresoCompletoClinica(string $documento, string $tipoDocumento, string $contratoNit, string $refId): array
     {
         $log = Log::channel('urgencias');
         $log->info('Urgencias: creando ingreso completo en clínica', ['ref' => $refId, 'documento' => $documento]);
 
+        // Timestamp único para todo el proceso, para que todas las tablas queden con la misma hora exacta
+        $ahora = now()->format('Y-m-d H:i:s');
+
         try {
-            return DB::connection('sqlsrv')->transaction(function () use ($documento, $tipoDocumento, $contratoNit, $refId, $log) {
+            return DB::connection('sqlsrv')->transaction(function () use ($documento, $tipoDocumento, $contratoNit, $refId, $log, $ahora) {
                 $maxCsc = DB::connection('sqlsrv')->table('INGRESOS')
                     ->where('MPCedu', $documento)
                     ->where('MPTDoc', $tipoDocumento)
@@ -322,9 +343,9 @@ class ClinicaIntegrationService
                     'MPTDoc' => $tipoDocumento,
                     'ClaPro' => self::CLAPRO_TRIAGE,
                     'IngCsc' => $ingCsc,
-                    'IngFecAdm' => now(),
+                    'IngFecAdm' => DB::raw("CONVERT(datetime, '$ahora', 120)"),
                     'IngUsrReg' => self::USUARIO_SISTEMA,
-                    'IngFecEgr' => '1753-01-01',
+                    'IngFecEgr' => DB::raw("CONVERT(datetime, '1753-01-01', 120)"),
                     'MPCodP' => self::PABELLON_TRIAGE,
                     'IngNit' => $contratoNit,
                     'IngAtnAct' => self::CLAPRO_TRIAGE,
@@ -365,11 +386,11 @@ class ClinicaIntegrationService
                     'IngRiCoDe' => 0,
                     'INGDXTIP3' => 0,
                     'indRefac' => 0,
-                    'IngFchM' => '1753-01-01',
-                    'IngFchAnu' => '1753-01-01',
-                    'IngFeHAtU' => '1753-01-01',
-                    'IngFSAdTr' => '1900-01-01',
-                    'IngFecTur' => '1900-01-01',
+                    'IngFchM' => DB::raw("CONVERT(datetime, '1753-01-01', 120)"),
+                    'IngFchAnu' => DB::raw("CONVERT(datetime, '1753-01-01', 120)"),
+                    'IngFeHAtU' => DB::raw("CONVERT(datetime, '1753-01-01', 120)"),
+                    'IngFSAdTr' => DB::raw("CONVERT(datetime, '1900-01-01', 120)"),
+                    'IngFecTur' => DB::raw("CONVERT(datetime, '1900-01-01', 120)"),
                     'IngIndCap' => '',
                     'IngResExe' => '',
                     'IngCodPlt' => '',
@@ -458,9 +479,9 @@ class ClinicaIntegrationService
                     'IngCtvMoP' => 1,
                     'IngCodPab' => self::PABELLON_TRIAGE,
                     'IngCodCam' => '',
-                    'IngFecMoP' => now(),
+                    'IngFecMoP' => DB::raw("CONVERT(datetime, '$ahora', 120)"),
                     'IngUsuMoP' => self::USUARIO_SISTEMA,
-                    'IngFecMoE' => '1753-01-01',
+                    'IngFecMoE' => DB::raw("CONVERT(datetime, '1753-01-01', 120)"),
                     'IngUrgObs' => 0,
                 ]);
 
@@ -468,7 +489,7 @@ class ClinicaIntegrationService
                     'MPCedu' => $documento,
                     'MPTDoc' => $tipoDocumento,
                     'IngCsc' => $ingCsc,
-                    'IngFec' => now(),
+                    'IngFec' => DB::raw("CONVERT(datetime, '$ahora', 120)"),
                     'UsrIng' => self::USUARIO_SISTEMA,
                 ]);
 
@@ -481,6 +502,7 @@ class ClinicaIntegrationService
 
                 $tmCtvIng = ($maxTmCtvIng ?? 0) + 1;
 
+                $horaActual = now()->format('H:i:s');
 
                 DB::connection('sqlsrv')->table('TMPFAC')->insert([
                     // Identificadores
@@ -494,9 +516,9 @@ class ClinicaIntegrationService
                     'TFcCodPab' => self::PABELLON_TRIAGE,
 
                     // Fecha/hora reales
-                    'TFFchI' => now(),
-                    'TFFCES' => now(),
-                    'TFHorI' => now()->format('H:i:s'),
+                    'TFFchI' => DB::raw("CONVERT(datetime, '$ahora', 120)"),
+                    'TFFCES' => DB::raw("CONVERT(datetime, '$ahora', 120)"),
+                    'TFHorI' => $horaActual, // char, no datetime — no necesita CONVERT
 
                     // Fijos confirmados
                     'SCCCod' => '001',
@@ -507,12 +529,12 @@ class ClinicaIntegrationService
                     'TFTiRe' => '1',
 
                     // Fechas sentinela
-                    'SOFchVIni' => '1900-01-01',
-                    'SOFchAcc' => '1900-01-01',
-                    'SOFchVFin' => '1900-01-01',
-                    'MPFEsH' => '1900-01-01',
-                    'TFFchM' => '1753-01-01',
-                    'TFFchS' => '1753-01-01',
+                    'SOFchVIni' => DB::raw("CONVERT(datetime, '1900-01-01', 120)"),
+                    'SOFchAcc' => DB::raw("CONVERT(datetime, '1900-01-01', 120)"),
+                    'SOFchVFin' => DB::raw("CONVERT(datetime, '1900-01-01', 120)"),
+                    'MPFEsH' => DB::raw("CONVERT(datetime, '1900-01-01', 120)"),
+                    'TFFchM' => DB::raw("CONVERT(datetime, '1753-01-01', 120)"),
+                    'TFFchS' => DB::raw("CONVERT(datetime, '1753-01-01', 120)"),
 
                     // Numéricas en 0
                     'MICodI' => 0,
@@ -643,9 +665,10 @@ class ClinicaIntegrationService
                     'ref' => $refId,
                     'documento' => $documento,
                     'ing_csc' => $ingCsc,
+                    'tm_ctv_ing' => $tmCtvIng,
                 ]);
 
-                return $ingCsc;
+                return ['ingCsc' => $ingCsc, 'tmCtvIng' => $tmCtvIng];
             });
         } catch (\Throwable $e) {
             $log->error('Urgencias: error creando ingreso completo en la clínica', [
@@ -739,15 +762,24 @@ class ClinicaIntegrationService
             throw $e;
         }
     }
-    /** Rollback: elimina el ingreso completo (LOGINGR, INGRESOMP, INGRESOS) en orden inverso */
-    private function eliminarIngresoCompletoClinica(int $ingCsc, string $documento, string $tipoDocumento, string $refId): void
+    /**
+     * Rollback: elimina el ingreso completo (TMPFAC, LOGINGR, INGRESOMP, INGRESOS) en orden inverso.
+     * $tmCtvIng es OBLIGATORIO y va aparte de $ingCsc porque son consecutivos independientes
+     * (ver nota en crearIngresoCompletoClinica) — nunca usar $ingCsc para buscar en TMPFAC.
+     * Si $tmCtvIng es null (por ejemplo, un turno antiguo creado antes de este cambio, sin el
+     * dato guardado), se omite el borrado de TMPFAC y se deja constancia en el log crítico
+     * para revisión manual, en vez de arriesgarse a borrar la fila equivocada.
+     */
+    private function eliminarIngresoCompletoClinica(int $ingCsc, ?int $tmCtvIng, string $documento, string $tipoDocumento, string $refId): void
     {
         $log = Log::channel('urgencias');
         try {
-            DB::connection('sqlsrv')->transaction(function () use ($ingCsc, $documento, $tipoDocumento) {
-                DB::connection('sqlsrv')->table('TMPFAC')
-                    ->where('TFCedu', $documento)->where('TFTDoc', $tipoDocumento)->where('TmCtvIng', $ingCsc)
-                    ->delete();
+            DB::connection('sqlsrv')->transaction(function () use ($ingCsc, $tmCtvIng, $documento, $tipoDocumento) {
+                if ($tmCtvIng !== null) {
+                    DB::connection('sqlsrv')->table('TMPFAC')
+                        ->where('TFCedu', $documento)->where('TFTDoc', $tipoDocumento)->where('TmCtvIng', $tmCtvIng)
+                        ->delete();
+                }
 
                 DB::connection('sqlsrv')->table('LOGINGR')
                     ->where('MPCedu', $documento)->where('MPTDoc', $tipoDocumento)->where('IngCsc', $ingCsc)
@@ -761,11 +793,25 @@ class ClinicaIntegrationService
                     ->where('MPCedu', $documento)->where('MPTDoc', $tipoDocumento)->where('IngCsc', $ingCsc)
                     ->delete();
             });
-            $log->warning('Urgencias: ingreso completo revertido en la clínica', ['ref' => $refId, 'ing_csc' => $ingCsc]);
+
+            if ($tmCtvIng === null) {
+                $log->critical('Urgencias: rollback SIN tm_ctv_ing — TMPFAC no fue revertido, requiere revisión manual', [
+                    'ref' => $refId,
+                    'ing_csc' => $ingCsc,
+                    'documento' => $documento,
+                ]);
+            }
+
+            $log->warning('Urgencias: ingreso completo revertido en la clínica', [
+                'ref' => $refId,
+                'ing_csc' => $ingCsc,
+                'tm_ctv_ing' => $tmCtvIng,
+            ]);
         } catch (\Throwable $e) {
             $log->critical('Urgencias: NO se pudo revertir el ingreso completo, requiere revisión manual', [
                 'ref' => $refId,
                 'ing_csc' => $ingCsc,
+                'tm_ctv_ing' => $tmCtvIng,
                 'documento' => $documento,
                 'error' => $e->getMessage(),
             ]);
@@ -819,9 +865,16 @@ class ClinicaIntegrationService
         $documento = $turno->paciente->numero_documento ?? null;
         $tipoDocumento = $turno->paciente->tipo_documento ?? null;
         $ingCsc = $turno->ingreso_consecutivo;
+        $tmCtvIng = $turno->tmpfac_consecutivo; // NUEVO: puede ser null en turnos antiguos
 
         if ($ingCsc !== null && $documento && $tipoDocumento) {
-            $this->eliminarIngresoCompletoClinica((int) $ingCsc, $documento, $tipoDocumento, $refId);
+            $this->eliminarIngresoCompletoClinica(
+                (int) $ingCsc,
+                $tmCtvIng !== null ? (int) $tmCtvIng : null,
+                $documento,
+                $tipoDocumento,
+                $refId
+            );
         }
 
         $turno->delete();
