@@ -127,7 +127,7 @@ class TurnoPantallaController extends Controller
             ->whereDate('fecha', now()->toDateString())
             ->where('motivo', 'urgencias')
             ->where(function ($query) {
-                $query->whereIn('estado', ['llamado', 'asignado', 'llamado_medico'])
+                $query->whereIn('estado', ['llamado', 'llamado_medico'])   // ⬅️ se quitó 'asignado'
                     ->orWhere('estado_admisiones', 'llamado')
                     ->orWhere('estado_consulta_medica', 'atendido');
             })
