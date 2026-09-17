@@ -30,7 +30,8 @@ class ConsultorioUrgenciasResource extends Resource
         return parent::getEloquentQuery()
             ->hoy()
             ->where('estado', 'asignado')
-            ->where('motivo', 'urgencias');
+            ->where('motivo', 'urgencias')
+            ->with(['paciente', 'consultorio']);
     }
     public static function canCreate(): bool
     {
@@ -62,10 +63,18 @@ class ConsultorioUrgenciasResource extends Resource
         return $table
             ->poll('5s')
             ->columns([
-
+                TextColumn::make('paciente.numero_documento')   // ⬅️ nueva
+                    ->label('Documento')
+                    ->sortable()
+                    ->searchable(),
 
                 TextColumn::make('paciente_urgencias')
                     ->label('Paciente')
+                    ->sortable()
+                    ->searchable(),
+
+                TextColumn::make('contrato_nombre')   // ⬅️ nueva
+                    ->label('Contrato / EPS')
                     ->sortable()
                     ->searchable(),
 
