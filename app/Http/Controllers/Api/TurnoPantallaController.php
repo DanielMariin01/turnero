@@ -29,14 +29,14 @@ class TurnoPantallaController extends Controller
     }
     public function turnosLlamados()
     {
-        return Turno::with(['paciente', 'modulo', 'consultorio'])   // ✅
+        return Turno::with(['paciente', 'modulo', 'consultorio'])
+            ->whereDate('fecha', now()->toDateString())   // ⬅️ agregada
             ->whereIn('estado', ['llamado', 'llamado_medico', 'llamado_facturar'])
             ->whereIn('motivo', ['Consulta Externa', 'Pedir Cita', 'Oncologia'])
             ->orderBy('updated_at', 'desc')
             ->take(5)
             ->get();
     }
-
 
     public function turnosMedico()
     {
@@ -54,6 +54,7 @@ class TurnoPantallaController extends Controller
     public function turnoUltimoUrgencias()
     {
         $ultimoTurno = Turno::with('modulo')
+            ->whereDate('fecha', now()->toDateString())   // ⬅️ agregada
             ->where('motivo', 'urgencias')
             ->where('estado_admisiones', 'llamado')
             ->orderBy('updated_at', 'desc')
@@ -65,7 +66,7 @@ class TurnoPantallaController extends Controller
             'modulo'       => $ultimoTurno?->modulo ?? null,
             'fk_modulo'    => $ultimoTurno?->fk_modulo ?? null,
             'llamado_en'   => $ultimoTurno?->llamado_en,
-            'paciente_urgencias' => $ultimoTurno?->paciente_urgencias,   // ⬅nueva linea para mostrar el nombre del paciente
+            'paciente_urgencias' => $ultimoTurno?->paciente_urgencias,
         ]);
     }
 
