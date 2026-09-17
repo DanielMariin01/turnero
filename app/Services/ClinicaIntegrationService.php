@@ -544,14 +544,7 @@ class ClinicaIntegrationService
                     'UsrIng' => self::USUARIO_SISTEMA,
                 ]);
 
-                // Calcular TmCtvIng de forma independiente (NO usar el mismo $ingCsc)
-                $maxTmCtvIng = DB::connection('sqlsrv')->table('TMPFAC')
-                    ->where('TFCedu', $documento)
-                    ->where('TFTDoc', $tipoDocumento)
-                    ->lockForUpdate()
-                    ->max('TmCtvIng');
 
-                $tmCtvIng = ($maxTmCtvIng ?? 0) + 1;
 
                 $horaActual = now()->format('H:i:s');
 
@@ -559,7 +552,7 @@ class ClinicaIntegrationService
                     // Identificadores
                     'TFCedu' => $documento,
                     'TFTDoc' => $tipoDocumento,
-                    'TmCtvIng' => $tmCtvIng,
+                    'TmCtvIng' => $ingCsc,
                     'TFMENi' => $contratoNit,
                     'ClaPro' => self::CLAPRO_TRIAGE,
                     'ClaproI' => self::CLAPRO_TRIAGE,
@@ -716,10 +709,10 @@ class ClinicaIntegrationService
                     'ref' => $refId,
                     'documento' => $documento,
                     'ing_csc' => $ingCsc,
-                    'tm_ctv_ing' => $tmCtvIng,
+                    'tm_ctv_ing' => $ingCsc,
                 ]);
 
-                return ['ingCsc' => $ingCsc, 'tmCtvIng' => $tmCtvIng];
+                return ['ingCsc' => $ingCsc, 'tmCtvIng' => $ingCsc];
             });
         } catch (\Throwable $e) {
             $log->error('Urgencias: error creando ingreso completo en la clínica', [
