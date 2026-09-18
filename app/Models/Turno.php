@@ -36,6 +36,7 @@ class Turno extends Model
         'ingreso_consecutivo',
         'hora_ingreso_cola',
         'fk_consultorio_consulta',
+        'hora_ingreso_consulta_medica',
     ];
 
     public function scopeHoy($query)

@@ -29,7 +29,7 @@ class UrgenciasResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->hoy()
+            ->whereDate('fecha', '>=', now()->subDay()->toDateString())
             ->whereIn('estado_admisiones', ['pendiente', 'llamado'])
             ->where('motivo', 'urgencias')
             ->with(['paciente', 'consultorio', 'modulo']);
@@ -166,6 +166,7 @@ class UrgenciasResource extends Resource
 
                         if ($record->estado_consulta_medica === null) {
                             $updates['estado_consulta_medica'] = 'pendiente';
+                            $updates['hora_ingreso_consulta_medica'] = now()->format('H:i:s');   // ⬅️ agregar
                         }
 
                         $record->update($updates);

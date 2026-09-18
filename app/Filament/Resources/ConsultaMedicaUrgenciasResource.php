@@ -24,8 +24,8 @@ class ConsultaMedicaUrgenciasResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->hoy()
-            ->whereIn('estado_consulta_medica', ['pendiente', 'llamado'])
+            ->whereDate('fecha', '>=', now()->subDay()->toDateString())
+            ->where('estado_consulta_medica', 'pendiente')
             ->where('motivo', 'urgencias')
             ->with(['paciente', 'consultorio', 'consultorioConsulta']);
     }
@@ -54,12 +54,16 @@ class ConsultaMedicaUrgenciasResource extends Resource
     {
         return $table
             ->poll('10s')
-            ->defaultSort('nivel_triage', 'asc')
+            ->defaultSort('hora_ingreso_consulta_medica', 'asc')
             ->columns([
                 TextColumn::make('numero_turno')
                     ->label('Turno')
                     ->sortable()
                     ->searchable(),
+
+                TextColumn::make('hora_ingreso_consulta_medica')
+                    ->label('Esperando desde')
+                    ->sortable(),
 
                 TextColumn::make('paciente.numero_documento')
                     ->label('Documento')

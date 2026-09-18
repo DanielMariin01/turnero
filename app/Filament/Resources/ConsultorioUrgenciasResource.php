@@ -28,7 +28,7 @@ class ConsultorioUrgenciasResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->hoy()
+            ->whereDate('fecha', '>=', now()->subDay()->toDateString())
             ->where('estado', 'asignado')
             ->where('motivo', 'urgencias')
             ->with(['paciente', 'consultorio']);

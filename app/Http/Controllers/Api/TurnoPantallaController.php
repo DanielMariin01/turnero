@@ -30,7 +30,7 @@ class TurnoPantallaController extends Controller
     public function turnosLlamados()
     {
         return Turno::with(['paciente', 'modulo', 'consultorio'])
-            ->whereDate('fecha', now()->toDateString())   // ⬅️ agregada
+            ->whereDate('fecha', '>=', now()->subDay()->toDateString())   // ⬅️ cambiado
             ->whereIn('estado', ['llamado', 'llamado_medico', 'llamado_facturar'])
             ->whereIn('motivo', ['Consulta Externa', 'Pedir Cita', 'Oncologia'])
             ->orderBy('updated_at', 'desc')
@@ -54,7 +54,7 @@ class TurnoPantallaController extends Controller
     public function turnoUltimoUrgencias()
     {
         $ultimoTurno = Turno::with('modulo')
-            ->whereDate('fecha', now()->toDateString())   // ⬅️ agregada
+            ->whereDate('fecha', '>=', now()->subDay()->toDateString())   // ⬅️ cambiado
             ->where('motivo', 'urgencias')
             ->where('estado_admisiones', 'llamado')
             ->orderBy('updated_at', 'desc')
@@ -70,16 +70,19 @@ class TurnoPantallaController extends Controller
         ]);
     }
 
-
     public function turnoMedicoUrgencias()
     {
+        $fechaLimite = now()->subDay()->toDateString();
+
         $turnoTriage = Turno::with('consultorio')
+            ->whereDate('fecha', '>=', $fechaLimite)   // ⬅️ agregada
             ->where('motivo', 'urgencias')
             ->where('estado', 'llamado_medico')
             ->orderBy('updated_at', 'desc')
             ->first();
 
         $turnoConsulta = Turno::with('consultorioConsulta')
+            ->whereDate('fecha', '>=', $fechaLimite)   // ⬅️ agregada
             ->where('motivo', 'urgencias')
             ->where('estado_consulta_medica', 'atendido')
             ->whereNotNull('fk_consultorio_consulta')
@@ -120,14 +123,13 @@ class TurnoPantallaController extends Controller
         ]);
     }
 
-
     public function turnosLlamadosUrgencias()
     {
         return Turno::with(['consultorio', 'modulo', 'consultorioConsulta'])
-            ->whereDate('fecha', now()->toDateString())
+            ->whereDate('fecha', '>=', now()->subDay()->toDateString())   // ⬅️ cambiado
             ->where('motivo', 'urgencias')
             ->where(function ($query) {
-                $query->whereIn('estado', ['llamado', 'llamado_medico'])   // ⬅️ se quitó 'asignado'
+                $query->whereIn('estado', ['llamado', 'llamado_medico'])
                     ->orWhere('estado_admisiones', 'llamado')
                     ->orWhere('estado_consulta_medica', 'atendido');
             })
