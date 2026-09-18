@@ -14,10 +14,20 @@ class SincronizarTriageUrgencias extends Command
     protected $description = 'Vigila la clasificación de Triage en la clínica y enruta los turnos de Urgencias automáticamente.';
 
     const INTERVALO_SEGUNDOS = 5;
+    const MEMORIA_MAXIMA_MB = 128;
+    const VIDA_MAXIMA_SEGUNDOS = 3600; // reinicio preventivo cada hora
 
-    public function handle()
+    // Solo se vigilan turnos en estos estados
+    const ESTADOS_A_VIGILAR = ['asignado', 'llamado_medico'];
+
+    // Solo se revisan turnos creados en las últimas N horas
+    const VENTANA_HORAS = 48;
+
+    public function handle(): int
     {
         $log = Log::channel('urgencias');
+        $inicio = time();
+
         $log->info('Urgencias: vigilante de Triage iniciado');
         $this->info('Vigilante de Triage iniciado. Presiona Ctrl+C para detener.');
 
@@ -29,23 +39,47 @@ class SincronizarTriageUrgencias extends Command
                     'error' => $e->getMessage(),
                     'archivo' => $e->getFile() . ':' . $e->getLine(),
                 ]);
+                DB::purge('sqlsrv');
+            }
+
+            if ($this->debeReiniciar($inicio)) {
+                $log->info('Urgencias: reinicio preventivo del vigilante de Triage');
+                return self::SUCCESS;
             }
 
             sleep(self::INTERVALO_SEGUNDOS);
         }
     }
 
+    private function debeReiniciar(int $inicio): bool
+    {
+        $memoriaMb = memory_get_usage(true) / 1024 / 1024;
+
+        return $memoriaMb > self::MEMORIA_MAXIMA_MB
+            || (time() - $inicio) > self::VIDA_MAXIMA_SEGUNDOS;
+    }
+
     private function procesarPendientes($log): void
     {
         $pendientes = Turno::with('paciente')
             ->where('motivo', 'urgencias')
-            ->where('estado', 'llamado_medico')
+            ->whereIn('estado', self::ESTADOS_A_VIGILAR)
             ->whereNull('nivel_triage')
             ->whereNotNull('ingreso_consecutivo')
+            ->where('created_at', '>=', now()->subHours(self::VENTANA_HORAS))
             ->get();
 
         foreach ($pendientes as $turno) {
-            $this->procesarTurno($turno, $log);
+            try {
+                $this->procesarTurno($turno, $log);
+            } catch (\Throwable $e) {
+                $log->error('Urgencias: error procesando turno', [
+                    'id_turno' => $turno->id_turno,
+                    'error' => $e->getMessage(),
+                    'archivo' => $e->getFile() . ':' . $e->getLine(),
+                ]);
+                DB::purge('sqlsrv');
+            }
         }
     }
 
@@ -76,6 +110,7 @@ class SincronizarTriageUrgencias extends Command
             'ref' => $refId,
             'id_turno' => $turno->id_turno,
             'numero_turno' => $turno->numero_turno,
+            'estado_previo' => $turno->estado,
             'nivel_triage' => $nivel,
         ]);
 
@@ -102,7 +137,19 @@ class SincronizarTriageUrgencias extends Command
                 ]);
         }
 
-        $turno->update($datos);
+        // Actualización atómica: solo si el turno sigue en un estado vigilado y sin Triage
+        $afectados = Turno::where('id_turno', $turno->id_turno)
+            ->whereNull('nivel_triage')
+            ->whereIn('estado', self::ESTADOS_A_VIGILAR)
+            ->update($datos);
+
+        if ($afectados === 0) {
+            $log->info('Urgencias: turno ya procesado o cambió de estado', [
+                'ref' => $refId,
+                'id_turno' => $turno->id_turno,
+            ]);
+            return;
+        }
 
         $log->info('Urgencias: turno enrutado según Triage', [
             'ref' => $refId,
