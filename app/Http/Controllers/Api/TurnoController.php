@@ -104,6 +104,35 @@ class TurnoController extends Controller
             'contrato_nombre' => 'required|string|max:250',
         ]);
 
+        $tiposConEdadExacta = ['CN', 'RC', 'TI', 'CC'];
+        $tiposConEdadGenerica = ['AS', 'MS'];
+
+        if (in_array($validated['tipo_documento'], $tiposConEdadExacta)) {
+            $edad = \Carbon\Carbon::parse($validated['fecha_nacimiento'])->age;
+            $tipoEsperado = match (true) {
+                $edad < 1 => 'CN',
+                $edad < 7 => 'RC',
+                $edad < 18 => 'TI',
+                default => 'CC',
+            };
+
+            if ($validated['tipo_documento'] !== $tipoEsperado) {
+                return response()->json([
+                    'message' => "Según la fecha de nacimiento, el paciente tiene {$edad} años y debería tener tipo de documento {$tipoEsperado}, no {$validated['tipo_documento']}. Por favor corrija el tipo de documento.",
+                ], 422);
+            }
+        } elseif (in_array($validated['tipo_documento'], $tiposConEdadGenerica)) {
+            $edad = \Carbon\Carbon::parse($validated['fecha_nacimiento'])->age;
+            $esIncompatible = ($validated['tipo_documento'] === 'AS' && $edad < 18)
+                || ($validated['tipo_documento'] === 'MS' && $edad >= 18);
+
+            if ($esIncompatible) {
+                return response()->json([
+                    'message' => "Según la fecha de nacimiento, el paciente tiene {$edad} años, lo cual no es compatible con el tipo de documento seleccionado.",
+                ], 422);
+            }
+        }
+
         try {
             $turno = $clinica->crearTurnoUrgencias($validated);
         } catch (\Throwable $e) {

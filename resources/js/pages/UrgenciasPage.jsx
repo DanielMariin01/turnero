@@ -372,6 +372,33 @@ export default function UrgenciasPage() {
             Swal.fire({ title: "Campo requerido", text: "Por favor busque y seleccione su EPS, SOAT o Particular", icon: "warning", confirmButtonText: "Aceptar" });
             return;
         }
+        const tiposConEdadExacta = ['CN', 'RC', 'TI', 'CC'];
+        const tiposConEdadGenerica = ['AS', 'MS'];
+
+        if (tiposConEdadExacta.includes(paciente.tipo_documento)) {
+            const edad = calcularEdad(paciente.fecha_nacimiento);
+            const tipoEsperado = tipoDocumentoEsperadoPorEdad(edad);
+            if (tipoEsperado && paciente.tipo_documento !== tipoEsperado) {
+                Swal.fire({
+                    title: "Tipo de documento incorrecto",
+                    text: `Según la fecha de nacimiento, el paciente tiene ${edad} años y debería tener ${NOMBRES_TIPO_DOCUMENTO[tipoEsperado]}, no ${NOMBRES_TIPO_DOCUMENTO[paciente.tipo_documento]}.`,
+                    icon: "error",
+                    confirmButtonText: "Corregir"
+                });
+                return;
+            }
+        } else if (tiposConEdadGenerica.includes(paciente.tipo_documento)) {
+            const edad = calcularEdad(paciente.fecha_nacimiento);
+            if (tipoDocumentoEsIncompatibleConEdad(paciente.tipo_documento, edad)) {
+                Swal.fire({
+                    title: "Tipo de documento incorrecto",
+                    text: `Según la fecha de nacimiento, el paciente tiene ${edad} años, lo cual no es compatible con "${NOMBRES_TIPO_DOCUMENTO[paciente.tipo_documento]}".`,
+                    icon: "error",
+                    confirmButtonText: "Corregir"
+                });
+                return;
+            }
+        }
 
         if (procesandoRef.current) return;
         procesandoRef.current = true;
@@ -600,6 +627,45 @@ export default function UrgenciasPage() {
         }
 
         handleChange(campo.name, paciente[campo.name].slice(0, -1));
+    };
+
+    const calcularEdad = (fechaNacimiento) => {
+        if (!fechaNacimiento) return null;
+        const hoy = new Date();
+        const nacimiento = new Date(fechaNacimiento);
+        let edad = hoy.getFullYear() - nacimiento.getFullYear();
+        const diferenciaMes = hoy.getMonth() - nacimiento.getMonth();
+        if (diferenciaMes < 0 || (diferenciaMes === 0 && hoy.getDate() < nacimiento.getDate())) {
+            edad--;
+        }
+        return edad;
+    };
+
+    const tipoDocumentoEsperadoPorEdad = (edad) => {
+        if (edad === null) return null;
+        if (edad < 1) return 'CN';
+        if (edad < 7) return 'RC';
+        if (edad < 18) return 'TI';
+        return 'CC';
+    };
+
+    // ⬇️ NUEVO: agrega esta función aquí
+    const tipoDocumentoEsIncompatibleConEdad = (tipoDocumento, edad) => {
+        if (edad === null) return false;
+        if (tipoDocumento === 'AS' && edad < 18) return true;
+        if (tipoDocumento === 'MS' && edad >= 18) return true;
+        return false;
+    };
+
+    const NOMBRES_TIPO_DOCUMENTO = {
+        CC: 'Cédula de ciudadanía',
+        TI: 'Tarjeta de identidad',
+        CE: 'Cédula de extranjería',
+        PA: 'Pasaporte',
+        RC: 'Registro civil de nacimiento',
+        AS: 'Adulto sin identificación',   // ⬅️ NUEVO
+        CN: 'Certificado de nacido vivo',  // ⬅️ NUEVO
+        MS: 'Menor sin identificación',    // ⬅️ NUEVO
     };
 
     // ============================================
