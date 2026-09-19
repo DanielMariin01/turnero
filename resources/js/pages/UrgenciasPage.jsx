@@ -30,6 +30,7 @@ export default function UrgenciasPage() {
     const [abiertoDia, setAbiertoDia] = useState(false);
     const [textoAnio, setTextoAnio] = useState('');
     const [abiertoAnio, setAbiertoAnio] = useState(false);
+    const [confirmarNumeroDocumento, setConfirmarNumeroDocumento] = useState('');
 
 
     useEffect(() => {
@@ -258,7 +259,6 @@ export default function UrgenciasPage() {
                 mostrarMensaje('⚠️ Datos incompletos en la cédula.', 'warning');
                 return;
             }
-
             try {
                 const response = await fetch(`/api/pacientes/${numeroDocumento}`);
                 if (response.ok) {
@@ -271,6 +271,7 @@ export default function UrgenciasPage() {
                         fecha_nacimiento: fechaNacimiento,
                         sexo: sexo,
                     });
+                    setConfirmarNumeroDocumento(numeroDocumento);
                     mostrarMensaje('✅ Paciente encontrado, datos cargados', 'success');
                 } else {
                     setPaciente({
@@ -281,6 +282,7 @@ export default function UrgenciasPage() {
                         fecha_nacimiento: fechaNacimiento,
                         sexo: sexo,
                     });
+                    setConfirmarNumeroDocumento(numeroDocumento);   // ⬅️ agregar aquí
                     mostrarMensaje('✅ Cédula escaneada. Seleccione el tipo de documento.', 'success');
                 }
             } catch (err) {
@@ -292,6 +294,7 @@ export default function UrgenciasPage() {
                     fecha_nacimiento: fechaNacimiento,
                     sexo: sexo,
                 });
+                setConfirmarNumeroDocumento(numeroDocumento);   // ⬅️ agregar aquí también
                 mostrarMensaje('✅ Cédula escaneada correctamente', 'success');
             }
 
@@ -376,6 +379,27 @@ export default function UrgenciasPage() {
         }
         if (!contratoSeleccionado) {
             Swal.fire({ title: "Campo requerido", text: "Por favor busque y seleccione su EPS, SOAT o Particular", icon: "warning", confirmButtonText: "Aceptar" });
+            return;
+        }
+        if (paciente.numero_documento !== confirmarNumeroDocumento) {
+            Swal.fire({
+                title: "Los números de documento no son iguales",
+                html: `
+    <p style="font-size: 1.1rem;">
+        Escribió dos números distintos. Por favor compárelos:
+    </p>
+    <div style="font-size: 1.2rem; text-align: left; display: inline-block; margin: 8px 0;">
+        <div><b>Número de documento:</b> ${paciente.numero_documento}</div>
+        <div><b>Confirmación:</b> ${confirmarNumeroDocumento}</div>
+    </div>
+    <p style="font-size: 1.1rem;">
+        Deben ser <b>exactamente iguales</b>. Corrija el que esté mal e intente de nuevo.
+    </p>
+`,
+                icon: "warning",
+                confirmButtonText: "Corregir",
+                confirmButtonColor: "#f59e0b"
+            });
             return;
         }
         const tiposConEdadExacta = ['CN', 'RC', 'TI', 'CC'];
@@ -523,6 +547,7 @@ export default function UrgenciasPage() {
             sexo: "",
         });
         setMensajeEscaneo('');
+        setConfirmarNumeroDocumento('');
         inputActivo.current = null;
         setBusquedaContrato('');
         setContratoSeleccionado(null);
@@ -547,7 +572,7 @@ export default function UrgenciasPage() {
                     onBlur={() => setAbierto(false)}
                     onChange={(e) => setTexto(e.target.value.replace(/\D/g, ""))}
                 />
-                {abierto && (
+                {abierto && texto.length > 0 && (   // ⬅️ único cambio
                     <div className="absolute z-20 w-full min-w-[8rem] bg-white border-2 border-gray-200 rounded-lg mt-1 max-h-64 overflow-y-auto shadow-lg" onPointerDown={(e) => e.preventDefault()}>
                         {filtradas.length === 0 ? (
                             <div className="px-3 py-4 text-xl text-gray-500">Sin resultados</div>
@@ -575,7 +600,10 @@ export default function UrgenciasPage() {
         const numeros = "1234567890".split("");
 
         return (
-            <div className="w-full bg-slate-900 p-3 rounded-t-2xl shadow-2xl">
+            <div
+                className="w-full bg-slate-900 p-3 rounded-t-2xl shadow-2xl"
+                onPointerDown={(e) => e.preventDefault()}
+            >
                 <div className="flex gap-1.5 mb-2">
                     {numeros.map((num) => (
                         <button
@@ -667,6 +695,18 @@ export default function UrgenciasPage() {
             setTextoAnio(prev => (prev + tecla).replace(/\D/g, ''));
             return;
         }
+        if (campo.name === 'confirmar_numero_documento') {
+            const regla = REGLAS_DOCUMENTO[paciente.tipo_documento];
+            if (regla?.soloNumeros && !/^\d$/.test(tecla)) {
+                return;
+            }
+            const maxLen = regla?.maxLength || 20;
+            if (confirmarNumeroDocumento.length >= maxLen) {
+                return;
+            }
+            setConfirmarNumeroDocumento(prev => prev + tecla);
+            return;
+        }
 
         handleChange(campo.name, paciente[campo.name] + tecla);
     };
@@ -685,6 +725,10 @@ export default function UrgenciasPage() {
         }
         if (campo.name === 'anio_nacimiento') {
             setTextoAnio(prev => prev.slice(0, -1));   // ⬅️ corregido: quita el último carácter
+            return;
+        }
+        if (campo.name === 'confirmar_numero_documento') {
+            setConfirmarNumeroDocumento(prev => prev.slice(0, -1));
             return;
         }
 
@@ -842,8 +886,31 @@ export default function UrgenciasPage() {
                                     handleChange("numero_documento", valor);
                                 }}
                                 onFocus={(e) => (inputActivo.current = e.target)}
+                                onBlur={() => buscarPacienteClinica(paciente.numero_documento)}
                                 className="border-2 border-gray-300 px-3 py-5 rounded-lg w-full text-xl text-gray-900 font-medium focus:border-indigo-500 focus:outline-none transition-all"
                                 placeholder="Número de documento"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-lg font-semibold text-gray-700 mb-1">
+                                CONFIRME SU NÚMERO DE DOCUMENTO
+                            </label>
+                            <input
+                                type="text"
+                                name="confirmar_numero_documento"
+                                value={confirmarNumeroDocumento}
+                                maxLength={REGLAS_DOCUMENTO[paciente.tipo_documento]?.maxLength || 20}
+                                onChange={(e) => {
+                                    const regla = REGLAS_DOCUMENTO[paciente.tipo_documento];
+                                    let valor = e.target.value;
+                                    if (regla?.soloNumeros) {
+                                        valor = valor.replace(/\D/g, '');
+                                    }
+                                    setConfirmarNumeroDocumento(valor);
+                                }}
+                                onFocus={(e) => (inputActivo.current = e.target)}
+                                className="border-2 border-gray-300 px-3 py-5 rounded-lg w-full text-xl text-gray-900 font-medium focus:border-indigo-500 focus:outline-none transition-all"
+                                placeholder="Confirme el número de documento"
                             />
                         </div>
 
