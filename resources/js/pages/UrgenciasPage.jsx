@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { connectQZ, isQZConnected } from "../qzConfig";
 
+
+
 export default function UrgenciasPage() {
     const navigate = useNavigate();
     const procesandoRef = useRef(false);
@@ -24,6 +26,10 @@ export default function UrgenciasPage() {
     const [fechaDia, setFechaDia] = useState('');
     const [fechaMes, setFechaMes] = useState('');
     const [fechaAnio, setFechaAnio] = useState('');
+    const [textoDia, setTextoDia] = useState('');
+    const [abiertoDia, setAbiertoDia] = useState(false);
+    const [textoAnio, setTextoAnio] = useState('');
+    const [abiertoAnio, setAbiertoAnio] = useState(false);
 
 
     useEffect(() => {
@@ -521,6 +527,43 @@ export default function UrgenciasPage() {
         setBusquedaContrato('');
         setContratoSeleccionado(null);
     };
+    const SelectBuscador = ({ opciones, valor, placeholder, onSeleccionar, onFocusCampo, texto, setTexto, abierto, setAbierto }) => {
+        const etiquetaSeleccionada = opciones.find((o) => o.value === valor)?.label || "";
+        const filtradas = opciones.filter((o) => o.label.includes(texto));
+
+        return (
+            <div className="relative">
+                <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder={placeholder}
+                    className="border-2 border-gray-300 px-3 py-5 rounded-lg w-full text-xl text-gray-900 font-medium focus:border-indigo-500 focus:outline-none transition-all"
+                    value={abierto ? texto : etiquetaSeleccionada}
+                    onFocus={(e) => {
+                        setTexto("");
+                        setAbierto(true);
+                        onFocusCampo?.(e);
+                    }}
+                    onBlur={() => setAbierto(false)}
+                    onChange={(e) => setTexto(e.target.value.replace(/\D/g, ""))}
+                />
+                {abierto && (
+                    <div className="absolute z-20 w-full min-w-[8rem] bg-white border-2 border-gray-200 rounded-lg mt-1 max-h-64 overflow-y-auto shadow-lg" onPointerDown={(e) => e.preventDefault()}>
+                        {filtradas.length === 0 ? (
+                            <div className="px-3 py-4 text-xl text-gray-500">Sin resultados</div>
+                        ) : (
+                            filtradas.map((o) => (
+                                <div key={o.value} className="px-3 py-4 hover:bg-indigo-50 cursor-pointer border-b border-gray-100 text-xl text-gray-900 font-medium"
+                                    onClick={() => { onSeleccionar(o.value); setTexto(""); setAbierto(false); }}>
+                                    {o.label}
+                                </div>
+                            ))
+                        )}
+                    </div>
+                )}
+            </div>
+        );
+    };
 
     // ============================================
     // TECLADO EN PANTALLA
@@ -616,6 +659,14 @@ export default function UrgenciasPage() {
             setContratoSeleccionado(null);
             return;
         }
+        if (campo.name === 'dia_nacimiento') {
+            setTextoDia(prev => (prev + tecla).replace(/\D/g, ''));
+            return;
+        }
+        if (campo.name === 'anio_nacimiento') {
+            setTextoAnio(prev => (prev + tecla).replace(/\D/g, ''));
+            return;
+        }
 
         handleChange(campo.name, paciente[campo.name] + tecla);
     };
@@ -626,6 +677,14 @@ export default function UrgenciasPage() {
 
         if (campo.name === 'busqueda_contrato') {
             setBusquedaContrato(prev => prev.slice(0, -1));
+            return;
+        }
+        if (campo.name === 'dia_nacimiento') {
+            setTextoDia(prev => prev.slice(0, -1));   // ⬅️ corregido: quita el último carácter
+            return;
+        }
+        if (campo.name === 'anio_nacimiento') {
+            setTextoAnio(prev => prev.slice(0, -1));   // ⬅️ corregido: quita el último carácter
             return;
         }
 
@@ -671,6 +730,40 @@ export default function UrgenciasPage() {
         MS: 'Menor sin identificación',    // ⬅️ NUEVO
     };
 
+
+
+    const REGLAS_DOCUMENTO = {
+        CC: { maxLength: 10, soloNumeros: true },
+        TI: { maxLength: 11, soloNumeros: true },
+        CE: { maxLength: 7, soloNumeros: true },
+        PA: { maxLength: 16, soloNumeros: false },
+        RC: { maxLength: 10, soloNumeros: true },
+        CN: { maxLength: 10, soloNumeros: true },
+        NIT: { maxLength: 10, soloNumeros: true },
+        PE: { maxLength: 15, soloNumeros: true },
+        PT: { maxLength: 15, soloNumeros: true },
+        TE: { maxLength: 7, soloNumeros: true },
+        CD: { maxLength: 16, soloNumeros: false },
+        DE: { maxLength: 16, soloNumeros: false },
+        SC: { maxLength: 16, soloNumeros: false },
+        AS: { maxLength: 15, soloNumeros: false },
+        MS: { maxLength: 15, soloNumeros: false },
+        SI: { maxLength: 15, soloNumeros: false },
+    };
+
+
+    const opcionesDia = Array.from({ length: 31 }, (_, i) => ({
+        value: String(i + 1).padStart(2, "0"),
+        label: String(i + 1),
+    }));
+
+    const opcionesAnio = Array.from(
+        { length: new Date().getFullYear() - 1900 + 1 },
+        (_, i) => {
+            const a = String(new Date().getFullYear() - i);
+            return { value: a, label: a };
+        }
+    );
     // ============================================
     // RENDER
     // ============================================
@@ -678,8 +771,11 @@ export default function UrgenciasPage() {
         <div className="flex flex-col h-screen w-[1000px] mx-auto bg-gradient-to-br from-blue-50 bg-[#5B6BB1]">
             <div className="flex-1 flex items-center justify-center p-4 overflow-auto">
                 <div className="w-full max-w-5xl bg-white shadow-2xl rounded-2xl p-6">
-                    <h2 className="text-3xl font-bold mb-4 text-center text-indigo-700">
-                        Turno de Urgencias
+                    <h2 className="text-3xl font-bold mb-4 text-center text-gray-700">
+                        Escanee su cédula
+                        <span className="block text-2xl font-semibold text-gray-500 mt-1">
+                            o complete sus datos manualmente
+                        </span>
                     </h2>
 
                     {mensajeEscaneo && (
@@ -697,64 +793,69 @@ export default function UrgenciasPage() {
                             </p>
                         </div>
                     )}
-
                     <div className="grid grid-cols-2 gap-4 mb-5">
                         <div>
                             <label className="block text-lg font-semibold text-gray-700 mb-1">
-                                Digite su Número de Documento
-                            </label>
-                            <input
-                                type="text"
-                                name="numero_documento"
-                                placeholder="Número de documento"
-                                className="border-2 border-gray-300 p-3 rounded-lg w-full text-base focus:border-indigo-500 focus:outline-none transition-all"
-                                value={paciente.numero_documento}
-                                onFocus={(e) => (inputActivo.current = e.target)}
-                                onChange={(e) =>
-                                    handleChange("numero_documento", e.target.value.replace(/\D/g, ""))
-                                }
-                                onBlur={(e) => buscarPacienteClinica(e.target.value)}
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-lg font-semibold text-gray-700 mb-1">
-                                Seleccione su Tipo de Documento
+                                SELECCIONE SU TIPO DE DOCUMENTO
                             </label>
                             <select
                                 name="tipo_documento"
-                                className="border-2 border-gray-300 p-3 rounded-lg w-full text-base focus:border-indigo-500 focus:outline-none transition-all"
+                                className="border-2 border-gray-300 px-3 py-5 rounded-lg w-full text-xl text-gray-900 font-medium focus:border-indigo-500 focus:outline-none transition-all"
                                 value={paciente.tipo_documento}
                                 onFocus={() => (inputActivo.current = null)}
                                 onChange={(e) => handleChange("tipo_documento", e.target.value)}
                             >
-                                <option value="">Tipo de documento</option>
-                                <option value="CC">Cédula de ciudadanía</option>
-                                <option value="TI">Tarjeta de identidad</option>
-                                <option value="CE">Cédula de extranjería</option>
-                                <option value="PA">Pasaporte</option>
-                                <option value="RC">Registro civil de nacimiento</option>
-                                <option value="AS">Adulto sin identificación</option>
-                                <option value="CD">Carné diplomático</option>
-                                <option value="CN">Certificado de nacido vivo</option>
-                                <option value="DE">Documento extranjero</option>
-                                <option value="MS">Menor sin identificación</option>
-                                <option value="NIT">NIT</option>
-                                <option value="PE">Permiso especial de permanencia</option>
-                                <option value="PT">Permiso por protección temporal</option>
-                                <option value="SC">Salvoconducto de permanencia</option>
-                                <option value="SI">Sin identificación</option>
-                                <option value="TE">Tarjeta de extranjería</option>
+                                <option value="" className="text-2xl text-gray-900">Tipo de documento</option>
+                                <option value="CC" className="text-2xl text-gray-900">Cédula de ciudadanía</option>
+                                <option value="TI" className="text-2xl text-gray-900">Tarjeta de identidad</option>
+                                <option value="CE" className="text-2xl text-gray-900">Cédula de extranjería</option>
+                                <option value="PA" className="text-2xl text-gray-900">Pasaporte</option>
+                                <option value="RC" className="text-2xl text-gray-900">Registro civil de nacimiento</option>
+                                <option value="AS" className="text-2xl text-gray-900">Adulto sin identificación</option>
+                                <option value="CD" className="text-2xl text-gray-900">Carné diplomático</option>
+                                <option value="CN" className="text-2xl text-gray-900">Certificado de nacido vivo</option>
+                                <option value="DE" className="text-2xl text-gray-900">Documento extranjero</option>
+                                <option value="MS" className="text-2xl text-gray-900">Menor sin identificación</option>
+                                <option value="NIT" className="text-2xl text-gray-900">NIT</option>
+                                <option value="PE" className="text-2xl text-gray-900">Permiso especial de permanencia</option>
+                                <option value="PT" className="text-2xl text-gray-900">Permiso por protección temporal</option>
+                                <option value="SC" className="text-2xl text-gray-900">Salvoconducto de permanencia</option>
+                                <option value="SI" className="text-2xl text-gray-900">Sin identificación</option>
+                                <option value="TE" className="text-2xl text-gray-900">Tarjeta de extranjería</option>
                             </select>
                         </div>
                         <div>
                             <label className="block text-lg font-semibold text-gray-700 mb-1">
-                                Ingrese su Nombre
+                                DIGITE SU NÚMERO DE DOCUMENTO
+                            </label>
+                            <input
+                                type="text"
+                                name="numero_documento"
+                                value={paciente.numero_documento}
+                                maxLength={REGLAS_DOCUMENTO[paciente.tipo_documento]?.maxLength || 20}
+                                onChange={(e) => {
+                                    const regla = REGLAS_DOCUMENTO[paciente.tipo_documento];
+                                    let valor = e.target.value;
+                                    if (regla?.soloNumeros) {
+                                        valor = valor.replace(/\D/g, '');
+                                    }
+                                    handleChange("numero_documento", valor);
+                                }}
+                                onFocus={(e) => (inputActivo.current = e.target)}
+                                className="border-2 border-gray-300 px-3 py-5 rounded-lg w-full text-xl text-gray-900 font-medium focus:border-indigo-500 focus:outline-none transition-all"
+                                placeholder="Número de documento"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-lg font-semibold text-gray-700 mb-1">
+                                INGRESE SU NOMBRE
                             </label>
                             <input
                                 type="text"
                                 name="nombre"
                                 placeholder="Nombre"
-                                className="border-2 border-gray-300 p-3 rounded-lg w-full text-base focus:border-indigo-500 focus:outline-none transition-all"
+                                className="border-2 border-gray-300 px-3 py-5 rounded-lg w-full text-xl text-gray-900 font-medium focus:border-indigo-500 focus:outline-none transition-all"
                                 value={paciente.nombre}
                                 onFocus={(e) => (inputActivo.current = e.target)}
                                 onChange={(e) => handleChange("nombre", e.target.value)}
@@ -763,42 +864,40 @@ export default function UrgenciasPage() {
 
                         <div>
                             <label className="block text-lg font-semibold text-gray-700 mb-1">
-                                Ingrese su Apellido
+                                INGRESE SU APELLIDO
                             </label>
                             <input
                                 type="text"
                                 name="apellido"
                                 placeholder="Apellido"
-                                className="border-2 border-gray-300 p-3 rounded-lg w-full text-base focus:border-indigo-500 focus:outline-none transition-all"
+                                className="border-2 border-gray-300 px-3 py-5 rounded-lg w-full text-xl text-gray-900 font-medium focus:border-indigo-500 focus:outline-none transition-all"
                                 value={paciente.apellido}
                                 onFocus={(e) => (inputActivo.current = e.target)}
                                 onChange={(e) => handleChange("apellido", e.target.value)}
                             />
                         </div>
-
-
                         <div>
                             <label className="block text-lg font-semibold text-gray-700 mb-1">
-                                Seleccione su Fecha de Nacimiento
+                                SELECCIONE SU FECHA DE NACIMIENTO
                             </label>
                             <div className="grid grid-cols-3 gap-2">
-                                <select
-                                    className="border-2 border-gray-300 p-3 rounded-lg text-base focus:border-indigo-500 focus:outline-none transition-all"
-                                    value={fechaDia}
-                                    onFocus={() => (inputActivo.current = null)}
-                                    onChange={(e) => {
-                                        setFechaDia(e.target.value);
-                                        actualizarFecha(e.target.value, fechaMes, fechaAnio);
+                                <SelectBuscador
+                                    placeholder="Día"
+                                    valor={fechaDia}
+                                    opciones={opcionesDia}
+                                    texto={textoDia}
+                                    setTexto={setTextoDia}
+                                    abierto={abiertoDia}
+                                    setAbierto={setAbiertoDia}
+                                    onFocusCampo={() => (inputActivo.current = { name: 'dia_nacimiento' })}
+                                    onSeleccionar={(v) => {
+                                        setFechaDia(v);
+                                        actualizarFecha(v, fechaMes, fechaAnio);
                                     }}
-                                >
-                                    <option value="">Día</option>
-                                    {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
-                                        <option key={d} value={String(d).padStart(2, '0')}>{d}</option>
-                                    ))}
-                                </select>
+                                />
 
                                 <select
-                                    className="border-2 border-gray-300 p-3 rounded-lg text-base focus:border-indigo-500 focus:outline-none transition-all"
+                                    className="border-2 border-gray-300 px-3 py-5 rounded-lg w-full text-xl text-gray-900 font-medium focus:border-indigo-500 focus:outline-none transition-all"
                                     value={fechaMes}
                                     onFocus={() => (inputActivo.current = null)}
                                     onChange={(e) => {
@@ -806,60 +905,57 @@ export default function UrgenciasPage() {
                                         actualizarFecha(fechaDia, e.target.value, fechaAnio);
                                     }}
                                 >
-                                    <option value="">Mes</option>
+                                    <option value="" className="text-2xl text-gray-900">Mes</option>
                                     {[
                                         'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
                                         'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
                                     ].map((nombreMes, i) => (
-                                        <option key={i} value={String(i + 1).padStart(2, '0')}>{nombreMes}</option>
+                                        <option key={i} value={String(i + 1).padStart(2, '0')} className="text-2xl text-gray-900">{nombreMes}</option>
                                     ))}
                                 </select>
 
-                                <select
-                                    className="border-2 border-gray-300 p-3 rounded-lg text-base focus:border-indigo-500 focus:outline-none transition-all"
-                                    value={fechaAnio}
-                                    onFocus={() => (inputActivo.current = null)}
-                                    onChange={(e) => {
-                                        setFechaAnio(e.target.value);
-                                        actualizarFecha(fechaDia, fechaMes, e.target.value);
+                                <SelectBuscador
+                                    placeholder="Año"
+                                    valor={fechaAnio}
+                                    opciones={opcionesAnio}
+                                    texto={textoAnio}
+                                    setTexto={setTextoAnio}
+                                    abierto={abiertoAnio}
+                                    setAbierto={setAbiertoAnio}
+                                    onFocusCampo={() => (inputActivo.current = { name: 'anio_nacimiento' })}
+                                    onSeleccionar={(v) => {
+                                        setFechaAnio(v);
+                                        actualizarFecha(fechaDia, fechaMes, v);
                                     }}
-                                >
-                                    <option value="">Año</option>
-                                    {Array.from(
-                                        { length: new Date().getFullYear() - 1900 + 1 },
-                                        (_, i) => new Date().getFullYear() - i
-                                    ).map((a) => (
-                                        <option key={a} value={a}>{a}</option>
-                                    ))}
-                                </select>
+                                />
                             </div>
                         </div>
                         <div>
                             <label className="block text-lg font-semibold text-gray-700 mb-1">
-                                Seleccione su Sexo
+                                SELECCIONE SU SEXO
                             </label>
                             <select
                                 name="sexo"
-                                className="border-2 border-gray-300 p-3 rounded-lg w-full text-base focus:border-indigo-500 focus:outline-none transition-all"
+                                className="border-2 border-gray-300 px-3 py-5 rounded-lg w-full text-xl text-gray-900 font-medium focus:border-indigo-500 focus:outline-none transition-all"
                                 value={paciente.sexo}
                                 onFocus={() => (inputActivo.current = null)}
                                 onChange={(e) => handleChange("sexo", e.target.value)}
                             >
-                                <option value="">Sexo</option>
-                                <option value="M">Masculino</option>
-                                <option value="F">Femenino</option>
+                                <option value="" className="text-2xl text-gray-900">Sexo</option>
+                                <option value="M" className="text-2xl text-gray-900">Masculino</option>
+                                <option value="F" className="text-2xl text-gray-900">Femenino</option>
                             </select>
                         </div>
                         <div className="col-span-2">
                             <label className="block text-lg font-semibold text-gray-700 mb-1">
-                                ¿Con qué EPS o seguro viene?
+                                ¿ CON QUÉ EPS O SEGURO VIENE?
                             </label>
                             <div className="relative">
                                 <input
                                     type="text"
                                     name="busqueda_contrato"
                                     placeholder="Seleccionao o Busca  EPS, SOAT o Particular..."
-                                    className="border-2 border-gray-300 p-3 rounded-lg w-full text-base focus:border-indigo-500 focus:outline-none transition-all"
+                                    className="border-2 border-gray-300 px-3 py-5 rounded-lg w-full text-xl text-gray-900 font-medium focus:border-indigo-500 focus:outline-none transition-all"
                                     value={busquedaContrato}
                                     onFocus={(e) => (inputActivo.current = e.target)}
                                     onChange={(e) => {
@@ -868,19 +964,19 @@ export default function UrgenciasPage() {
                                     }}
                                 />
                                 {contratoSeleccionado && (
-                                    <p className="text-sm text-green-700 mt-1 font-semibold">
+                                    <p className="text-lg text-green-700 mt-1 font-semibold">
                                         ✅ Seleccionado: {contratoSeleccionado.nombre}
                                     </p>
                                 )}
                                 {busquedaContrato && !contratoSeleccionado && (
-                                    <div className="absolute z-10 w-full bg-white border-2 border-gray-200 rounded-lg mt-1 max-h-48 overflow-y-auto shadow-lg">
+                                    <div className="absolute z-10 w-full bg-white border-2 border-gray-200 rounded-lg mt-1 max-h-64 overflow-y-auto shadow-lg">
                                         {contratos
                                             .filter(c => c.nombre.toLowerCase().includes(busquedaContrato.toLowerCase()))
                                             .slice(0, 8)
                                             .map(c => (
                                                 <div
                                                     key={c.nit}
-                                                    className="p-3 hover:bg-indigo-50 cursor-pointer border-b border-gray-100 text-sm"
+                                                    className="px-3 py-4 hover:bg-indigo-50 cursor-pointer border-b border-gray-100 text-xl text-gray-900 font-medium"
                                                     onClick={() => {
                                                         setContratoSeleccionado(c);
                                                         setBusquedaContrato(c.nombre);
@@ -895,9 +991,10 @@ export default function UrgenciasPage() {
                         </div>
                     </div>
 
+
                     <div className="flex gap-4 mt-5">
                         <button
-                            className="bg-[#5B6BB1] text-white px-6 py-3 rounded-lg w-full text-lg font-bold bg-[#5564A8] transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
+                            className="bg-[#5B6BB1] text-white px-3 py-5 rounded-lg w-full text-lg font-bold bg-[#5564A8] transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
                             onClick={handleGuardar}
                             disabled={generando}
                         >

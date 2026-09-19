@@ -135,6 +135,38 @@ class TurnoController extends Controller
                 ], 422);
             }
         }
+        $reglasDocumento = [
+            'CC'  => ['max' => 10, 'solo_numeros' => true],
+            'TI'  => ['max' => 11, 'solo_numeros' => true],
+            'CE'  => ['max' => 7,  'solo_numeros' => true],
+            'PA'  => ['max' => 16, 'solo_numeros' => false],
+            'RC'  => ['max' => 10, 'solo_numeros' => true],
+            'CN'  => ['max' => 10, 'solo_numeros' => true],
+            'NIT' => ['max' => 10, 'solo_numeros' => true],
+            'PE'  => ['max' => 15, 'solo_numeros' => true],
+            'PT'  => ['max' => 15, 'solo_numeros' => true],
+            'TE'  => ['max' => 7,  'solo_numeros' => true],
+            'CD'  => ['max' => 16, 'solo_numeros' => false],
+            'DE'  => ['max' => 16, 'solo_numeros' => false],
+            'SC'  => ['max' => 16, 'solo_numeros' => false],
+            'AS'  => ['max' => 15, 'solo_numeros' => false],
+            'MS'  => ['max' => 15, 'solo_numeros' => false],
+            'SI'  => ['max' => 15, 'solo_numeros' => false],
+        ];
+
+        $regla = $reglasDocumento[$validated['tipo_documento']] ?? null;
+        if ($regla) {
+            if (strlen($validated['numero_documento']) > $regla['max']) {
+                return response()->json([
+                    'message' => "El número de documento no debe tener más de {$regla['max']} caracteres para el tipo de documento seleccionado.",
+                ], 422);
+            }
+            if ($regla['solo_numeros'] && !ctype_digit($validated['numero_documento'])) {
+                return response()->json([
+                    'message' => "El número de documento debe contener solo números para el tipo de documento seleccionado.",
+                ], 422);
+            }
+        }
 
         try {
             $turno = $clinica->crearTurnoUrgencias($validated);
