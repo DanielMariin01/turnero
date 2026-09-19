@@ -109,16 +109,19 @@ class TurnoController extends Controller
 
         if (in_array($validated['tipo_documento'], $tiposConEdadExacta)) {
             $edad = \Carbon\Carbon::parse($validated['fecha_nacimiento'])->age;
-            $tipoEsperado = match (true) {
-                $edad < 1 => 'CN',
-                $edad < 7 => 'RC',
-                $edad < 18 => 'TI',
-                default => 'CC',
+
+            $tiposPermitidos = match (true) {
+                $edad < 1 => ['CN', 'RC'],   // ← ahora permite CN y RC
+                $edad < 7 => ['RC'],
+                $edad < 18 => ['TI'],
+                default => ['CC'],
             };
 
-            if ($validated['tipo_documento'] !== $tipoEsperado) {
+            if (!in_array($validated['tipo_documento'], $tiposPermitidos)) {
+                $esperados = implode(' o ', $tiposPermitidos);
+
                 return response()->json([
-                    'message' => "Según la fecha de nacimiento, el paciente tiene {$edad} años y debería tener tipo de documento {$tipoEsperado}, no {$validated['tipo_documento']}. Por favor corrija el tipo de documento.",
+                    'message' => "Según la fecha de nacimiento, el paciente tiene {$edad} años y debería tener tipo de documento {$esperados}, no {$validated['tipo_documento']}. Por favor corrija el tipo de documento.",
                 ], 422);
             }
         } elseif (in_array($validated['tipo_documento'], $tiposConEdadGenerica)) {

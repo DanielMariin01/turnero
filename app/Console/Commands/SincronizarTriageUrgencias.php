@@ -14,8 +14,7 @@ class SincronizarTriageUrgencias extends Command
     protected $description = 'Vigila la clasificación de Triage en la clínica y enruta los turnos de Urgencias automáticamente.';
 
     const INTERVALO_SEGUNDOS = 5;
-    const MEMORIA_MAXIMA_MB = 128;
-    const VIDA_MAXIMA_SEGUNDOS = 3600; // reinicio preventivo cada hora
+    const MEMORIA_MAXIMA_MB = 128; // reinicio preventivo solo si la memoria crece de más
 
     // Solo se vigilan turnos en estos estados
     const ESTADOS_A_VIGILAR = ['asignado', 'llamado_medico'];
@@ -26,7 +25,6 @@ class SincronizarTriageUrgencias extends Command
     public function handle(): int
     {
         $log = Log::channel('urgencias');
-        $inicio = time();
 
         $log->info('Urgencias: vigilante de Triage iniciado');
         $this->info('Vigilante de Triage iniciado. Presiona Ctrl+C para detener.');
@@ -39,24 +37,29 @@ class SincronizarTriageUrgencias extends Command
                     'error' => $e->getMessage(),
                     'archivo' => $e->getFile() . ':' . $e->getLine(),
                 ]);
-                DB::purge('sqlsrv');
+                $this->purgarConexiones();
             }
 
-            if ($this->debeReiniciar($inicio)) {
-                $log->info('Urgencias: reinicio preventivo del vigilante de Triage');
-                return self::SUCCESS;
+            if ($this->debeReiniciar()) {
+                $log->info('Urgencias: reinicio preventivo del vigilante de Triage por memoria');
+                return self::FAILURE;   // ⬅️ para que Windows lo detecte como "falla" y lo reinicie solo
             }
 
             sleep(self::INTERVALO_SEGUNDOS);
         }
     }
 
-    private function debeReiniciar(int $inicio): bool
+    private function debeReiniciar(): bool
     {
         $memoriaMb = memory_get_usage(true) / 1024 / 1024;
 
-        return $memoriaMb > self::MEMORIA_MAXIMA_MB
-            || (time() - $inicio) > self::VIDA_MAXIMA_SEGUNDOS;
+        return $memoriaMb > self::MEMORIA_MAXIMA_MB;
+    }
+
+    private function purgarConexiones(): void
+    {
+        DB::purge('sqlsrv');
+        DB::purge(); // conexión por defecto (donde vive Turno)
     }
 
     private function procesarPendientes($log): void
@@ -78,7 +81,7 @@ class SincronizarTriageUrgencias extends Command
                     'error' => $e->getMessage(),
                     'archivo' => $e->getFile() . ':' . $e->getLine(),
                 ]);
-                DB::purge('sqlsrv');
+                $this->purgarConexiones();
             }
         }
     }

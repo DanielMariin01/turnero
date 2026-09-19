@@ -377,11 +377,14 @@ export default function UrgenciasPage() {
 
         if (tiposConEdadExacta.includes(paciente.tipo_documento)) {
             const edad = calcularEdad(paciente.fecha_nacimiento);
-            const tipoEsperado = tipoDocumentoEsperadoPorEdad(edad);
-            if (tipoEsperado && paciente.tipo_documento !== tipoEsperado) {
+            const tiposPermitidos = tiposDocumentoPermitidosPorEdad(edad);
+            if (tiposPermitidos && !tiposPermitidos.includes(paciente.tipo_documento)) {
+                const nombresEsperados = tiposPermitidos
+                    .map(t => NOMBRES_TIPO_DOCUMENTO[t])
+                    .join(' o ');
                 Swal.fire({
                     title: "Tipo de documento incorrecto",
-                    text: `Según la fecha de nacimiento, el paciente tiene ${edad} años y debería tener ${NOMBRES_TIPO_DOCUMENTO[tipoEsperado]}, no ${NOMBRES_TIPO_DOCUMENTO[paciente.tipo_documento]}.`,
+                    text: `Según la fecha de nacimiento, el paciente tiene ${edad} años y debería tener ${nombresEsperados}, no ${NOMBRES_TIPO_DOCUMENTO[paciente.tipo_documento]}.`,
                     icon: "error",
                     confirmButtonText: "Corregir"
                 });
@@ -641,12 +644,12 @@ export default function UrgenciasPage() {
         return edad;
     };
 
-    const tipoDocumentoEsperadoPorEdad = (edad) => {
+    const tiposDocumentoPermitidosPorEdad = (edad) => {
         if (edad === null) return null;
-        if (edad < 1) return 'CN';
-        if (edad < 7) return 'RC';
-        if (edad < 18) return 'TI';
-        return 'CC';
+        if (edad < 1) return ['CN', 'RC'];   // ← ahora permite CN y RC
+        if (edad < 7) return ['RC'];
+        if (edad < 18) return ['TI'];
+        return ['CC'];
     };
 
     // ⬇️ NUEVO: agrega esta función aquí
