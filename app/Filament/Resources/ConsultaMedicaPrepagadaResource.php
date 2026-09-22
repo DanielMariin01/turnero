@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\ConsultaMedicaUrgenciasResource\Pages;
+use App\Filament\Resources\ConsultaMedicaPrepagadaResource\Pages;
 use App\Models\Turno;
 use App\Models\Consultorio;
 use Filament\Forms;
@@ -15,14 +15,14 @@ use Illuminate\Database\Eloquent\Model;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 
-class ConsultaMedicaUrgenciasResource extends Resource
+class ConsultaMedicaPrepagadaResource extends Resource
 {
     protected static ?string $model = Turno::class;
-    protected static ?string $navigationIcon = 'heroicon-o-heart';
-    protected static ?string $label = 'Consulta Médica Urgencias ';
+    protected static ?string $navigationIcon = 'heroicon-o-plus-circle';
+    protected static ?string $label = 'Consulta Médica Prepagada ';
 
     // IMPORTANTE: esta lista debe coincidir exactamente con la misma constante
-    // en ConsultaMedicaPrepagadaResource.php (ahí se INCLUYEN solo estos códigos)
+    // en ConsultaMedicaUrgenciasResource.php (ahí se EXCLUYEN estos mismos códigos)
     const CONTRATOS_PREPAGADA = [
         '37209',
         'CPJ-01',
@@ -51,13 +51,13 @@ class ConsultaMedicaUrgenciasResource extends Resource
             ->whereDate('fecha', '>=', now()->subDay()->toDateString())
             ->where('estado_consulta_medica', 'pendiente')
             ->where('motivo', 'urgencias')
-            ->whereNotIn('contrato_nit', self::CONTRATOS_PREPAGADA)   // ⬅️ agregada
+            ->whereIn('contrato_nit', self::CONTRATOS_PREPAGADA)
             ->with(['paciente', 'consultorio', 'consultorioConsulta']);
     }
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->hasAnyRole(['admin', 'medico_consulta_urgencias']) ?? false;
+        return auth()->user()?->hasAnyRole(['admin', 'medico_consulta_prepagada']) ?? false;
     }
 
     public static function canCreate(): bool
@@ -85,10 +85,6 @@ class ConsultaMedicaUrgenciasResource extends Resource
                     ->label('Turno')
                     ->sortable()
                     ->searchable(),
-
-                TextColumn::make('hora_ingreso_consulta_medica')
-                    ->label('Esperando desde')
-                    ->sortable(),
 
                 TextColumn::make('paciente.numero_documento')
                     ->label('Documento')
@@ -120,19 +116,20 @@ class ConsultaMedicaUrgenciasResource extends Resource
                     }),
 
                 TextColumn::make('contrato_nombre')
-                    ->label('Contrato / EPS')
+                    ->label('Contrato / Plan')
                     ->sortable()
                     ->searchable(),
 
                 TextColumn::make('consultorioConsulta.nombre')
                     ->label('Consultorio')
                     ->sortable(),
+
+                TextColumn::make('hora_ingreso_consulta_medica')
+                    ->label('Esperando desde')
+                    ->sortable(),
             ])
             ->filters([])
             ->actions([
-                /* ================================
-     | LLAMAR A CONSULTA MÉDICA
-     ================================= */
                 Tables\Actions\Action::make('llamar_consulta')
                     ->label('Llamar')
                     ->iconButton()
@@ -172,9 +169,6 @@ class ConsultaMedicaUrgenciasResource extends Resource
                     })
                     ->visible(fn(Turno $record): bool => $record->estado_consulta_medica === 'pendiente'),
 
-                /* ================================
-     | CANCELAR TURNO
-     ================================= */
                 Tables\Actions\Action::make('cancelar')
                     ->label('CANCELAR TURNO')
                     ->iconButton()
@@ -224,9 +218,9 @@ class ConsultaMedicaUrgenciasResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListConsultaMedicaUrgencias::route('/'),
-            'create' => Pages\CreateConsultaMedicaUrgencias::route('/create'),
-            'edit' => Pages\EditConsultaMedicaUrgencias::route('/{record}/edit'),
+            'index' => Pages\ListConsultaMedicaPrepagadas::route('/'),
+            'create' => Pages\CreateConsultaMedicaPrepagada::route('/create'),
+            'edit' => Pages\EditConsultaMedicaPrepagada::route('/{record}/edit'),
         ];
     }
 }
