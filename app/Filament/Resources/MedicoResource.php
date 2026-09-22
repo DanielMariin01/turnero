@@ -106,7 +106,7 @@ class MedicoResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('fk_consultorio')
                     ->label('Consultorio')
-                    ->options(Consultorio::pluck('nombre', 'id_consultorio'))
+                    ->options(Consultorio::where('area', 'consulta_externa')->pluck('nombre', 'id_consultorio'))
                     ->placeholder('Todos los consultorios')
                     ->searchable(),
             ])
