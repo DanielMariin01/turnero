@@ -34,6 +34,7 @@ class Turno extends Model
         'estado_admisiones',
         'estado_consulta_medica',
         'ingreso_consecutivo',
+        'tmpfac_consecutivo',
         'hora_ingreso_cola',
         'fk_consultorio_consulta',
         'hora_ingreso_consulta_medica',
