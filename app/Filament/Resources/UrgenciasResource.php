@@ -140,6 +140,7 @@ class UrgenciasResource extends Resource
                         $record->update([
                             'estado_admisiones' => 'llamado',
                             'fk_modulo' => $data['fk_modulo'],
+                            'hora_llamado' => now()->format('H:i:s'),
                         ]);
 
                         Notification::make()

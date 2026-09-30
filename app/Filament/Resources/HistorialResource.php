@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Tables\Columns\TextColumn;
 
+
 class HistorialResource extends Resource
 {
     protected static ?string $model = Turno::class;
@@ -39,32 +40,30 @@ class HistorialResource extends Resource
         return $form
             ->schema([
 
-
-
-
-
                 Forms\Components\Section::make('Detalles de Atención')
                     ->schema([
                         Forms\Components\Grid::make(2)
                             ->schema([
 
-
                                 Forms\Components\Select::make('fk_modulo')
                                     ->label('Modulo')
-                                    ->relationship('modulo', 'nombre')
+                                    ->relationship(
+                                        'modulo',
+                                        'nombre',
+                                        modifyQueryUsing: fn(Builder $query) => $query->where('area', 'consulta_externa')
+                                    )
                                     ->searchable()
                                     ->preload(),
 
-
                                 Forms\Components\Select::make('consultorio.nombre')
                                     ->label('Consultorio')
-                                    ->relationship('consultorio', 'nombre')
+                                    ->relationship(
+                                        'consultorio',
+                                        'nombre',
+                                        modifyQueryUsing: fn(Builder $query) => $query->where('area', 'consulta_externa')
+                                    )
                                     ->placeholder('Seleccione el consultorio')
-                                    //->searchable()
                                     ->preload(),
-
-
-
 
                                 Forms\Components\Select::make('estado')
                                     ->label('Estado')
@@ -73,10 +72,8 @@ class HistorialResource extends Resource
                                         'llamado' => 'Llamado',
                                         'asignado' => 'Asignado',
                                         'facturar' => 'Facturar',
-                                        //'llamado_medico' => 'Llamado por el Médico',
                                         'llamado_facturar' => 'Llamado Facturar',
                                     ])
-
                                     ->preload()
                                     ->native(false),
                             ]),
