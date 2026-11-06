@@ -15,6 +15,9 @@ class ClinicaIntegrationService
     const CLAPRO_TRIAGE = '5';
     const PABELLON_TRIAGE = 15;
     const USUARIO_SISTEMA = 'SISTEMAS';
+    const COBERTURA_1 = '1'; // IPSCONTC: "cobertura 1"
+    const REGIMEN_POR_DEFECTO = '1'; // Contributivo
+    const TIPO_AFILIADO_POR_DEFECTO = 'A'; // Cotizante Nivel 1
 
     /**
      * Orquesta la creación completa de un turno de Urgencias:
@@ -729,10 +732,10 @@ class ClinicaIntegrationService
      * Busca la afiliación paciente+contrato en MAEPAC; si no existe esa combinación
      * exacta, la crea. Un mismo paciente puede tener varias filas (una por cada
      * contrato distinto que haya usado a lo largo del tiempo).
-     * MTUCod/MTCodP usan un valor genérico confirmado como el más frecuente en la
-     * práctica (Contributivo / Cotizante Nivel 1) — el personal de Admisiones lo
-     * corrige después con el dato real del paciente. IPSCbr queda en NULL (su
-     * valor no sigue un patrón claro y tiene peso legal en reportes RIPS).
+     * MTUCod/MTCodP salen del contrato (ver resolverRegimenYTipoAfiliado) y, si no se
+     * puede decidir, usan el valor por defecto histórico (Contributivo / Cotizante
+     * Nivel 1) — el personal de Admisiones lo corrige después con el dato real del
+     * paciente. IPSCbr siempre es COBERTURA 1.
      * No se revierte si algo falla después (mismo criterio que CAPBAS: es un
      * dato real y reutilizable).
      */
@@ -770,12 +773,14 @@ class ClinicaIntegrationService
 
                 $siguienteOrd = ($maxOrd ?? 0) + 1;
 
+                [$regimen, $tipoAfiliado] = $this->resolverRegimenYTipoAfiliado($contratoNit, $refId);
+
                 DB::connection('sqlsrv')->table('MAEPAC')->insert([
                     'MPCedu' => $documento,
                     'MPTDoc' => $tipoDocumento,
                     'MENNIT' => $contratoNit,
-                    'MTUCod' => '1', // Contributivo (el régimen más común)
-                    'MTCodP' => 'A', // Cotizante Nivel 1
+                    'MTUCod' => $regimen, // según el contrato (por defecto Contributivo)
+                    'MTCodP' => $tipoAfiliado, // según el contrato (por defecto Cotizante Nivel 1)
                     'MPNoCa' => 0,
                     'MPstatus' => 'A',
                     'MPACMO' => 0.0000,
@@ -785,7 +790,7 @@ class ClinicaIntegrationService
                     'MpPunSIS' => 0.0000,
                     'MpFicSIS' => 0,
                     'MPPoPla' => null,
-                    'IPSCbr' => null, //SEDE IPS
+                    'IPSCbr' => self::COBERTURA_1,
                 ]);
 
                 $log->info('Urgencias: afiliación creada en MAEPAC (pendiente de verificar por Admisiones)', [
@@ -804,6 +809,80 @@ class ClinicaIntegrationService
                 'error' => $e->getMessage(),
             ]);
             throw $e;
+        }
+    }
+
+    /**
+     * Decide el régimen (MTUCod) y el tipo de afiliado (MTCodP) de una afiliación nueva en MAEPAC.
+     * Si el contrato tiene exactamente un régimen activo (MAEEMP1 + MAETPA2) y, para ese régimen,
+     * exactamente un tipo de afiliado activo (MAEEMP3 + MAETPA3), se usan esos. En cualquier otro
+     * caso —varios, ninguno o un error en la consulta— se conserva el valor por defecto histórico
+     * (Contributivo / Cotizante Nivel 1): el turno nunca se frena por esto y Admisiones corrige el
+     * dato después de la atención. Solo hace SELECT.
+     *
+     * @return array{0: string, 1: string} [régimen, tipo de afiliado]
+     */
+    private function resolverRegimenYTipoAfiliado(string $contratoNit, string $refId): array
+    {
+        $log = Log::channel('urgencias');
+        $porDefecto = [self::REGIMEN_POR_DEFECTO, self::TIPO_AFILIADO_POR_DEFECTO];
+
+        try {
+            $regimenesActivos = DB::connection('sqlsrv')->table('MAEEMP1 as e1')
+                ->join('MAETPA2 as r', 'r.MTUCod', '=', 'e1.MTUCo1')
+                ->where('e1.MENNIT', $contratoNit)
+                ->where('r.MTUEstado', 'A')
+                ->distinct()
+                ->pluck('e1.MTUCo1');
+
+            if ($regimenesActivos->count() !== 1) {
+                $log->info('Urgencias: contrato sin un único régimen activo — se usa el valor por defecto', [
+                    'ref' => $refId,
+                    'contrato_nit' => $contratoNit,
+                    'regimenes_activos' => $regimenesActivos->count(),
+                ]);
+                return $porDefecto;
+            }
+
+            $regimen = trim($regimenesActivos->first());
+
+            $tiposActivos = DB::connection('sqlsrv')->table('MAEEMP3 as e3')
+                ->join('MAETPA3 as t', function ($join) {
+                    $join->on('t.MTUCod', '=', 'e3.MTUCo1')->on('t.MTCodP', '=', 'e3.MTCodP');
+                })
+                ->where('e3.MENNIT', $contratoNit)
+                ->where('e3.MTUCo1', $regimen)
+                ->where('t.MTTEstado', 'A')
+                ->distinct()
+                ->pluck('e3.MTCodP');
+
+            if ($tiposActivos->count() !== 1) {
+                $log->info('Urgencias: contrato sin un único tipo de afiliado activo — se usa el valor por defecto', [
+                    'ref' => $refId,
+                    'contrato_nit' => $contratoNit,
+                    'regimen' => $regimen,
+                    'tipos_activos' => $tiposActivos->count(),
+                ]);
+                return $porDefecto;
+            }
+
+            $tipoAfiliado = trim($tiposActivos->first());
+
+            $log->info('Urgencias: régimen y tipo de afiliado tomados del contrato', [
+                'ref' => $refId,
+                'contrato_nit' => $contratoNit,
+                'regimen' => $regimen,
+                'tipo_afiliado' => $tipoAfiliado,
+            ]);
+
+            return [$regimen, $tipoAfiliado];
+        } catch (\Throwable $e) {
+            $log->warning('Urgencias: no se pudo resolver régimen/tipo de afiliado del contrato — se usa el valor por defecto', [
+                'ref' => $refId,
+                'contrato_nit' => $contratoNit,
+                'error' => $e->getMessage(),
+            ]);
+            return $porDefecto;
         }
     }
     /**
