@@ -38,6 +38,7 @@ class Turno extends Model
         'hora_ingreso_cola',
         'fk_consultorio_consulta',
         'hora_ingreso_consulta_medica',
+        'fk_users_llamado',
     ];
 
     public function scopeHoy($query)
@@ -69,6 +70,11 @@ class Turno extends Model
             'acompañado_con_un_menor' => 'Media',
             default => 'Baja',
         };
+    }
+
+    public function usuarioLlamo()
+    {
+        return $this->belongsTo(User::class, 'fk_users_llamado');
     }
 
     public function consultorioConsulta()

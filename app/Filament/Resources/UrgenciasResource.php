@@ -141,6 +141,7 @@ class UrgenciasResource extends Resource
                             'estado_admisiones' => 'llamado',
                             'fk_modulo' => $data['fk_modulo'],
                             'hora_llamado' => now()->format('H:i:s'),
+                            'fk_users_llamado' => auth()->id(),
                         ]);
 
                         Notification::make()

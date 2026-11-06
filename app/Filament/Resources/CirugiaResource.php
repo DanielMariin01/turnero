@@ -166,7 +166,10 @@ TextColumn::make('motivo')
 
     // 🔹 Este “before” se ejecuta al abrir el formulario
     ->before(function (Turno $record) {
-        $record->update(['estado' => 'llamado']);
+        $record->update([
+            'estado' => 'llamado',
+            'fk_users_llamado' => auth()->id(),
+        ]);
 
         Notification::make()
             ->title('Turno llamado')

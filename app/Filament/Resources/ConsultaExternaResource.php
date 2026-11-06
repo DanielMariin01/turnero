@@ -188,6 +188,7 @@ class ConsultaExternaResource extends Resource
                         $record->update([
                             'estado' => 'llamado',
                             'hora_llamado' => now()->format('H:i:s'),
+                            'fk_users_llamado' => auth()->id(),
                         ]);
                         Notification::make()->title('Turno llamado')->success()->send();
                     })
@@ -227,6 +228,7 @@ class ConsultaExternaResource extends Resource
                         $record->update([
                             'estado' => 'llamado_facturar',
                             'hora_llamado_facturar' => now()->format('H:i:s'),
+                            'fk_users_llamado' => auth()->id(),
                         ]);
                         Notification::make()->title('Turno llamado')->success()->send();
                     })
