@@ -84,7 +84,7 @@ export default function BienvenidaPage() {
           Solo elige una de las opciones que ves a continuación
         </p>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-8 justify-items-center">
+      <div className="grid grid-cols-1 sm:grid-cols-4 lg:grid-cols-4 gap-8 justify-items-center">
        
        
         <Tarjeta
@@ -108,14 +108,14 @@ export default function BienvenidaPage() {
           onClick={() => manejarClick("Pedir Cita")}
         />
 
-          {/*<Tarjeta
+        <Tarjeta
           titulo="Laboratorios"
           color="blue"
           imagen={laboratorio}
           onClick={() => manejarClick("Laboratorio")}
         />
 
-        <Tarjeta
+          {/*<Tarjeta
           titulo="Cirugía"
           color="blue"
           imagen={cirugia}

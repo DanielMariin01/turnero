@@ -32,7 +32,7 @@ class TurnoPantallaController extends Controller
         return Turno::with(['paciente', 'modulo', 'consultorio'])
             ->whereDate('fecha', '>=', now()->subDay()->toDateString())   // ⬅️ cambiado
             ->whereIn('estado', ['llamado', 'llamado_medico', 'llamado_facturar'])
-            ->whereIn('motivo', ['Consulta Externa', 'Pedir Cita', 'Oncologia'])
+            ->whereIn('motivo', ['Consulta Externa', 'Pedir Cita', 'Oncologia', 'Laboratorio'])
             ->orderBy('updated_at', 'desc')
             ->take(5)
             ->get();
@@ -43,7 +43,7 @@ class TurnoPantallaController extends Controller
 
         return Turno::with(['paciente', 'consultorio'])
             ->where('estado', 'llamado_medico')
-            ->where('motivo', 'Consulta Externa')
+            ->whereIn('motivo', ['Consulta Externa', 'Laboratorio'])
             //->whereDate('updated_at', $hoy)
             ->orderBy('updated_at', 'desc')
             ->take(6)
