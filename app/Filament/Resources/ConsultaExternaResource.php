@@ -38,7 +38,7 @@ class ConsultaExternaResource extends Resource
         return parent::getEloquentQuery()
             ->hoy()
             ->whereIn('estado', ['en_espera', 'llamado', 'facturar', 'llamado_facturar'])
-            ->whereIn('motivo', ['consulta externa', 'pendiente para facturar'])
+            ->whereIn('motivo', ['consulta externa', 'pendiente para facturar', 'laboratorio'])
             ->with(['paciente', 'modulo', 'consultorio']);
     }
 
@@ -116,10 +116,11 @@ class ConsultaExternaResource extends Resource
                 //->searchable(),
 
                 // MOTIVO
-                //Tables\Columns\TextColumn::make('motivo')
-                //->label('Motivo')
-                //->sortable()
-                //->searchable(),
+                Tables\Columns\TextColumn::make('motivo')
+                    ->label('Motivo')
+                    ->formatStateUsing(fn($state) => ucfirst($state))
+                    ->sortable()
+                    ->searchable(),
 
                 // MÓDULO
                 Tables\Columns\TextColumn::make('modulo.nombre')
@@ -155,6 +156,19 @@ class ConsultaExternaResource extends Resource
                     ->label('Hora')
                     ->sortable()
                     ->time('g:i A'),
+            ])
+
+            /* ============================================
+             |  FILTROS
+             ============================================ */
+            ->filters([
+                Tables\Filters\SelectFilter::make('motivo')
+                    ->label('Motivo')
+                    ->options([
+                        'consulta externa' => 'Consulta externa',
+                        'laboratorio' => 'Laboratorio',
+                        'pendiente para facturar' => 'Pendiente para facturar',
+                    ]),
             ])
 
             /* ============================================
