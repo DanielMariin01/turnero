@@ -554,7 +554,7 @@ export default function UrgenciasPage() {
     };
     const SelectBuscador = ({ opciones, valor, placeholder, onSeleccionar, onFocusCampo, texto, setTexto, abierto, setAbierto }) => {
         const etiquetaSeleccionada = opciones.find((o) => o.value === valor)?.label || "";
-        const filtradas = opciones.filter((o) => o.label.includes(texto));
+        const filtradas = opciones.filter((o) => o.label.includes(texto) || o.value.includes(texto));
 
         return (
             <div className="relative">
