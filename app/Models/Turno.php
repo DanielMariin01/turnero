@@ -30,6 +30,7 @@ class Turno extends Model
         'hora_finalizacion',
         'contrato_nit',
         'contrato_nombre',
+        'prioridad_especial',
         'nivel_triage',
         'estado_admisiones',
         'estado_consulta_medica',

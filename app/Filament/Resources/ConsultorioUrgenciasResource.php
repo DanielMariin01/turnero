@@ -78,6 +78,14 @@ class ConsultorioUrgenciasResource extends Resource
                     ->sortable()
                     ->searchable(),
 
+                TextColumn::make('prioridad_especial')
+                    ->label('Prioridad')
+                    ->badge()
+                    ->placeholder('-')
+                    ->formatStateUsing(fn($state) => is_null($state) ? null : ($state ? 'SÍ' : 'NO'))
+                    ->color(fn($state) => $state ? 'danger' : 'gray')
+                    ->sortable(),
+
                 TextColumn::make('consultorio.nombre')
                     ->label('Consultorio')
                     ->sortable()
