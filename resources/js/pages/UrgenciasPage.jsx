@@ -352,6 +352,45 @@ export default function UrgenciasPage() {
     // ============================================
     // GENERAR TURNO
     // ============================================
+    const preguntarPrioridadEspecial = () => {
+        return Swal.fire({
+            title: "¿Usted tiene alguna de estas condiciones?",
+            html: `
+    <div style="font-size: 2.6rem; line-height: 1.5; text-align: left; display: inline-block; margin: 12px 0;">
+        <div>• Tiene <b>60 años o más</b></div>
+        <div>• Es <b>menor de 10 años</b></div>
+        <div>• Está en <b>embarazo</b></div>
+        <div>• Tiene una <b>discapacidad</b></div>
+    </div>
+`,
+            width: "60rem",
+            showConfirmButton: true,
+            showDenyButton: true,
+            confirmButtonText: "SÍ",
+            denyButtonText: "NO",
+            confirmButtonColor: "#5564A8",
+            denyButtonColor: "#6b7280",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            customClass: {
+                title: "swal-prioridad-titulo",
+                confirmButton: "swal-prioridad-boton",
+                denyButton: "swal-prioridad-boton",
+            },
+            didOpen: () => {
+                const titulo = Swal.getTitle();
+                if (titulo) titulo.style.fontSize = "3.2rem";
+                [Swal.getConfirmButton(), Swal.getDenyButton()].forEach((boton) => {
+                    if (boton) {
+                        boton.style.fontSize = "3rem";
+                        boton.style.padding = "0.6em 2.5em";
+                        boton.style.minWidth = "12rem";
+                    }
+                });
+            },
+        });
+    };
+
     const handleGuardar = async () => {
         if (!paciente.nombre.trim()) {
             Swal.fire({ title: "Campo requerido", text: "Por favor ingrese el nombre del paciente", icon: "warning", confirmButtonText: "Aceptar" });
@@ -434,6 +473,12 @@ export default function UrgenciasPage() {
         }
 
         if (procesandoRef.current) return;
+
+        const respuestaPrioridad = await preguntarPrioridadEspecial();
+
+        if (!respuestaPrioridad.isConfirmed && !respuestaPrioridad.isDenied) return;
+        const prioridadEspecial = respuestaPrioridad.isConfirmed;
+
         procesandoRef.current = true;
         setGenerando(true);
 
@@ -457,6 +502,7 @@ export default function UrgenciasPage() {
                 sexo: paciente.sexo,
                 contrato_nit: contratoSeleccionado.nit,
                 contrato_nombre: contratoSeleccionado.nombre,
+                prioridad_especial: prioridadEspecial,
             };
 
             const response = await fetch("/api/turno/urgencias", {

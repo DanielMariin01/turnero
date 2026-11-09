@@ -116,6 +116,7 @@ class ClinicaIntegrationService
                     'paciente_urgencias' => trim($paciente->nombre . ' ' . $paciente->apellido),
                     'contrato_nit' => $datos['contrato_nit'],
                     'contrato_nombre' => $datos['contrato_nombre'],
+                    'prioridad_especial' => (bool) $datos['prioridad_especial'],
                     'ingreso_consecutivo' => $ingCsc,
                     'tmpfac_consecutivo' => $tmCtvIng,
                 ]);

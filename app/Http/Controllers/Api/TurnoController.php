@@ -102,6 +102,7 @@ class TurnoController extends Controller
             'sexo' => 'required|string|max:1|in:M,F',
             'contrato_nit' => 'required|string|max:20',
             'contrato_nombre' => 'required|string|max:250',
+            'prioridad_especial' => 'required|boolean',
         ]);
 
         $tiposConEdadExacta = ['CN', 'RC', 'TI', 'CC'];
