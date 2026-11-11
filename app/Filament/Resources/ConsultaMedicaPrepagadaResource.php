@@ -151,6 +151,7 @@ class ConsultaMedicaPrepagadaResource extends Resource
                             'estado_consulta_medica' => 'atendido',
                             'fk_consultorio_consulta' => $data['fk_consultorio_consulta'],
                             'llamado_en' => now(),
+                            'fk_users_llamado' => auth()->id(),
                         ]);
                         $record->refresh();
 

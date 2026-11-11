@@ -136,6 +136,7 @@ class MedicoResource extends Resource
                         $record->update([
                             'estado' => 'llamado_medico',
                             'hora_llamado_medico' => now()->format('H:i:s'),
+                            'fk_users_llamado' => auth()->id(),
                         ]);
 
                         // ========================================

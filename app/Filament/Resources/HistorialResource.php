@@ -13,6 +13,10 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
+use Illuminate\Support\Carbon;
 
 
 class HistorialResource extends Resource
@@ -136,6 +140,11 @@ class HistorialResource extends Resource
                     ->label('Consultorio')
                     ->sortable()
                     ->searchable(),
+                TextColumn::make('usuarioLlamo.name')
+                    ->label('Llamado por')
+                    ->placeholder('-')
+                    ->sortable()
+                    ->searchable(),
                 TextColumn::make('observaciones')
                     ->label('Observacion')
                     ->sortable(),
@@ -175,8 +184,71 @@ class HistorialResource extends Resource
 
 
             ->filters([
-                //
-            ])
+                Filter::make('documento')
+                    ->label('Número de documento')
+                    ->form([
+                        Forms\Components\TextInput::make('documento')
+                            ->label('Número de documento')
+                            ->placeholder('Ej: 1053000000')
+                            ->maxLength(20),
+                    ])
+                    ->query(
+                        fn(Builder $query, array $data): Builder => $query->when(
+                            filled($data['documento'] ?? null),
+                            fn(Builder $consulta) => $consulta->whereHas(
+                                'paciente',
+                                fn(Builder $paciente) => $paciente->where('numero_documento', 'like', trim($data['documento']) . '%')
+                            )
+                        )
+                    )
+                    ->indicateUsing(
+                        fn(array $data): ?string => filled($data['documento'] ?? null)
+                            ? 'Documento: ' . trim($data['documento'])
+                            : null
+                    ),
+
+                Filter::make('fecha')
+                    ->label('Fecha')
+                    ->form([
+                        Forms\Components\DatePicker::make('desde')
+                            ->label('Fecha desde')
+                            ->native(false)
+                            ->displayFormat('d/m/Y'),
+                        Forms\Components\DatePicker::make('hasta')
+                            ->label('Fecha hasta')
+                            ->native(false)
+                            ->displayFormat('d/m/Y'),
+                    ])
+                    ->query(
+                        fn(Builder $query, array $data): Builder => $query
+                            ->when($data['desde'] ?? null, fn(Builder $consulta, $desde) => $consulta->whereDate('fecha', '>=', $desde))
+                            ->when($data['hasta'] ?? null, fn(Builder $consulta, $hasta) => $consulta->whereDate('fecha', '<=', $hasta))
+                    )
+                    ->indicateUsing(function (array $data): array {
+                        $indicadores = [];
+                        if ($data['desde'] ?? null) {
+                            $indicadores[] = 'Desde: ' . Carbon::parse($data['desde'])->format('d/m/Y');
+                        }
+                        if ($data['hasta'] ?? null) {
+                            $indicadores[] = 'Hasta: ' . Carbon::parse($data['hasta'])->format('d/m/Y');
+                        }
+
+                        return $indicadores;
+                    }),
+
+                SelectFilter::make('estado')
+                    ->label('Estado')
+                    ->options([
+                        'en_espera' => 'En espera',
+                        'llamado' => 'Llamado',
+                        'asignado' => 'Asignado',
+                        'facturar' => 'Facturar',
+                        'llamado_facturar' => 'Llamado facturar',
+                        'atendido' => 'Atendido',
+                        'no_atendido' => 'No atendido',
+                    ]),
+            ], layout: FiltersLayout::AboveContent)
+            ->filtersFormColumns(4)
             ->actions([
                 Tables\Actions\EditAction::make()
                     ->label('Editar'),
