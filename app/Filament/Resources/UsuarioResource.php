@@ -44,7 +44,8 @@ public static function form(Form $form): Form
                     Forms\Components\TextInput::make('cedula')
                         ->label('Cedula')
                 
-                        //->unique(ignoreRecord: true)
+                        ->unique(ignoreRecord: true)
+                        ->maxLength(15)
                         ->required(),
 
                     Forms\Components\TextInput::make('email')

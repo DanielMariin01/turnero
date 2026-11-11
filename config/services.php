@@ -24,6 +24,13 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    // Ingreso único desde el Portal Corporativo (ver App\Services\PortalSsoService).
+    'portal' => [
+        'url' => env('PORTAL_URL'),
+        'audiencia' => env('PORTAL_SSO_AUDIENCIA', 'Turnero'),
+        'clave_publica' => env('PORTAL_SSO_CLAVE_PUBLICA', storage_path('app/sso/publica.pem')),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

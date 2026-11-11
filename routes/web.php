@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\PortalSsoController;
 
 
 
@@ -21,6 +22,9 @@ Route::get('/pantallaQuimioterapia', function () {
     return view('pantallaQuimioterapia');
 });
 
+
+// Ingreso único desde el Portal Corporativo (el pase se valida dentro del controlador).
+Route::get('/sso', PortalSsoController::class)->middleware('throttle:20,1')->name('sso');
 
 Route::get('/{any}', function () {
     return view('welcome');
