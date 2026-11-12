@@ -43,9 +43,9 @@ class PortalSsoServiceTest extends TestCase
         return null;
     }
 
-    private function servicio(): PortalSsoService
+    private function servicio(int $margenReloj = PortalSsoService::MARGEN_RELOJ_POR_DEFECTO): PortalSsoService
     {
-        return new PortalSsoService(self::$publica, self::EMISOR, self::AUDIENCIA);
+        return new PortalSsoService(self::$publica, self::EMISOR, self::AUDIENCIA, $margenReloj);
     }
 
     private function base64Url(string $texto): string
@@ -85,6 +85,25 @@ class PortalSsoServiceTest extends TestCase
     {
         $this->expectException(RuntimeException::class);
         $this->servicio()->validar($this->token(['iat' => time() - 500, 'exp' => time() - 300]));
+    }
+
+    public function test_rechaza_un_token_emitido_por_un_reloj_adelantado_mas_alla_del_margen(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->servicio(30)->validar($this->token(['iat' => time() + 45, 'exp' => time() + 105]));
+    }
+
+    public function test_acepta_el_mismo_token_si_el_margen_de_reloj_es_mayor(): void
+    {
+        $datos = $this->servicio(60)->validar($this->token(['iat' => time() + 45, 'exp' => time() + 105]));
+
+        $this->assertSame('1001', $datos['documento']);
+    }
+
+    public function test_el_margen_de_reloj_no_vuelve_valido_un_token_realmente_vencido(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->servicio(60)->validar($this->token(['iat' => time() - 500, 'exp' => time() - 300]));
     }
 
     public function test_rechaza_un_token_de_otro_aplicativo(): void

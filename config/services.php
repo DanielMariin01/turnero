@@ -29,6 +29,8 @@ return [
         'url' => env('PORTAL_URL'),
         'audiencia' => env('PORTAL_SSO_AUDIENCIA', 'Turnero'),
         'clave_publica' => env('PORTAL_SSO_CLAVE_PUBLICA', storage_path('app/sso/publica.pem')),
+        // Segundos de diferencia de reloj que se toleran entre el portal y este servidor.
+        'margen_reloj' => (int) env('PORTAL_SSO_MARGEN_RELOJ', 60),
     ],
 
     'slack' => [

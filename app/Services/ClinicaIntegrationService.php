@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Filament\Resources\ConsultaMedicaPrepagadaResource;
 use App\Models\Paciente;
 use App\Models\Turno;
 use Illuminate\Support\Facades\DB;
@@ -105,13 +106,23 @@ class ClinicaIntegrationService
                 $fecha = Carbon::today()->toDateString();
                 $hora = Carbon::now()->toTimeString();
 
+                // Prepagada: se salta triage y entra directo a Admisiones
+                // (el médico de prepagada hace triage y consulta).
+                $esPrepagada = in_array(
+                    $datos['contrato_nit'],
+                    ConsultaMedicaPrepagadaResource::CONTRATOS_PREPAGADA,
+                    true
+                );
+
                 $turno = Turno::create([
                     'fk_paciente' => $paciente->id_paciente,
                     'numero_turno' => $numeroTurno,
                     'motivo' => 'urgencias',
                     'fecha' => $fecha,
                     'hora' => $hora,
-                    'estado' => 'asignado',
+                    'estado' => $esPrepagada ? 'en_proceso' : 'asignado',
+                    'estado_admisiones' => $esPrepagada ? 'pendiente' : null,
+                    'hora_ingreso_cola' => $esPrepagada ? $hora : null,
                     'hora_atendido' => $hora,
                     'paciente_urgencias' => trim($paciente->nombre . ' ' . $paciente->apellido),
                     'contrato_nit' => $datos['contrato_nit'],
