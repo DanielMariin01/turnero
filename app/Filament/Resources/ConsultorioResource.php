@@ -44,6 +44,14 @@ class ConsultorioResource extends Resource
                     Forms\Components\TextInput::make('ubicacion')
                         ->label('Ubicacion')
                         ->maxLength(250),
+                    Forms\Components\Select::make('area')
+                        ->label('Área')
+                        ->required()
+                        ->options([
+                            'urgencias' => 'Urgencias (Triage)',
+                            'consulta_medica_urgencias' => 'Urgencias (Consulta médica / Prepagada)',
+                            'consulta_externa' => 'Consulta externa',
+                        ]),
                     ])
                     ->columns(2)
             ]);
@@ -62,6 +70,10 @@ class ConsultorioResource extends Resource
                 ->label('Ubicacion')
                 ->sortable()
                 ->searchable(),
+
+            Tables\Columns\TextColumn::make('area')
+                ->label('Área')
+                ->sortable(),
             ])
             ->filters([
                 //
