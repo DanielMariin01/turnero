@@ -69,6 +69,7 @@ class PortalSsoController extends Controller
             is_file($ruta) ? (string) file_get_contents($ruta) : '',
             (string) config('services.portal.url'),
             (string) config('services.portal.audiencia'),
+            max(0, (int) config('services.portal.margen_reloj')),
         );
     }
 

@@ -10,13 +10,14 @@ use RuntimeException;
  */
 class PortalSsoService
 {
-    /** Tolerancia por diferencia de reloj entre el portal y este servidor. */
-    private const MARGEN_RELOJ_SEGUNDOS = 30;
+    /** Tolerancia por defecto ante la diferencia de reloj entre el portal y este servidor. */
+    public const MARGEN_RELOJ_POR_DEFECTO = 30;
 
     public function __construct(
         private readonly string $clavePublica,
         private readonly string $emisor,
         private readonly string $audiencia,
+        private readonly int $margenRelojSegundos = self::MARGEN_RELOJ_POR_DEFECTO,
     ) {
     }
 
@@ -59,10 +60,10 @@ class PortalSsoService
     {
         $ahora = time();
 
-        if (($datos['exp'] ?? 0) + self::MARGEN_RELOJ_SEGUNDOS < $ahora) {
+        if (($datos['exp'] ?? 0) + $this->margenRelojSegundos < $ahora) {
             throw new RuntimeException('El token venció.');
         }
-        if (($datos['iat'] ?? $ahora) - self::MARGEN_RELOJ_SEGUNDOS > $ahora) {
+        if (($datos['iat'] ?? $ahora) - $this->margenRelojSegundos > $ahora) {
             throw new RuntimeException('El token aún no es válido.');
         }
         if (($datos['iss'] ?? null) !== $this->emisor) {
